@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
   <!-- Modular Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 
 <body>
@@ -60,9 +60,10 @@
           <!-- Segmented Speed Controls -->
           <div class="segmented-control">
             <button class="btn-seg" id="btn-pause" title="일시정지 (Space)">⏸</button>
-            <button class="btn-seg active" id="btn-speed-1" title="1배속">1x</button>
-            <button class="btn-seg" id="btn-speed-2" title="2배속">2x</button>
-            <button class="btn-seg" id="btn-speed-4" title="4배속">4x</button>
+            <button class="btn-seg" id="btn-speed-05" title="0.5배속 (슬로우)">0.5x</button>
+            <button class="btn-seg" id="btn-speed-07" title="0.7배속 (정밀)">0.7x</button>
+            <button class="btn-seg active" id="btn-speed-1" title="1배속 (기본)">1x</button>
+            <button class="btn-seg" id="btn-speed-2" title="2배속 (빠르게)">2x</button>
           </div>
 
           <!-- Action Buttons -->
@@ -363,10 +364,14 @@
 
       <!-- 1. Campaign Tab -->
       <div class="tab-content active" id="tab-campaign">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
           <span style="font-size: 11px; color: var(--text-dim);">총 10개 캠페인 구역 (순차 진행)</span>
-          <button class="btn-tool btn-tool-danger" style="padding: 3px 8px; font-size: 10px;"
-            id="btn-reset-all-campaign" title="전체 10개 구역을 기본 맵으로 초기화">🔄 전체 기본값 복원</button>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #00ff88; color: #00ff88;"
+              id="btn-download-campaign-json" title="현재 수정된 10개 구역을 campaign.json 파일로 다운로드하여 stages/ 폴더에 넣고 git push하면 깃허브 전체 동기화">💾 campaign.json 다운로드</button>
+            <button class="btn-tool btn-tool-danger" style="padding: 3px 8px; font-size: 10px;"
+              id="btn-reset-all-campaign" title="전체 10개 구역을 기본 맵으로 초기화">🔄 전체 기본값 복원</button>
+          </div>
         </div>
         <div class="stage-card-list" id="campaign-stage-list"></div>
       </div>
@@ -378,12 +383,25 @@
 
       <!-- 3. JSON Import/Export Tab -->
       <div class="tab-content" id="tab-json">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div style="display: flex; gap: 6px; font-size: 11px;">
+            <label style="color: var(--neon-cyan); cursor: pointer;"><input type="radio" name="json-export-type" id="json-type-current" value="current" checked> 현재 맵</label>
+            <label style="color: #00ff88; cursor: pointer;"><input type="radio" name="json-export-type" id="json-type-campaign" value="campaign"> 전체 10개 캠페인 맵 세트</label>
+            <label style="color: var(--neon-gold); cursor: pointer;"><input type="radio" name="json-export-type" id="json-type-all" value="all"> 전체 백업(커스텀 포함)</label>
+          </div>
+        </div>
         <textarea class="json-textarea" id="json-export-area" placeholder="JSON 코드가 여기에 표시됩니다..."></textarea>
-        <div style="display: flex; gap: 6px; justify-content: flex-end;">
-          <button class="btn-tool" id="btn-stage-mgr-import" onclick="window.game.stageMgr.importFromJson()">📥 JSON
-            불러오기</button>
-          <button class="btn-tool btn-tool-play" id="btn-stage-mgr-refresh"
-            onclick="window.game.stageMgr.updateJsonView()">🔄 현재 맵 새로고침</button>
+        <div style="display: flex; gap: 4px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+          <div style="display: flex; gap: 4px;">
+            <button class="btn-tool" id="btn-copy-json" style="border-color: #ffb700; color: #ffb700;" title="JSON 코드 클립보드 복사">📋 클립보드 복사</button>
+            <button class="btn-tool" id="btn-download-json-file" style="border-color: #00ff88; color: #00ff88;" title="JSON 파일로 다운로드">💾 JSON 파일 다운로드</button>
+            <button class="btn-tool" id="btn-upload-json-file-trigger" title="컴퓨터/스마트폰의 JSON 파일 불러오기">📂 파일 선택 불러오기</button>
+            <input type="file" id="input-stage-file" accept=".json" style="display: none;">
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn-tool" id="btn-stage-mgr-import" onclick="window.game.stageMgr.importFromJson()">📥 텍스트 붙여넣기 적용</button>
+            <button class="btn-tool btn-tool-play" id="btn-stage-mgr-refresh" onclick="window.game.stageMgr.updateJsonView()">🔄 새로고침</button>
+          </div>
         </div>
       </div>
 
@@ -565,17 +583,17 @@
   </div>
 
   <!-- Modular Scripts Execution Pipeline -->
-  <script src="js/engine/SFX.js?v=2"></script>
-  <script src="js/engine/TerrainEngine.js?v=2"></script>
-  <script src="js/engine/NanoUnit.js?v=2"></script>
-  <script src="js/procedural/PuzzleGrammar.js?v=2"></script>
-  <script src="js/procedural/VirtualMapValidator.js?v=2"></script>
-  <script src="js/procedural/AutoSolver.js?v=2"></script>
-  <script src="js/procedural/ProceduralMapEngine.js?v=2"></script>
-  <script src="js/editor/StageManager.js?v=2"></script>
-  <script src="js/editor/LevelEditor.js?v=2"></script>
-  <script src="js/engine/GameEngine.js?v=2"></script>
-  <script src="js/main.js?v=2"></script>
+  <script src="js/engine/SFX.js?v=5"></script>
+  <script src="js/engine/TerrainEngine.js?v=5"></script>
+  <script src="js/engine/NanoUnit.js?v=5"></script>
+  <script src="js/procedural/PuzzleGrammar.js?v=5"></script>
+  <script src="js/procedural/VirtualMapValidator.js?v=5"></script>
+  <script src="js/procedural/AutoSolver.js?v=5"></script>
+  <script src="js/procedural/ProceduralMapEngine.js?v=5"></script>
+  <script src="js/editor/StageManager.js?v=5"></script>
+  <script src="js/editor/LevelEditor.js?v=5"></script>
+  <script src="js/engine/GameEngine.js?v=5"></script>
+  <script src="js/main.js?v=5"></script>
 </body>
 
 </html>

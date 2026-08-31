@@ -770,6 +770,43 @@ class StageManager {
         }
       };
     }
+
+    // 1-Click Campaign.json Download (For GitHub synchronization)
+    const btnDownCamp = document.getElementById('btn-download-campaign-json');
+    if (btnDownCamp) {
+      btnDownCamp.onclick = () => this.downloadCampaignJson();
+    }
+
+    // Copy JSON to clipboard
+    const btnCopy = document.getElementById('btn-copy-json');
+    if (btnCopy) {
+      btnCopy.onclick = () => this.copyJsonToClipboard();
+    }
+
+    // Download current JSON view file
+    const btnDownJson = document.getElementById('btn-download-json-file');
+    if (btnDownJson) {
+      btnDownJson.onclick = () => this.downloadCurrentJsonArea();
+    }
+
+    // File upload trigger & listener
+    const btnUploadTrig = document.getElementById('btn-upload-json-file-trigger');
+    const inputStageFile = document.getElementById('input-stage-file');
+    if (btnUploadTrig && inputStageFile) {
+      btnUploadTrig.onclick = () => inputStageFile.click();
+      inputStageFile.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          this.importFromJsonFile(file);
+          inputStageFile.value = '';
+        }
+      };
+    }
+
+    // Radio type switch in JSON tab
+    document.querySelectorAll('input[name="json-export-type"]').forEach(radio => {
+      radio.onchange = () => this.updateJsonView();
+    });
   }
 
   switchTab(tabId) {
@@ -917,19 +954,137 @@ class StageManager {
   updateJsonView() {
     const area = document.getElementById('json-export-area');
     if (!area) return;
-    let current = null;
-    if (this.game.gameState === GAME_STATE.EDITOR && this.game.editor && this.game.editor.levelData) {
-      current = this.game.editor.levelData;
-    } else if (this.game.isCustomPlay && this.game.activeCustomData) {
-      current = this.game.activeCustomData;
-    } else if (LEVELS && LEVELS[this.game.currentLevelIdx]) {
-      current = LEVELS[this.game.currentLevelIdx];
-    } else if (this.game.editor && this.game.editor.levelData) {
-      current = this.game.editor.levelData;
+    const typeRadio = document.querySelector('input[name="json-export-type"]:checked');
+    const exportType = typeRadio ? typeRadio.value : 'current';
+
+    if (exportType === 'campaign') {
+      // Full 10 Campaign Stages Set (matching stages/campaign.json structure)
+      const campaignSet = LEVELS.map(lvl => {
+        const clone = JSON.parse(JSON.stringify(lvl));
+        delete clone.isOverridden;
+        return clone;
+      });
+      area.value = JSON.stringify(campaignSet, null, 2);
+    } else if (exportType === 'all') {
+      // Full Backup including campaign and custom slots
+      const fullBackup = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        campaign: LEVELS.map(lvl => {
+          const clone = JSON.parse(JSON.stringify(lvl));
+          delete clone.isOverridden;
+          return clone;
+        }),
+        customStages: this.customStages || []
+      };
+      area.value = JSON.stringify(fullBackup, null, 2);
     } else {
-      current = StageDataEngine.createDefaultStage();
+      // Single Current Level
+      let current = null;
+      if (this.game.gameState === GAME_STATE.EDITOR && this.game.editor && this.game.editor.levelData) {
+        current = this.game.editor.levelData;
+      } else if (this.game.isCustomPlay && this.game.activeCustomData) {
+        current = this.game.activeCustomData;
+      } else if (LEVELS && LEVELS[this.game.currentLevelIdx]) {
+        current = LEVELS[this.game.currentLevelIdx];
+      } else if (this.game.editor && this.game.editor.levelData) {
+        current = this.game.editor.levelData;
+      } else {
+        current = StageDataEngine.createDefaultStage();
+      }
+      const clone = JSON.parse(JSON.stringify(current));
+      delete clone.isOverridden;
+      area.value = JSON.stringify(clone, null, 2);
     }
-    area.value = JSON.stringify(current, null, 2);
+  }
+
+  downloadCampaignJson() {
+    const campaignSet = LEVELS.map(lvl => {
+      const clone = JSON.parse(JSON.stringify(lvl));
+      delete clone.isOverridden;
+      return clone;
+    });
+    const jsonStr = JSON.stringify(campaignSet, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'campaign.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    SFX.playTeleport();
+    if (this.game && this.game.particles) {
+      this.game.particles.spawnFloatingText(400, 180, "💾 campaign.json 다운로드 완료! (stages/ 폴더 덮어쓰기 후 git push)", "#00ff88");
+    }
+  }
+
+  downloadCurrentJsonArea() {
+    const area = document.getElementById('json-export-area');
+    if (!area) return;
+    const jsonStr = area.value.trim();
+    if (!jsonStr) {
+      alert("다운로드할 JSON 데이터가 없습니다.");
+      return;
+    }
+    const typeRadio = document.querySelector('input[name="json-export-type"]:checked');
+    const exportType = typeRadio ? typeRadio.value : 'current';
+    let filename = 'stage.json';
+    if (exportType === 'campaign') filename = 'campaign.json';
+    else if (exportType === 'all') filename = `nano_terra_backup_${Date.now()}.json`;
+    else {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.title) filename = `stage_${parsed.title.replace(/[^a-zA-Z0-9가-힣_]/g, '_')}.json`;
+      } catch(e) {}
+    }
+
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    SFX.playTeleport();
+  }
+
+  copyJsonToClipboard() {
+    const area = document.getElementById('json-export-area');
+    if (!area) return;
+    const text = area.value.trim();
+    if (!text) {
+      alert("복사할 JSON 내용이 없습니다.");
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      SFX.playClick();
+      if (this.game && this.game.particles) {
+        this.game.particles.spawnFloatingText(400, 180, "📋 JSON 클립보드 복사 완료!", "#ffb700");
+      } else {
+        alert("클립보드에 복사되었습니다!");
+      }
+    }).catch(() => {
+      area.select();
+      document.execCommand('copy');
+      alert("클립보드에 복사되었습니다!");
+    });
+  }
+
+  importFromJsonFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        this.processImportedJsonData(JSON.parse(content));
+      } catch(err) {
+        alert(`JSON 파일 파싱 실패: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
   }
 
   importFromJson() {
@@ -943,10 +1098,65 @@ class StageManager {
 
     try {
       const data = JSON.parse(rawVal);
-      if (!data.elements || !Array.isArray(data.elements)) {
-        throw new Error("유효한 elements 배열이 포함되어 있지 않습니다.");
+      this.processImportedJsonData(data);
+    } catch(err) {
+      alert(`JSON 불러오기 오류: ${err.message}`);
+    }
+  }
+
+  processImportedJsonData(data) {
+    if (!data) return;
+
+    // 1. Case: Entire Campaign Set (Array of stages, e.g. campaign.json)
+    if (Array.isArray(data) && data.length > 0 && data[0].elements) {
+      if (confirm(`총 ${data.length}개의 구역이 포함된 캠페인 맵 세트 파일입니다.\n현재 캠페인 1~${data.length}구역에 일괄 적용하시겠습니까?`)) {
+        this.campaignOverrides = {};
+        data.forEach((lvl, idx) => {
+          if (idx < 10) {
+            const clone = JSON.parse(JSON.stringify(lvl));
+            clone.id = idx + 1;
+            clone.isOverridden = true;
+            this.campaignOverrides[idx] = clone;
+          }
+        });
+        this.saveCampaignOverridesToStorage();
+        this.renderStageList();
+        if (!this.game.isCustomPlay) {
+          this.game.loadLevel(this.game.currentLevelIdx, false);
+        }
+        SFX.playTeleport();
+        alert("✅ 전체 캠페인 맵 세트가 성공적으로 적용되었습니다!");
+        return;
       }
-      
+    }
+
+    // 2. Case: Full Backup Object ({ campaign: [...], customStages: [...] })
+    if (data.campaign && Array.isArray(data.campaign)) {
+      if (confirm("캠페인 10개 구역 및 커스텀 슬롯이 모두 포함된 통합 백업 파일입니다.\n전체 복원하시겠습니까?")) {
+        this.campaignOverrides = {};
+        data.campaign.forEach((lvl, idx) => {
+          if (idx < 10) {
+            const clone = JSON.parse(JSON.stringify(lvl));
+            clone.id = idx + 1;
+            clone.isOverridden = true;
+            this.campaignOverrides[idx] = clone;
+          }
+        });
+        this.saveCampaignOverridesToStorage();
+
+        if (Array.isArray(data.customStages)) {
+          this.customStages = data.customStages;
+          this.saveCustomStagesToStorage();
+        }
+        this.renderStageList();
+        SFX.playTeleport();
+        alert("✅ 전체 맵 및 커스텀 슬롯 통합 복원이 완료되었습니다!");
+        return;
+      }
+    }
+
+    // 3. Case: Single Stage Object
+    if (data.elements && Array.isArray(data.elements)) {
       if (!data.title) data.title = "IMPORTED SECTOR";
       if (!data.totalUnits) data.totalUnits = 15;
       if (!data.needPercent) data.needPercent = 70;
@@ -963,8 +1173,9 @@ class StageManager {
       this.openSaveSlotModal(data, 'custom');
       this.closeModal();
       SFX.playTeleport();
-    } catch(err) {
-      alert(`JSON 불러오기 오류: ${err.message}`);
+      return;
     }
+
+    throw new Error("올바른 맵 데이터 형식이 아닙니다 (elements 또는 campaign 배열 누락).");
   }
 }

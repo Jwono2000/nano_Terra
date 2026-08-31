@@ -327,9 +327,10 @@ class GameEngine {
       SFX.playClick();
       this.setSpeed(this.gameSpeed === 0 ? 1 : 0);
     });
+    bindBtn('btn-speed-05', () => { SFX.playClick(); this.setSpeed(0.5); });
+    bindBtn('btn-speed-07', () => { SFX.playClick(); this.setSpeed(0.7); });
     bindBtn('btn-speed-1', () => { SFX.playClick(); this.setSpeed(1); });
     bindBtn('btn-speed-2', () => { SFX.playClick(); this.setSpeed(2); });
-    bindBtn('btn-speed-4', () => { SFX.playClick(); this.setSpeed(4); });
 
     bindBtn('btn-quick-restart', () => {
       this.restartLevelDirectly();
@@ -451,22 +452,25 @@ class GameEngine {
 
   setSpeed(spd) {
     this.gameSpeed = spd;
-    ['btn-pause', 'btn-speed-1', 'btn-speed-2', 'btn-speed-4'].forEach(id => {
+    ['btn-pause', 'btn-speed-05', 'btn-speed-07', 'btn-speed-1', 'btn-speed-2'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.classList.remove('active');
     });
     if (spd === 0) {
       const p = document.getElementById('btn-pause');
       if (p) p.classList.add('active');
+    } else if (spd === 0.5) {
+      const s05 = document.getElementById('btn-speed-05');
+      if (s05) s05.classList.add('active');
+    } else if (spd === 0.7) {
+      const s07 = document.getElementById('btn-speed-07');
+      if (s07) s07.classList.add('active');
     } else if (spd === 1) {
       const s1 = document.getElementById('btn-speed-1');
       if (s1) s1.classList.add('active');
     } else if (spd === 2) {
       const s2 = document.getElementById('btn-speed-2');
       if (s2) s2.classList.add('active');
-    } else if (spd === 4) {
-      const s4 = document.getElementById('btn-speed-4');
-      if (s4) s4.classList.add('active');
     }
   }
 

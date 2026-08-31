@@ -7,6 +7,11 @@ desktop.ini
 .vscode/
 .idea/
 
+# Browser & runtime cache
+temp_profile/
+.user_uploaded/
+scratch/
+
 # Logs & temp files
 *.log
 *.tmp

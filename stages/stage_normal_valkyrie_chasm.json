@@ -1,0 +1,37 @@
+{
+  "id": "STAGE_NORMAL_01",
+  "difficulty": "normal",
+  "title": "[NORMAL] VALKYRIE SECTOR #204",
+  "bgImg": "assets/bg_level_2.jpg",
+  "terrainTheme": "red",
+  "desc": "마그마 균열 지대입니다. 강철벽 앞 바닥을 드릴로 천공하여 하층으로 진입하십시오.",
+  "totalUnits": 15,
+  "needPercent": 70,
+  "spawnRate": 22,
+  "timeLimit": 210,
+  "skills": {
+    "climb": 4,
+    "float": 4,
+    "bash": 4,
+    "drill": 4,
+    "bomb": 2,
+    "build": 6,
+    "block": 3,
+    "portal": 1
+  },
+  "spawnX": 80,
+  "spawnY": 50,
+  "gateX": 720,
+  "gateY": 275,
+  "elements": [
+    { "type": "platform", "x": 40, "y": 100, "w": 140, "h": 20, "palette": "red" },
+    { "type": "platform", "x": 195, "y": 100, "w": 150, "h": 20, "palette": "red" },
+    { "type": "steelBarrier", "x": 330, "y": 30, "w": 20, "h": 90 },
+    { "type": "volcanicBasalt", "x": 60, "y": 200, "w": 500, "h": 24, "palette": "red", "profile": [18, 28, 38, 28, 18] },
+    { "type": "rockWall", "x": 260, "y": 130, "w": 60, "h": 70, "palette": "red" },
+    { "type": "steelBarrier", "x": 430, "y": 125, "w": 20, "h": 95 },
+    { "type": "volcanicBasalt", "x": 220, "y": 300, "w": 540, "h": 28, "palette": "red", "profile": [20, 32, 42, 30, 22] }
+  ],
+  "solutionDna": ["BASH", "DRILL", "BLOCK"],
+  "difficultyScore": 68
+}

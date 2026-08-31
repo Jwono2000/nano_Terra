@@ -1,0 +1,37 @@
+{
+  "id": "STAGE_HARD_01",
+  "difficulty": "hard",
+  "title": "[HARD] HYPERION SECTOR #308",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "desc": "170px 고도 낙하 및 이중 암벽 지대입니다. 역추진과 연속 레이저로 관통하십시오.",
+  "totalUnits": 18,
+  "needPercent": 80,
+  "spawnRate": 25,
+  "timeLimit": 180,
+  "skills": {
+    "climb": 3,
+    "float": 4,
+    "bash": 4,
+    "drill": 3,
+    "bomb": 2,
+    "build": 4,
+    "block": 2,
+    "portal": 1
+  },
+  "spawnX": 80,
+  "spawnY": 50,
+  "gateX": 720,
+  "gateY": 260,
+  "elements": [
+    { "type": "platform", "x": 40, "y": 90, "w": 120, "h": 20, "palette": "purple" },
+    { "type": "platform", "x": 175, "y": 90, "w": 160, "h": 20, "palette": "purple" },
+    { "type": "steelBarrier", "x": 320, "y": 20, "w": 20, "h": 90 },
+    { "type": "quantumCrystal", "x": 60, "y": 260, "w": 540, "h": 24, "palette": "purple", "profile": [16, 26, 38, 30, 18] },
+    { "type": "rockWall", "x": 260, "y": 190, "w": 60, "h": 70, "palette": "purple" },
+    { "type": "steelBarrier", "x": 440, "y": 185, "w": 20, "h": 95 },
+    { "type": "quantumCrystal", "x": 240, "y": 340, "w": 520, "h": 28, "palette": "purple", "profile": [20, 30, 42, 28, 20] }
+  ],
+  "solutionDna": ["FLOAT", "BASH", "DRILL", "BUILD"],
+  "difficultyScore": 124
+}

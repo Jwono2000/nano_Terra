@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>테라포머스: 나노 엑소더스 (Terraformers: Nano Exodus)</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Modular Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="game-wrapper">
+    <div id="game-container">
+      
+      <!-- Top In-Game HUD -->
+      <div id="hud-top">
+        <div class="hud-group">
+          <div class="hud-badge">
+            <span class="hud-label">MISSION</span>
+            <span class="hud-value" id="hud-level-title">GENESIS DROP</span>
+          </div>
+          <div class="hud-badge">
+            <span class="hud-label">RESCUED / GOAL</span>
+            <span class="hud-value" id="hud-rescued-count"><span class="highlight" id="hud-rescued-num">0</span> / 11 (70%)</span>
+          </div>
+          <div class="hud-badge">
+            <span class="hud-label">ALIVE / OUT</span>
+            <span class="hud-value" id="hud-active-count">0 / 15</span>
+          </div>
+          <div class="hud-badge">
+            <span class="hud-label">TIME</span>
+            <span class="hud-value" id="hud-time-left">04:00</span>
+          </div>
+          <div class="hud-badge">
+            <span class="hud-label">SCORE</span>
+            <span class="hud-value score-val" id="hud-score">0</span>
+          </div>
+        </div>
+
+        <div class="hud-group">
+          <!-- Speed & Pause Controls -->
+          <button class="btn-hud" id="btn-pause" title="일시정지 (Space)">⏸</button>
+          <button class="btn-hud active" id="btn-speed-1" title="1배속">1x</button>
+          <button class="btn-hud" id="btn-speed-2" title="2배속">2x</button>
+          <button class="btn-hud" id="btn-speed-4" title="4배속">4x</button>
+
+          <!-- In-Game Quick Restart Button -->
+          <button class="btn-hud btn-restart" id="btn-quick-restart" title="구역 즉시 재시작 (R)">🔄 RESTART</button>
+
+          <!-- Level Editor & Stage Manager Entry Buttons -->
+          <button class="btn-hud" style="border-color: #00ff88; background: rgba(0, 255, 136, 0.12); color: #00ff88;" id="btn-hud-solve" title="AI 정답 자동 클리어 시연">🤖 AI 풀이</button>
+          <button class="btn-hud" id="btn-open-editor" title="비주얼 맵 에디터">🛠️ EDITOR</button>
+          <button class="btn-hud" id="btn-open-stage-manager" title="스테이지 목록 & JSON">📁 MAPS</button>
+
+          <!-- Nuke / Sound -->
+          <button class="btn-hud btn-nuke" id="btn-nuke" title="긴급 전원 차단 (NUKE)">💥 NUKE</button>
+          <button class="btn-hud" id="btn-audio" title="사운드 토글">🔊</button>
+        </div>
+      </div>
+
+      <!-- Main Canvas Viewport -->
+      <div id="canvas-wrapper">
+        <canvas id="game-canvas" width="800" height="450"></canvas>
+
+        <!-- AI Auto-Solve On-Screen Assistant HUD Overlay -->
+        <div id="ai-solve-overlay">
+          <span>🤖 AI AUTO-SOLVE: [1/3] 융해 드릴 천공 중...</span>
+        </div>
+
+        <!-- Level Editor Overlay (HUD Gizmos, Toolbar & Palette) -->
+        <div id="editor-overlay">
+          <div id="editor-topbar">
+            <div class="editor-group">
+              <span class="editor-title">🛠️ LEVEL EDITOR</span>
+              
+              <!-- Tool Palette -->
+              <button class="btn-tool active" data-tool="select" id="tool-select" title="선택 / 이동">👆 선택</button>
+              <button class="btn-tool" data-tool="platform" id="tool-platform" title="기본 SFX 플로어">🟦 플랫폼</button>
+              <button class="btn-tool" data-tool="craggyRock" id="tool-craggy" title="천연 암반층 (두께 가변)">🪨 암석</button>
+              <button class="btn-tool" data-tool="volcanicBasalt" id="tool-volcano" title="마그마 현무암층">🌋 화산암</button>
+              <button class="btn-tool" data-tool="quantumCrystal" id="tool-quantum" title="양자 크리스탈 유적">🔮 양자암</button>
+              <button class="btn-tool" data-tool="rockWall" id="tool-wall" title="파괴 가능 수직 암벽">⛰️ 암벽</button>
+              <button class="btn-tool" data-tool="steelBarrier" id="tool-steel" title="파괴 불가 강철 격벽">🚧 강철벽</button>
+              <button class="btn-tool" data-tool="spawn" id="tool-spawn" title="스폰 해치 위치 지정">🚪 스폰</button>
+              <button class="btn-tool" data-tool="gate" id="tool-gate" title="탈출 웜홀 위치 지정">🌀 웜홀</button>
+              <button class="btn-tool btn-tool-danger" data-tool="delete" id="tool-delete" title="오브젝트 삭제">🗑️ 삭제</button>
+            </div>
+
+            <div class="editor-group">
+              <button class="btn-tool active" id="btn-editor-snap" title="10px 그리드 스냅 토글">🧲 스냅: ON</button>
+              <button class="btn-tool" id="btn-editor-undo" title="실행 취소 (Ctrl+Z)">↩️ 되돌리기</button>
+              <button class="btn-tool" style="border-color: #ffb700; background: rgba(255, 183, 0, 0.15); color: #ffb700; font-weight: bold;" id="btn-editor-guide" title="정답 단계별 가이드">📖 정답 가이드</button>
+              <button class="btn-tool" style="border-color: #00ff88; background: rgba(0, 255, 136, 0.15); color: #00ff88; font-weight: bold;" id="btn-editor-solve" title="AI 정답 자동 시연 플레이">🤖 AI 정답 시연</button>
+              <button class="btn-tool" style="border-color: var(--neon-cyan); background: rgba(0, 243, 255, 0.15); color: #fff; font-weight: bold;" id="btn-editor-generate" title="난이도별 지형 자동 생성">🎲 자동 생성</button>
+              <button class="btn-tool" id="btn-editor-props" title="스테이지 정보 & 스킬 수량">⚙️ 설정</button>
+              <button class="btn-tool" id="btn-editor-export" title="JSON 저장 및 내보내기">💾 JSON</button>
+              <button class="btn-tool btn-tool-play" id="btn-editor-play" title="현재 맵 즉시 테스트 플레이">▶️ 테스트</button>
+              <button class="btn-tool btn-tool-danger" id="btn-editor-exit" title="에디터 종료">❌ 종료</button>
+            </div>
+          </div>
+
+          <!-- Bottom Status Bar & Precision Resizers -->
+          <div id="editor-statusbar">
+            <div id="editor-status-info">도구: 👆 선택 | 오브젝트: 0개 | 드래그하여 지형을 생성하세요.</div>
+            <div id="editor-selected-controls" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <!-- Width Resizer -->
+              <div style="display: flex; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: var(--neon-cyan); font-weight: 700;">너비(W):</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-width-sub20">-20</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-width-sub10">-10</button>
+                <span id="editor-selected-width-val" style="font-size: 11px; color: var(--neon-cyan); font-weight: 900; min-width: 38px; text-align: center;">160px</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-width-add10">+10</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-width-add20">+20</button>
+              </div>
+
+              <!-- Thickness Resizer -->
+              <div style="display: flex; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: var(--neon-gold); font-weight: 700;">두께(H):</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-thick-sub5">-5</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-thick-sub1">-1</button>
+                <span id="editor-selected-thick-val" style="font-size: 11px; color: var(--neon-gold); font-weight: 900; min-width: 32px; text-align: center;">22px</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-thick-add1">+1</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-thick-add5">+5</button>
+              </div>
+
+              <!-- Palette Selector -->
+              <div style="display: flex; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: #fff; font-weight: 700;">🎨 색상:</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 9px; min-width: unset; color:#00f3ff; border-color: #00f3ff;" id="btn-pal-cyan" title="사이버 시안">시안</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 9px; min-width: unset; color:#ff4444; border-color: #ff4444;" id="btn-pal-red" title="마그마 레드">레드</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 9px; min-width: unset; color:#f0a028; border-color: #f0a028;" id="btn-pal-brown" title="황무지 브라운">브라운</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 9px; min-width: unset; color:#00ff88; border-color: #00ff88;" id="btn-pal-green" title="바이오 에메랄드">그린</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 9px; min-width: unset; color:#bf00ff; border-color: #bf00ff;" id="btn-pal-purple" title="양자 바이올렛">퍼플</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Tactile Skill Command Bar -->
+      <div id="hud-bottom">
+        <div class="skill-card selected" id="card-climb" data-skill="climb" title="전자기 흡착 등반 [1]">
+          <span class="skill-hotkey">1</span>
+          <span class="skill-icon">🧲</span>
+          <span class="skill-name">흡착 등반</span>
+          <span class="skill-count" id="count-climb">4</span>
+        </div>
+        <div class="skill-card" id="card-float" data-skill="float" title="역추진 감쇄기 [2]">
+          <span class="skill-hotkey">2</span>
+          <span class="skill-icon">🚀</span>
+          <span class="skill-name">역추진</span>
+          <span class="skill-count" id="count-float">4</span>
+        </div>
+        <div class="skill-card" id="card-bash" data-skill="bash" title="플라즈마 수평 절삭 [3]">
+          <span class="skill-hotkey">3</span>
+          <span class="skill-icon">⚡</span>
+          <span class="skill-name">레이저</span>
+          <span class="skill-count" id="count-bash">6</span>
+        </div>
+        <div class="skill-card" id="card-drill" data-skill="drill" title="열핵 융해 드릴 [4]">
+          <span class="skill-hotkey">4</span>
+          <span class="skill-icon">🔥</span>
+          <span class="skill-name">융해 드릴</span>
+          <span class="skill-count" id="count-drill">4</span>
+        </div>
+        <div class="skill-card" id="card-bomb" data-skill="bomb" title="코어 오버로드 자폭 [5]">
+          <span class="skill-hotkey">5</span>
+          <span class="skill-icon">💣</span>
+          <span class="skill-name">코어 폭파</span>
+          <span class="skill-count" id="count-bomb">3</span>
+        </div>
+        <div class="skill-card" id="card-build" data-skill="build" title="3D 경사로 프린팅 [6]">
+          <span class="skill-hotkey">6</span>
+          <span class="skill-icon">🧱</span>
+          <span class="skill-name">3D 계단</span>
+          <span class="skill-count" id="count-build">8</span>
+        </div>
+        <div class="skill-card" id="card-block" data-skill="block" title="위상 방어막 돔 [7]">
+          <span class="skill-hotkey">7</span>
+          <span class="skill-icon">🛡️</span>
+          <span class="skill-name">방어막</span>
+          <span class="skill-count" id="count-block">4</span>
+        </div>
+        <div class="skill-card" id="card-portal" data-skill="portal" title="양자 웜홀 관문 [8]">
+          <span class="skill-hotkey">8</span>
+          <span class="skill-icon">🌀</span>
+          <span class="skill-name">차원 포탈</span>
+          <span class="skill-count" id="count-portal">1</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Briefing Modal -->
+  <div class="modal-overlay" id="modal-start">
+    <div class="modal-card">
+      <img src="assets/nanobot_hero.png" alt="Nano-Bot Commander" class="modal-hero-img">
+      <div class="modal-title" id="start-title">1구역: GENESIS DROP</div>
+      <div class="modal-subtitle" id="start-desc">외계 행성 테라포밍 전초기지입니다. 1층에서 2층으로 착지 후 레이저로 암벽을 뚫고 웜홀로 탈출하십시오.</div>
+      
+      <div class="modal-stats">
+        <div class="stat-box">
+          <div class="hud-label">DEPLOYMENT</div>
+          <div class="hud-value" id="start-total-units">15 UNIT</div>
+        </div>
+        <div class="stat-box">
+          <div class="hud-label">TIME LIMIT</div>
+          <div class="hud-value" id="start-time-limit">04:00</div>
+        </div>
+      </div>
+
+      <div style="font-size: 11px; color: var(--neon-gold); font-family: 'Orbitron', sans-serif;" id="start-best-score">최고 기록: - pt</div>
+
+      <button class="btn-action" id="btn-start-mission">작전 개시 (DEPLOY)</button>
+      
+      <div style="display: flex; gap: 8px; margin-top: 4px;">
+        <button class="btn-hud" id="btn-start-open-editor">🛠️ 레벨 에디터</button>
+        <button class="btn-hud" id="btn-start-stage-select">📁 구역 선택</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mission Complete / Defeat Result Modal with Star Presentation -->
+  <div class="modal-overlay" id="modal-end" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-title" id="end-title">작전 완료 (MISSION REPORT)</div>
+      
+      <div class="score-banner" id="end-score-banner">
+        <div class="stars-row">
+          <span class="star-item" id="star-1">★</span>
+          <span class="star-item" id="star-2">★</span>
+          <span class="star-item" id="star-3">★</span>
+        </div>
+        <div>
+          <span class="rank-badge rank-S" id="end-rank-badge">RANK S</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;" id="end-rank-title">MASTER OPERATOR (완벽 통제)</div>
+      </div>
+
+      <div class="modal-subtitle" id="end-desc">나노봇 군단을 성공적으로 구출하여 외계 테라포밍 기지를 구축했습니다!</div>
+
+      <!-- Detailed Score Breakdown -->
+      <div class="score-breakdown-grid">
+        <div class="score-item">
+          <span class="score-item-label">구출 보너스</span>
+          <span class="score-item-val" id="score-rescue-val">+15,000 pt</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">잔여 시간 보너스</span>
+          <span class="score-item-val" id="score-time-val">+3,200 pt</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">스킬 절약 보너스</span>
+          <span class="score-item-val" id="score-skill-val">+1,400 pt</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">전원 생존(PERFECT)</span>
+          <span class="score-item-val" id="score-perfect-val">+5,000 pt</span>
+        </div>
+      </div>
+
+      <div class="total-score-box">
+        <span style="font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--neon-cyan);">TOTAL SCORE</span>
+        <span class="total-score-num" id="end-total-score-num">24,600 pt</span>
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-dim); margin-top: -4px;" id="end-high-score-notice">최고 기록 갱신!</div>
+
+      <div style="display: flex; gap: 8px; margin-top: 6px; width: 100%; justify-content: center;">
+        <button class="btn-action" id="btn-retry-mission">다시 시도 (RETRY)</button>
+        <button class="btn-action" id="btn-next-mission" style="background: linear-gradient(90deg, #00ff88, #00aa55);">다음 구역 (NEXT)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solution Guide Walkthrough Modal -->
+  <div class="modal-overlay" id="modal-solution-guide" style="display: none;">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-title" style="color: #ffb700;">📖 정답 단계별 가이드 (SOLUTION)</div>
+      <div style="font-size: 11px; color: var(--text-dim); width: 100%; text-align: left;">
+        🧬 정답 DNA: <span id="solution-dna-badge" style="color: var(--neon-cyan); font-weight: 700;">FLOAT → BASH → DRILL</span> | 난이도 점수: <span id="solution-score-badge" style="color: var(--neon-gold); font-weight: 700;">85pt</span>
+      </div>
+      
+      <div class="solution-step-list" id="solution-guide-steps">
+        <!-- Injected dynamically by AutoSolver -->
+      </div>
+
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; margin-top: 6px;">
+        <button class="btn-tool" id="btn-guide-close">닫기</button>
+        <button class="btn-tool btn-tool-play" id="btn-guide-solve-now">🤖 AI 정답 시연 재생</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Manager / JSON Exporter Modal -->
+  <div class="modal-overlay" id="modal-stage-manager" style="display: none;">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-title">📁 STAGE LIBRARY & JSON</div>
+      
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-tab="tab-campaign">캠페인 구역</button>
+        <button class="modal-tab-btn" data-tab="tab-custom">커스텀 슬롯</button>
+        <button class="modal-tab-btn" id="tab-btn-json" data-tab="tab-json">JSON 입출력</button>
+      </div>
+
+      <!-- 1. Campaign Tab -->
+      <div class="tab-content active" id="tab-campaign">
+        <div class="stage-card-list" id="campaign-stage-list"></div>
+      </div>
+
+      <!-- 2. Custom Slots Tab -->
+      <div class="tab-content" id="tab-custom">
+        <div class="stage-card-list" id="custom-stage-list"></div>
+      </div>
+
+      <!-- 3. JSON Import/Export Tab -->
+      <div class="tab-content" id="tab-json">
+        <textarea class="json-textarea" id="json-export-area" placeholder="JSON 코드가 여기에 표시됩니다..."></textarea>
+        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+          <button class="btn-tool" onclick="window.game.stageMgr.importFromJson()">📥 JSON 불러오기</button>
+          <button class="btn-tool btn-tool-play" onclick="window.game.stageMgr.updateJsonView()">🔄 현재 맵 새로고침</button>
+        </div>
+      </div>
+
+      <button class="btn-tool" style="margin-top: 8px;" onclick="window.game.stageMgr.closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- AI Procedural Generator Modal -->
+  <div class="modal-overlay" id="modal-editor-generate" style="display: none;">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-title">🎲 AI 절차적 맵 생성기</div>
+      <div class="modal-subtitle">설정한 난이도와 테마에 맞춰 퍼즐 정답 DNA를 우선 생성한 후 지형을 수학적으로 구축합니다.</div>
+
+      <div class="prop-form-grid">
+        <div class="prop-group">
+          <label class="prop-label">난이도 (DIFFICULTY)</label>
+          <select class="prop-select" id="gen-difficulty">
+            <option value="easy">EASY (초급: 2~3단계 액션, 여유 스킬 +3)</option>
+            <option value="normal" selected>NORMAL (중급: 3~5단계 액션, 강철벽 배치)</option>
+            <option value="hard">HARD (고급: 5~7단계 콤보, 170px 치사낙하, 가짜길)</option>
+            <option value="nightmare">NIGHTMARE (극한: 7~9단계, 스킬 여유 0개, 미끼스킬)</option>
+          </select>
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">맵 레이아웃 형태</label>
+          <select class="prop-select" id="gen-layout">
+            <option value="tiered" selected>계단식 하강 (Tiered Descent)</option>
+            <option value="zigzag">지그재그 반전 (Zigzag Turns)</option>
+            <option value="labyrinth">양자 미궁 (Quantum Labyrinth)</option>
+            <option value="speedway">스피드 런웨이 (Speed Runway)</option>
+          </select>
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">배경 테마</label>
+          <select class="prop-select" id="gen-theme">
+            <option value="assets/bg_level_1.jpg" selected>사이버 전초기지 (Cyber)</option>
+            <option value="assets/bg_level_2.jpg">마그마 균열 지대 (Magma)</option>
+            <option value="assets/bg_level_3.jpg">양자 크리스탈 유적 (Quantum)</option>
+            <option value="assets/bg_level_4.jpg">심층 코어 붕괴지 (Core)</option>
+          </select>
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">지형 암석 컬러</label>
+          <select class="prop-select" id="gen-palette">
+            <option value="cyan" selected>기본 (사이버 시안)</option>
+            <option value="red">마그마 레드</option>
+            <option value="brown">황무지 브라운</option>
+            <option value="green">바이오 에메랄드</option>
+            <option value="purple">양자 바이올렛</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn-tool" id="btn-gen-cancel">취소</button>
+        <button class="btn-tool btn-tool-play" id="btn-gen-execute">🎲 즉시 생성</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Properties Modal -->
+  <div class="modal-overlay" id="modal-editor-props" style="display: none;">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-title">⚙️ STAGE SETTINGS</div>
+      
+      <div class="prop-form-grid">
+        <div class="prop-group">
+          <label class="prop-label">스테이지 명칭</label>
+          <input type="text" class="prop-input" id="prop-title" value="CUSTOM SECTOR">
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">배경 이미지</label>
+          <select class="prop-select" id="prop-theme">
+            <option value="assets/bg_level_1.jpg">1구역: 사이버 기지</option>
+            <option value="assets/bg_level_2.jpg">2구역: 마그마 균열</option>
+            <option value="assets/bg_level_3.jpg">3구역: 양자 크리스탈</option>
+            <option value="assets/bg_level_4.jpg">4구역: 코어 붕괴</option>
+          </select>
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">플로어/암석 컬러 테마</label>
+          <select class="prop-select" id="prop-terrain-palette">
+            <option value="cyan">기본 (사이버 시안)</option>
+            <option value="red">마그마 레드</option>
+            <option value="brown">황무지 브라운</option>
+            <option value="green">바이오 에메랄드</option>
+            <option value="purple">양자 바이올렛</option>
+          </select>
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">총 나노봇 수</label>
+          <input type="number" class="prop-input" id="prop-units" value="15">
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">구출 목표 (%)</label>
+          <input type="number" class="prop-input" id="prop-quota" value="70">
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">제한 시간 (초)</label>
+          <input type="number" class="prop-input" id="prop-time" value="240">
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">스폰 주기 (Rate)</label>
+          <input type="number" class="prop-input" id="prop-spawn-rate" value="20">
+        </div>
+      </div>
+
+      <div style="width: 100%; text-align: left; margin-top: 6px;">
+        <span class="prop-label">스킬 제공 수량 설정</span>
+        <div class="skill-config-grid">
+          <div class="skill-config-item"><span>🧲 흡착</span><input type="number" id="prop-sk-climb" value="4"></div>
+          <div class="skill-config-item"><span>🚀 역추진</span><input type="number" id="prop-sk-float" value="4"></div>
+          <div class="skill-config-item"><span>⚡ 레이저</span><input type="number" id="prop-sk-bash" value="4"></div>
+          <div class="skill-config-item"><span>🔥 드릴</span><input type="number" id="prop-sk-drill" value="4"></div>
+          <div class="skill-config-item"><span>💣 폭파</span><input type="number" id="prop-sk-bomb" value="2"></div>
+          <div class="skill-config-item"><span>🧱 계단</span><input type="number" id="prop-sk-build" value="6"></div>
+          <div class="skill-config-item"><span>🛡️ 방어막</span><input type="number" id="prop-sk-block" value="3"></div>
+          <div class="skill-config-item"><span>🌀 포탈</span><input type="number" id="prop-sk-portal" value="1"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn-tool" id="btn-props-cancel">취소</button>
+        <button class="btn-tool btn-tool-play" id="btn-props-save">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Scripts Execution Pipeline -->
+  <script src="js/engine/SFX.js"></script>
+  <script src="js/engine/TerrainEngine.js"></script>
+  <script src="js/engine/NanoUnit.js"></script>
+  <script src="js/procedural/PuzzleGrammar.js"></script>
+  <script src="js/procedural/AutoSolver.js"></script>
+  <script src="js/procedural/ProceduralMapEngine.js"></script>
+  <script src="js/editor/StageManager.js"></script>
+  <script src="js/editor/LevelEditor.js"></script>
+  <script src="js/engine/GameEngine.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

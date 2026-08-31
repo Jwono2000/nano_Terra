@@ -452,6 +452,9 @@ class GameEngine {
 
   setSpeed(spd) {
     this.gameSpeed = spd;
+    if (spd === 0) {
+      SFX.stopAllContinuousBeams();
+    }
     ['btn-pause', 'btn-speed-05', 'btn-speed-07', 'btn-speed-1', 'btn-speed-2'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.classList.remove('active');

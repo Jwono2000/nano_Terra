@@ -133,19 +133,16 @@ const SFX = {
     try {
       const now = this.ctx.currentTime;
       beam.gain.gain.cancelScheduledValues(now);
-      beam.gain.gain.setValueAtTime(beam.gain.gain.value, now);
-      beam.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+      beam.gain.gain.setValueAtTime(0, now);
 
-      setTimeout(() => {
-        try {
-          beam.osc1.stop();
-          beam.osc2.stop();
-          beam.lfo.stop();
-          beam.osc1.disconnect();
-          beam.osc2.disconnect();
-          beam.gain.disconnect();
-        } catch(e) {}
-      }, 140);
+      try {
+        beam.osc1.stop();
+        beam.osc2.stop();
+        beam.lfo.stop();
+        beam.osc1.disconnect();
+        beam.osc2.disconnect();
+        beam.gain.disconnect();
+      } catch(e) {}
     } catch(e) {}
   },
 
@@ -153,6 +150,7 @@ const SFX = {
     for (const id in this.activeBeams) {
       this.stopContinuousBeam(id);
     }
+    this.activeBeams = {};
   },
 
   playLaser() { this.startContinuousBeam('temp_laser', 'laser'); setTimeout(() => this.stopContinuousBeam('temp_laser'), 250); },

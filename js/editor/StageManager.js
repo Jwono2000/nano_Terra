@@ -891,14 +891,26 @@ class StageManager {
           const totalU = lvl.totalUnits || 15;
           const quota = lvl.needPercent || 70;
           const elemCount = (lvl.elements || []).length;
+
+          let slotOptions = '';
+          for (let s = 0; s < 10; s++) {
+            slotOptions += `<option value="${s}">캠페인 ${s + 1}구역</option>`;
+          }
+
           item.innerHTML = `
             <div class="stage-item-info">
               <div class="stage-item-title">${lvl.title || 'CUSTOM SECTOR'}</div>
               <div class="stage-item-desc">${totalU}기 유닛 | 목표 ${quota}% | 지형 오브젝트 ${elemCount}개</div>
             </div>
-            <div class="stage-item-actions">
+            <div class="stage-item-actions" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
               <button class="btn-tool btn-tool-play" data-act="play-custom" data-idx="${idx}">▶️ 플레이</button>
               <button class="btn-tool" data-act="edit-custom" data-idx="${idx}">✏️ 수정</button>
+              <div style="display: flex; align-items: center; gap: 2px; background: rgba(0, 243, 255, 0.08); padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(0, 243, 255, 0.3);">
+                <select class="prop-select custom-target-slot-select" id="custom-slot-select-${idx}" style="padding: 2px 4px; font-size: 10px; height: 22px; width: auto; color: var(--neon-cyan); background: #0b1424; border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 3px;">
+                  ${slotOptions}
+                </select>
+                <button class="btn-tool" style="border-color: #00ff88; color: #00ff88; padding: 2px 6px; font-size: 10px; height: 22px;" data-act="assign-campaign-slot" data-idx="${idx}" title="선택한 캠페인 구역 번호로 복사하여 등록">📥 슬롯등록</button>
+              </div>
               <button class="btn-tool btn-tool-danger" data-act="del-custom" data-idx="${idx}" title="삭제">🗑️</button>
             </div>
           `;
@@ -938,6 +950,20 @@ class StageManager {
           this.closeModal();
           if (this.customStages[idx]) {
             this.game.enterEditor(this.customStages[idx]);
+          }
+        } else if (act === 'assign-campaign-slot') {
+          const selectEl = document.getElementById(`custom-slot-select-${idx}`);
+          const targetSlot = selectEl ? parseInt(selectEl.value, 10) : 0;
+          const customStage = this.customStages[idx];
+          if (customStage) {
+            if (confirm(`'${customStage.title}' 맵을 [캠페인 ${targetSlot + 1}구역] 슬롯에 등록(덮어쓰기)하시겠습니까?\n등록 후 상단의 '💾 campaign.json 다운로드'를 통해 깃허브에도 동기화할 수 있습니다.`)) {
+              this.saveToCampaignSlot(targetSlot, customStage);
+              SFX.playTeleport();
+              if (this.game && this.game.particles) {
+                this.game.particles.spawnFloatingText(400, 180, `✅ [캠페인 ${targetSlot + 1}구역]에 '${customStage.title}' 등록 완료!`, "#00ff88");
+              }
+              alert(`✅ '${customStage.title}' 맵이 캠페인 [${targetSlot + 1}구역]으로 성공적으로 등록되었습니다!\n'캠페인 1~10구역' 탭에서 확인하거나 바로 플레이할 수 있습니다.`);
+            }
           }
         } else if (act === 'del-custom') {
           const target = this.customStages[idx];

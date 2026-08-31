@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "title": "GENESIS DROP",
+    "title": "[NORMAL] GENESIS DROP",
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "cyan",
     "desc": "1구역: 외계 행성 테라포밍 전초기지입니다. 1층에서 2층으로 착지 후 플라즈마 레이저(Bash)로 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill)로 뚫어 탈출하십시오.<br><span style='color: #ffb700;'>※ 노란색 사선 줄무늬의 강철 격벽은 절삭/천공할 수 없습니다!</span>",
@@ -20,18 +20,63 @@
       "block": 4,
       "portal": 1
     },
-    "spawnX": 90,
-    "spawnY": 60,
-    "gateX": 710,
-    "gateY": 254,
-    "solutionDna": ["FLOAT", "BASH", "DRILL"],
+    "spawnX": 210,
+    "spawnY": 190,
+    "gateX": 620,
+    "gateY": 240,
+    "solutionDna": [
+      "FLOAT",
+      "BASH",
+      "DRILL"
+    ],
     "difficultyScore": 45,
     "elements": [
-      { "type": "platform", "x": 40, "y": 120, "w": 160, "h": 20, "palette": "cyan" },
-      { "type": "craggyRock", "x": 100, "y": 200, "w": 420, "h": 22, "palette": "cyan", "profile": [18, 22, 34, 38, 20, 14, 16] },
-      { "type": "rockWall", "x": 280, "y": 130, "w": 70, "h": 70, "palette": "cyan" },
-      { "type": "steelBarrier", "x": 500, "y": 120, "w": 20, "h": 80 },
-      { "type": "craggyRock", "x": 400, "y": 280, "w": 360, "h": 28, "palette": "cyan", "profile": [24, 28, 32, 26, 20] }
+      {
+        "type": "craggyRock",
+        "x": 100,
+        "y": 260,
+        "w": 620,
+        "h": 50,
+        "palette": "cyan",
+        "profile": [
+          59,
+          48,
+          53,
+          59,
+          55,
+          58,
+          45,
+          61,
+          64,
+          50,
+          50,
+          50,
+          43,
+          59,
+          55
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 100,
+        "y": 200,
+        "w": 20,
+        "h": 60,
+        "palette": "cyan"
+      },
+      {
+        "type": "craggyRock",
+        "x": 370,
+        "y": 170,
+        "w": 50,
+        "h": 100,
+        "palette": "cyan",
+        "profile": [
+          90,
+          113,
+          104
+        ]
+      }
     ]
   },
   {
@@ -59,19 +104,72 @@
     "spawnY": 50,
     "gateX": 720,
     "gateY": 254,
-    "solutionDna": ["FLOAT", "BASH", "DRILL"],
+    "solutionDna": [
+      "FLOAT",
+      "BASH",
+      "DRILL"
+    ],
     "difficultyScore": 60,
     "elements": [
-      { "type": "platform", "x": 40, "y": 110, "w": 140, "h": 20, "palette": "red" },
-      { "type": "volcanicBasalt", "x": 40, "y": 190, "w": 480, "h": 24, "palette": "red", "profile": [16, 28, 42, 38, 14, 12] },
-      { "type": "rockWall", "x": 250, "y": 120, "w": 70, "h": 70, "palette": "red" },
-      { "type": "steelBarrier", "x": 500, "y": 110, "w": 20, "h": 80 },
-      { "type": "volcanicBasalt", "x": 380, "y": 280, "w": 380, "h": 30, "palette": "red", "profile": [26, 34, 40, 28, 22] }
+      {
+        "type": "platform",
+        "x": 40,
+        "y": 110,
+        "w": 140,
+        "h": 20,
+        "palette": "red"
+      },
+      {
+        "type": "volcanicBasalt",
+        "x": 40,
+        "y": 190,
+        "w": 480,
+        "h": 24,
+        "palette": "red",
+        "profile": [
+          16,
+          28,
+          42,
+          38,
+          14,
+          12
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 250,
+        "y": 120,
+        "w": 70,
+        "h": 70,
+        "palette": "red"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 500,
+        "y": 110,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "volcanicBasalt",
+        "x": 380,
+        "y": 280,
+        "w": 380,
+        "h": 30,
+        "palette": "red",
+        "profile": [
+          26,
+          34,
+          40,
+          28,
+          22
+        ]
+      }
     ]
   },
   {
     "id": 3,
-    "title": "QUANTUM LABYRINTH",
+    "title": "[NORMAL] QUANTUM LABYRINTH",
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "3구역: 양자 크리스탈 유적지입니다. 신비로운 보랏빛 유적 지형입니다. 1층에서 2층으로 하강 -> 강철벽 앞에서 바닥 드릴(Drill) -> 3층 암벽 레이저(Bash) 관통으로 웜홀에 도달하십시오.",
@@ -94,19 +192,75 @@
     "spawnY": 50,
     "gateX": 720,
     "gateY": 254,
-    "solutionDna": ["DRILL", "BASH", "BUILD"],
+    "solutionDna": [
+      "DRILL",
+      "BASH",
+      "BUILD"
+    ],
     "difficultyScore": 75,
     "elements": [
-      { "type": "quantumCrystal", "x": 40, "y": 110, "w": 140, "h": 20, "palette": "purple", "profile": [18, 22, 18] },
-      { "type": "quantumCrystal", "x": 100, "y": 190, "w": 320, "h": 24, "palette": "purple", "profile": [14, 20, 36, 16] },
-      { "type": "steelBarrier", "x": 400, "y": 90, "w": 20, "h": 100 },
-      { "type": "quantumCrystal", "x": 260, "y": 280, "w": 500, "h": 30, "palette": "purple", "profile": [18, 28, 36, 32, 22] },
-      { "type": "rockWall", "x": 480, "y": 210, "w": 70, "h": 70, "palette": "purple" }
+      {
+        "type": "quantumCrystal",
+        "x": 40,
+        "y": 110,
+        "w": 140,
+        "h": 20,
+        "palette": "purple",
+        "profile": [
+          18,
+          22,
+          18
+        ]
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 100,
+        "y": 190,
+        "w": 320,
+        "h": 100,
+        "palette": "purple",
+        "profile": [
+          60,
+          89,
+          150,
+          69
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 400,
+        "y": 90,
+        "w": 20,
+        "h": 150
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 260,
+        "y": 280,
+        "w": 500,
+        "h": 30,
+        "palette": "purple",
+        "profile": [
+          18,
+          28,
+          36,
+          32,
+          22
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 480,
+        "y": 210,
+        "w": 70,
+        "h": 70,
+        "palette": "purple"
+      }
     ]
   },
   {
     "id": 4,
-    "title": "CORE COLLAPSE",
+    "title": "[HARD] CORE COLLAPSE",
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "brown",
     "desc": "4구역: 심층 황무지 코어 발전소입니다. 1층 드릴 관통 -> 2층 레이저 절삭 -> 계단 생성으로 25기 나노봇 전원을 손실 없이 구출하십시오!",
@@ -129,20 +283,79 @@
     "spawnY": 50,
     "gateX": 730,
     "gateY": 314,
-    "solutionDna": ["DRILL", "FLOAT", "BASH", "BUILD"],
+    "solutionDna": [
+      "DRILL",
+      "FLOAT",
+      "BASH",
+      "BUILD"
+    ],
     "difficultyScore": 85,
     "elements": [
-      { "type": "platform", "x": 30, "y": 110, "w": 130, "h": 22, "palette": "brown" },
-      { "type": "craggyRock", "x": 90, "y": 190, "w": 280, "h": 22, "palette": "brown", "profile": [14, 22, 36, 18] },
-      { "type": "steelBarrier", "x": 350, "y": 80, "w": 20, "h": 110 },
-      { "type": "craggyRock", "x": 200, "y": 270, "w": 360, "h": 24, "palette": "brown", "profile": [18, 32, 44, 20, 16] },
-      { "type": "rockWall", "x": 420, "y": 200, "w": 70, "h": 70, "palette": "brown" },
-      { "type": "platform", "x": 460, "y": 340, "w": 310, "h": 32, "palette": "green" }
+      {
+        "type": "platform",
+        "x": 30,
+        "y": 110,
+        "w": 130,
+        "h": 22,
+        "palette": "brown"
+      },
+      {
+        "type": "craggyRock",
+        "x": 90,
+        "y": 190,
+        "w": 280,
+        "h": 22,
+        "palette": "brown",
+        "profile": [
+          14,
+          22,
+          36,
+          18
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 350,
+        "y": 80,
+        "w": 20,
+        "h": 110
+      },
+      {
+        "type": "craggyRock",
+        "x": 200,
+        "y": 270,
+        "w": 360,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          18,
+          32,
+          44,
+          20,
+          16
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 420,
+        "y": 200,
+        "w": 90,
+        "h": 70,
+        "palette": "brown"
+      },
+      {
+        "type": "platform",
+        "x": 460,
+        "y": 340,
+        "w": 310,
+        "h": 32,
+        "palette": "green"
+      }
     ]
   },
   {
     "id": 5,
-    "title": "BIO-EDEN SANCTUARY",
+    "title": "[HARD] BIO-EDEN SANCTUARY",
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "green",
     "desc": "5구역: 외계 바이오 에덴 성역입니다. 다단 녹색 테라스와 암벽을 방어막(Block)으로 나노봇의 진로를 반전시키고 흡착 등반(Climb)을 활용해 웜홀로 집결시키십시오.",
@@ -165,15 +378,75 @@
     "spawnY": 60,
     "gateX": 710,
     "gateY": 210,
-    "solutionDna": ["BLOCK", "BUILD", "BASH", "CLIMB"],
+    "solutionDna": [
+      "BLOCK",
+      "BUILD",
+      "BASH",
+      "CLIMB"
+    ],
     "difficultyScore": 95,
     "elements": [
-      { "type": "platform", "x": 40, "y": 120, "w": 180, "h": 20, "palette": "green" },
-      { "type": "craggyRock", "x": 160, "y": 200, "w": 380, "h": 24, "palette": "green", "profile": [16, 26, 36, 22, 18] },
-      { "type": "steelBarrier", "x": 520, "y": 110, "w": 20, "h": 90 },
-      { "type": "rockWall", "x": 300, "y": 130, "w": 70, "h": 70, "palette": "green" },
-      { "type": "craggyRock", "x": 80, "y": 290, "w": 400, "h": 26, "palette": "green", "profile": [18, 28, 38, 24, 18] },
-      { "type": "platform", "x": 440, "y": 230, "w": 330, "h": 22, "palette": "green" }
+      {
+        "type": "platform",
+        "x": 40,
+        "y": 120,
+        "w": 180,
+        "h": 20,
+        "palette": "green"
+      },
+      {
+        "type": "craggyRock",
+        "x": 160,
+        "y": 200,
+        "w": 380,
+        "h": 30,
+        "palette": "green",
+        "profile": [
+          20,
+          33,
+          45,
+          27,
+          23
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 520,
+        "y": 110,
+        "w": 20,
+        "h": 90
+      },
+      {
+        "type": "rockWall",
+        "x": 300,
+        "y": 130,
+        "w": 70,
+        "h": 70,
+        "palette": "green"
+      },
+      {
+        "type": "craggyRock",
+        "x": 80,
+        "y": 300,
+        "w": 400,
+        "h": 26,
+        "palette": "green",
+        "profile": [
+          18,
+          28,
+          38,
+          24,
+          18
+        ]
+      },
+      {
+        "type": "platform",
+        "x": 440,
+        "y": 250,
+        "w": 330,
+        "h": 22,
+        "palette": "green"
+      }
     ]
   },
   {
@@ -201,20 +474,78 @@
     "spawnY": 50,
     "gateX": 730,
     "gateY": 290,
-    "solutionDna": ["FLOAT", "DRILL", "DRILL", "BASH"],
+    "solutionDna": [
+      "FLOAT",
+      "DRILL",
+      "DRILL",
+      "BASH"
+    ],
     "difficultyScore": 105,
     "elements": [
-      { "type": "platform", "x": 30, "y": 100, "w": 140, "h": 20, "palette": "red" },
-      { "type": "volcanicBasalt", "x": 120, "y": 180, "w": 340, "h": 22, "palette": "red", "profile": [14, 24, 34, 20] },
-      { "type": "steelBarrier", "x": 440, "y": 80, "w": 20, "h": 100 },
-      { "type": "volcanicBasalt", "x": 200, "y": 260, "w": 380, "h": 24, "palette": "red", "profile": [16, 28, 38, 22] },
-      { "type": "rockWall", "x": 480, "y": 190, "w": 70, "h": 70, "palette": "red" },
-      { "type": "platform", "x": 400, "y": 310, "w": 360, "h": 24, "palette": "red" }
+      {
+        "type": "platform",
+        "x": 30,
+        "y": 100,
+        "w": 140,
+        "h": 20,
+        "palette": "red"
+      },
+      {
+        "type": "volcanicBasalt",
+        "x": 120,
+        "y": 180,
+        "w": 340,
+        "h": 22,
+        "palette": "red",
+        "profile": [
+          14,
+          24,
+          34,
+          20
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 440,
+        "y": 80,
+        "w": 20,
+        "h": 100
+      },
+      {
+        "type": "volcanicBasalt",
+        "x": 200,
+        "y": 260,
+        "w": 380,
+        "h": 24,
+        "palette": "red",
+        "profile": [
+          16,
+          28,
+          38,
+          22
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 480,
+        "y": 190,
+        "w": 70,
+        "h": 70,
+        "palette": "red"
+      },
+      {
+        "type": "platform",
+        "x": 400,
+        "y": 310,
+        "w": 360,
+        "h": 24,
+        "palette": "red"
+      }
     ]
   },
   {
     "id": 7,
-    "title": "HYPERION CITADEL",
+    "title": "[HARD] HYPERION CITADEL",
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "7구역: 하이페리온 양자 요새입니다. 공중에 떠 있는 다중 섬 지형입니다. 3D 계단(Build)으로 절벽을 잇거나 차원 포탈(Portal)을 생성해 강철벽을 우회하십시오.",
@@ -234,23 +565,93 @@
       "portal": 2
     },
     "spawnX": 80,
-    "spawnY": 50,
-    "gateX": 720,
-    "gateY": 180,
-    "solutionDna": ["BUILD", "PORTAL", "BASH", "BUILD"],
+    "spawnY": 70,
+    "gateX": 730,
+    "gateY": 300,
+    "solutionDna": [
+      "BUILD",
+      "PORTAL",
+      "BASH",
+      "BUILD"
+    ],
     "difficultyScore": 120,
     "elements": [
-      { "type": "quantumCrystal", "x": 40, "y": 110, "w": 160, "h": 22, "palette": "purple", "profile": [14, 22, 28, 16] },
-      { "type": "quantumCrystal", "x": 240, "y": 150, "w": 180, "h": 22, "palette": "purple", "profile": [16, 24, 22, 14] },
-      { "type": "steelBarrier", "x": 400, "y": 50, "w": 20, "h": 100 },
-      { "type": "quantumCrystal", "x": 120, "y": 250, "w": 320, "h": 24, "palette": "purple", "profile": [16, 26, 36, 20] },
-      { "type": "rockWall", "x": 340, "y": 180, "w": 70, "h": 70, "palette": "purple" },
-      { "type": "quantumCrystal", "x": 460, "y": 200, "w": 300, "h": 24, "palette": "purple", "profile": [14, 24, 30, 18] }
+      {
+        "type": "quantumCrystal",
+        "x": 40,
+        "y": 150,
+        "w": 160,
+        "h": 22,
+        "palette": "purple",
+        "profile": [
+          14,
+          22,
+          28,
+          16
+        ]
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 240,
+        "y": 130,
+        "w": 180,
+        "h": 30,
+        "palette": "purple",
+        "profile": [
+          23,
+          33,
+          30,
+          20
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 400,
+        "y": 50,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 120,
+        "y": 250,
+        "w": 320,
+        "h": 24,
+        "palette": "purple",
+        "profile": [
+          16,
+          26,
+          36,
+          20
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 340,
+        "y": 200,
+        "w": 70,
+        "h": 50,
+        "palette": "purple"
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 460,
+        "y": 200,
+        "w": 300,
+        "h": 24,
+        "palette": "purple",
+        "profile": [
+          14,
+          24,
+          30,
+          18
+        ]
+      }
     ]
   },
   {
     "id": 8,
-    "title": "ASTEROID DRILL FACILITY",
+    "title": "[NIGHTMARE] ASTEROID DRILL FACILITY",
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "brown",
     "desc": "8구역: 소행성 지하 채굴 기지입니다. 단단한 황무지 암반층과 복합 격벽이 있습니다. 코어 폭파(Bomb)와 융해 드릴(Drill)을 결합하여 심층 탈출로를 뚫으십시오.",
@@ -273,16 +674,81 @@
     "spawnY": 50,
     "gateX": 730,
     "gateY": 320,
-    "solutionDna": ["DRILL", "BOMB", "BASH", "BUILD"],
+    "solutionDna": [
+      "DRILL",
+      "BOMB",
+      "BASH",
+      "BUILD"
+    ],
     "difficultyScore": 135,
     "elements": [
-      { "type": "platform", "x": 40, "y": 100, "w": 150, "h": 20, "palette": "brown" },
-      { "type": "craggyRock", "x": 60, "y": 180, "w": 460, "h": 24, "palette": "brown", "profile": [18, 30, 42, 28, 16] },
-      { "type": "rockWall", "x": 240, "y": 110, "w": 70, "h": 70, "palette": "brown" },
-      { "type": "steelBarrier", "x": 500, "y": 90, "w": 20, "h": 90 },
-      { "type": "craggyRock", "x": 160, "y": 260, "w": 400, "h": 26, "palette": "brown", "profile": [20, 32, 40, 24] },
-      { "type": "steelBarrier", "x": 300, "y": 190, "w": 20, "h": 70 },
-      { "type": "platform", "x": 360, "y": 340, "w": 400, "h": 28, "palette": "brown" }
+      {
+        "type": "platform",
+        "x": 40,
+        "y": 100,
+        "w": 80,
+        "h": 20,
+        "palette": "brown"
+      },
+      {
+        "type": "craggyRock",
+        "x": 60,
+        "y": 180,
+        "w": 460,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          18,
+          30,
+          42,
+          28,
+          16
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 240,
+        "y": 110,
+        "w": 70,
+        "h": 70,
+        "palette": "brown"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 500,
+        "y": 90,
+        "w": 20,
+        "h": 90
+      },
+      {
+        "type": "craggyRock",
+        "x": 160,
+        "y": 260,
+        "w": 400,
+        "h": 26,
+        "palette": "brown",
+        "profile": [
+          20,
+          32,
+          40,
+          24
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 300,
+        "y": 190,
+        "w": 20,
+        "h": 70
+      },
+      {
+        "type": "platform",
+        "x": 360,
+        "y": 340,
+        "w": 400,
+        "h": 28,
+        "palette": "brown"
+      }
     ]
   },
   {
@@ -310,16 +776,81 @@
     "spawnY": 50,
     "gateX": 730,
     "gateY": 270,
-    "solutionDna": ["BLOCK", "DRILL", "FLOAT", "BASH", "BUILD"],
+    "solutionDna": [
+      "BLOCK",
+      "DRILL",
+      "FLOAT",
+      "BASH",
+      "BUILD"
+    ],
     "difficultyScore": 150,
     "elements": [
-      { "type": "platform", "x": 30, "y": 100, "w": 150, "h": 20, "palette": "cyan" },
-      { "type": "craggyRock", "x": 100, "y": 180, "w": 340, "h": 24, "palette": "cyan", "profile": [16, 28, 38, 22] },
-      { "type": "steelBarrier", "x": 420, "y": 80, "w": 20, "h": 100 },
-      { "type": "craggyRock", "x": 200, "y": 250, "w": 300, "h": 24, "palette": "cyan", "profile": [18, 30, 36, 20] },
-      { "type": "rockWall", "x": 380, "y": 180, "w": 70, "h": 70, "palette": "cyan" },
-      { "type": "steelBarrier", "x": 480, "y": 170, "w": 20, "h": 80 },
-      { "type": "platform", "x": 360, "y": 290, "w": 400, "h": 26, "palette": "cyan" }
+      {
+        "type": "platform",
+        "x": 30,
+        "y": 100,
+        "w": 150,
+        "h": 20,
+        "palette": "cyan"
+      },
+      {
+        "type": "craggyRock",
+        "x": 100,
+        "y": 180,
+        "w": 340,
+        "h": 24,
+        "palette": "cyan",
+        "profile": [
+          16,
+          28,
+          38,
+          22
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 420,
+        "y": 80,
+        "w": 20,
+        "h": 100
+      },
+      {
+        "type": "craggyRock",
+        "x": 200,
+        "y": 250,
+        "w": 300,
+        "h": 24,
+        "palette": "cyan",
+        "profile": [
+          18,
+          30,
+          36,
+          20
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 380,
+        "y": 180,
+        "w": 70,
+        "h": 70,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 480,
+        "y": 170,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "platform",
+        "x": 360,
+        "y": 290,
+        "w": 400,
+        "h": 26,
+        "palette": "cyan"
+      }
     ]
   },
   {
@@ -347,18 +878,104 @@
     "spawnY": 50,
     "gateX": 730,
     "gateY": 340,
-    "solutionDna": ["FLOAT", "BASH", "DRILL", "BLOCK", "BUILD", "PORTAL"],
+    "solutionDna": [
+      "FLOAT",
+      "BASH",
+      "DRILL",
+      "BLOCK",
+      "BUILD",
+      "PORTAL"
+    ],
     "difficultyScore": 180,
     "elements": [
-      { "type": "platform", "x": 30, "y": 100, "w": 160, "h": 20, "palette": "purple" },
-      { "type": "quantumCrystal", "x": 80, "y": 170, "w": 360, "h": 24, "palette": "purple", "profile": [16, 28, 40, 24] },
-      { "type": "rockWall", "x": 260, "y": 100, "w": 70, "h": 70, "palette": "purple" },
-      { "type": "steelBarrier", "x": 420, "y": 70, "w": 20, "h": 100 },
-      { "type": "volcanicBasalt", "x": 160, "y": 250, "w": 380, "h": 26, "palette": "red", "profile": [18, 30, 42, 26] },
-      { "type": "steelBarrier", "x": 260, "y": 180, "w": 20, "h": 70 },
-      { "type": "rockWall", "x": 420, "y": 180, "w": 70, "h": 70, "palette": "red" },
-      { "type": "craggyRock", "x": 300, "y": 330, "w": 280, "h": 26, "palette": "cyan", "profile": [16, 26, 36, 22] },
-      { "type": "platform", "x": 520, "y": 360, "w": 250, "h": 28, "palette": "purple" }
+      {
+        "type": "platform",
+        "x": 30,
+        "y": 100,
+        "w": 160,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 80,
+        "y": 170,
+        "w": 360,
+        "h": 24,
+        "palette": "purple",
+        "profile": [
+          16,
+          28,
+          40,
+          24
+        ]
+      },
+      {
+        "type": "rockWall",
+        "x": 260,
+        "y": 100,
+        "w": 70,
+        "h": 70,
+        "palette": "purple"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 420,
+        "y": 70,
+        "w": 20,
+        "h": 100
+      },
+      {
+        "type": "volcanicBasalt",
+        "x": 160,
+        "y": 250,
+        "w": 380,
+        "h": 26,
+        "palette": "red",
+        "profile": [
+          18,
+          30,
+          42,
+          26
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 260,
+        "y": 180,
+        "w": 20,
+        "h": 70
+      },
+      {
+        "type": "rockWall",
+        "x": 420,
+        "y": 180,
+        "w": 70,
+        "h": 70,
+        "palette": "red"
+      },
+      {
+        "type": "craggyRock",
+        "x": 300,
+        "y": 330,
+        "w": 280,
+        "h": 26,
+        "palette": "cyan",
+        "profile": [
+          16,
+          26,
+          36,
+          22
+        ]
+      },
+      {
+        "type": "platform",
+        "x": 520,
+        "y": 360,
+        "w": 250,
+        "h": 28,
+        "palette": "purple"
+      }
     ]
   }
 ]

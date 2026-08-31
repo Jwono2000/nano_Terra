@@ -20,7 +20,7 @@ class NanoUnit {
     this.x = x;
     this.y = y;
     this.dir = dir;
-    this.vx = dir * 0.25;
+    this.vx = dir * 1.25;
     this.vy = 0;
     this.state = STATE.FALLING;
     this.fallDistance = 0;
@@ -192,14 +192,14 @@ class NanoUnit {
       if (u.id !== this.id && u.state === STATE.BLOCKING_SHIELD) {
         if (Math.abs(this.x - u.x) < 18 && Math.abs(this.y - u.y) < 18) {
           this.dir = (this.x < u.x) ? -1 : 1;
-          this.vx = this.dir * 0.85;
+          this.vx = this.dir * 1.25;
           this.x += this.dir * 2;
           return;
         }
       }
     }
 
-    const nextX = this.x + this.dir * 0.85 * speedScale;
+    const nextX = this.x + this.dir * 1.25 * speedScale;
 
     if (Math.random() < 0.08) {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
@@ -239,7 +239,7 @@ class NanoUnit {
         if (this.hasPlasmaCutter) {
           if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
             this.dir = -this.dir;
-            this.vx = this.dir * 0.25;
+            this.vx = this.dir * 1.25;
             this.hasPlasmaCutter = false;
             particles.spawnFloatingText(this.x, this.y - 20, "강철 격벽 (절삭 불가)", "#ffaa00");
             return;
@@ -264,7 +264,7 @@ class NanoUnit {
           }
         } else {
           this.dir = -this.dir;
-          this.vx = this.dir * 0.85;
+          this.vx = this.dir * 1.25;
         }
       }
     } else {
@@ -273,8 +273,8 @@ class NanoUnit {
   }
 
   updateClimbing(terrain, particles, speedScale) {
-    // Steady, realistic climbing speed matching walking pace (0.8px/frame)
-    this.y -= 0.8 * speedScale;
+    // Steady, realistic climbing speed matching walking pace
+    this.y -= 1.15 * speedScale;
     this.climbStep = (this.climbStep || 0) + 0.35 * speedScale;
 
     if (Math.random() < 0.2) {
@@ -284,7 +284,7 @@ class NanoUnit {
 
     if (terrain.isSolid(this.x, this.y - 22)) {
       this.dir = -this.dir;
-      this.vx = this.dir * 0.85;
+      this.vx = this.dir * 1.25;
       this.state = STATE.FALLING;
       this.fallDistance = 0;
       this.vy = 0;
@@ -301,7 +301,7 @@ class NanoUnit {
         this.x += this.dir * 7;
         this.y -= 2;
         this.state = STATE.WALKING;
-        this.vx = this.dir * 0.85;
+        this.vx = this.dir * 1.25;
         this.hasMagnetizer = false; // 1-time usage consumed upon climbing over wall!
         particles.spawnBurst(this.x, this.y - 4, '#00f3ff', 8, 1.2);
         particles.spawnFloatingText(this.x, this.y - 20, "등반 완료!", "#00ff88");
@@ -329,7 +329,7 @@ class NanoUnit {
       if (isObstacleAhead) {
         SFX.stopContinuousBeam('laser_' + this.id);
         this.dir = -this.dir;
-        this.vx = this.dir * 0.85;
+        this.vx = this.dir * 1.25;
         this.state = STATE.WALKING;
         this.y = this.cutStartY;
         this.cutSteps = 0;
@@ -340,7 +340,7 @@ class NanoUnit {
       }
 
       // Smooth continuous forward advancement
-      this.x += this.dir * 0.9 * speedScale;
+      this.x += this.dir * 1.35 * speedScale;
       if (Math.random() < 0.45) {
         particles.spawnBurst(this.x + this.dir * 18, this.cutStartY - 14, '#00f3ff', 2, 1.2);
       }
@@ -418,7 +418,7 @@ class NanoUnit {
       }
 
       // Smooth continuous downward progression
-      this.y += 0.9 * speedScale;
+      this.y += 1.35 * speedScale;
       if (Math.random() < 0.4) {
         particles.spawnBurst(this.x, this.y, '#ff6600', 4, 1.5);
       }
@@ -478,7 +478,7 @@ class NanoUnit {
       if (isObstacleAhead) {
         SFX.stopContinuousBeam('mine_' + this.id);
         this.dir = -this.dir;
-        this.vx = this.dir * 0.85;
+        this.vx = this.dir * 1.25;
         this.state = STATE.WALKING;
         this.cutSteps = 0;
         this.exitSteps = 0;
@@ -487,8 +487,8 @@ class NanoUnit {
       }
 
       // Smooth diagonal progression
-      this.x += this.dir * 0.85 * speedScale;
-      this.y += 0.75 * speedScale;
+      this.x += this.dir * 1.25 * speedScale;
+      this.y += 1.05 * speedScale;
       this.fallDistance = 0;
       if (Math.random() < 0.4) {
         particles.spawnBurst(this.x + this.dir * 6, this.y - 8, '#f0a028', 3, 1.2);

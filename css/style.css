@@ -55,36 +55,33 @@ html, body {
   position: relative;
   width: 100%;
   height: 100%;
-  max-width: min(100vw, calc(100dvh * 1.7778), calc(100vh * 1.7778));
+  max-width: min(100vw, calc(100dvh * 16 / 9), calc(100vh * 16 / 9));
+  max-height: min(100dvh, 100vh);
   margin: auto;
   box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
   background: #060913;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   overflow: hidden;
 }
 
 #canvas-wrapper {
   position: relative;
   width: 100%;
-  flex: 1;
+  flex: 1 1 0%;
   min-height: 0;
   overflow: hidden;
   background: #080d1a;
   cursor: crosshair;
   touch-action: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 canvas {
-  position: relative;
-  max-width: 100%;
-  max-height: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: block;
   image-rendering: auto;
 }
@@ -94,24 +91,26 @@ canvas {
   position: relative;
   width: 100%;
   flex-shrink: 0;
-  height: clamp(28px, 6.8vh, 38px);
-  background: linear-gradient(180deg, rgba(6, 11, 22, 0.98) 0%, rgba(6, 11, 22, 0.9) 100%);
+  height: clamp(28px, 6.5vh, 38px);
+  background: linear-gradient(180deg, rgba(6, 11, 22, 0.98) 0%, rgba(6, 11, 22, 0.92) 100%);
   border-bottom: 1px solid var(--panel-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1px clamp(4px, 0.8vw, 10px);
+  padding: 1px clamp(3px, 0.6vw, 8px);
   z-index: 30;
   pointer-events: auto;
-  gap: 3px;
+  gap: 2px;
   overflow: hidden;
 }
 
 .hud-group {
   display: flex;
   align-items: center;
-  gap: clamp(2px, 0.4vw, 4px);
-  flex-shrink: 0;
+  gap: clamp(2px, 0.3vw, 4px);
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .hud-badge {
@@ -941,18 +940,20 @@ canvas {
 }
 
 @media (max-width: 960px), (max-height: 540px) {
-  .hud-badge:nth-child(2) {
-    max-width: 95px;
+  /* Truncate mission name badge */
+  #badge-mission {
+    max-width: 90px;
   }
-  .hud-badge:nth-child(2) .hud-value {
+  #badge-mission .hud-value {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
-  #btn-open-editor, #btn-hud-creator, #btn-open-stage-manager, #btn-hud-solve, #btn-quick-restart {
-    font-size: clamp(7.5px, 1.3vh, 9.5px);
-    padding: 1px 4px;
+
+  .btn-hud {
+    font-size: clamp(7px, 1.2vh, 9px);
+    padding: 2px 3px;
+    gap: 1px;
   }
 
   .modal-card {
@@ -962,28 +963,20 @@ canvas {
     max-height: 94vh;
     overflow-y: auto;
   }
-  .modal-hero-img {
-    width: 38px;
-    height: 38px;
-  }
-  .modal-title {
-    font-size: 15px;
-  }
-  .modal-subtitle {
-    font-size: 10.5px;
-    line-height: 1.3;
-  }
-  .btn-action {
-    padding: 5px 16px;
-    font-size: 11.5px;
-  }
-  .stat-box {
-    padding: 2px 5px;
-  }
+  .modal-hero-img { width: 38px; height: 38px; }
+  .modal-title { font-size: 15px; }
+  .modal-subtitle { font-size: 10.5px; line-height: 1.3; }
+  .btn-action { padding: 5px 16px; font-size: 11.5px; }
+  .stat-box { padding: 2px 5px; }
 }
 
 @media (max-width: 760px) {
-  .hud-badge-desktop, .hud-btn-desktop {
+  /* Hide secondary info badges on mobile */
+  #badge-mission, #badge-alive, #badge-score {
+    display: none !important;
+  }
+  /* Hide secondary buttons on mobile */
+  #btn-open-editor, #btn-hud-creator, #btn-open-stage-manager {
     display: none !important;
   }
   #editor-topbar {
@@ -999,26 +992,19 @@ canvas {
 
 @media (max-height: 440px) {
   #hud-top {
-    height: clamp(24px, 7vh, 32px);
-    padding: 1px 4px;
+    height: clamp(22px, 6vh, 30px);
+    padding: 1px 3px;
   }
   #hud-bottom {
-    height: clamp(34px, 10.5vh, 44px);
+    height: clamp(32px, 10vh, 42px);
     padding: 1px 2px;
     gap: 2px;
   }
   .skill-card {
-    height: clamp(30px, 9.5vh, 38px);
-    width: clamp(30px, 8.5vw, 54px);
+    height: clamp(28px, 9vh, 36px);
+    width: clamp(28px, 8vw, 50px);
   }
-  .skill-icon {
-    font-size: clamp(9px, 2vh, 12px);
-  }
-  .skill-name {
-    font-size: clamp(6px, 1.2vh, 7.5px);
-  }
-  .skill-count {
-    font-size: clamp(7px, 1.4vh, 9px);
-  }
+  .skill-icon { font-size: clamp(9px, 2vh, 12px); }
+  .skill-name { font-size: clamp(5.5px, 1.1vh, 7px); }
+  .skill-count { font-size: clamp(6.5px, 1.3vh, 8.5px); }
 }
-

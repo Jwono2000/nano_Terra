@@ -977,9 +977,14 @@ canvas {
   #badge-mission, #badge-alive, #badge-score {
     display: none !important;
   }
-  /* Hide secondary buttons on mobile */
-  #btn-open-editor, #btn-hud-creator, #btn-open-stage-manager {
-    display: none !important;
+  /* Further compact buttons to ensure they all fit horizontally on phones */
+  .btn-hud {
+    font-size: clamp(6px, 1vh, 7.5px);
+    padding: 1px 2px;
+  }
+  .btn-seg {
+    font-size: clamp(6.5px, 1.1vh, 8px);
+    padding: 2px 3px;
   }
   #editor-topbar {
     overflow-x: auto;

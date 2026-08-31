@@ -592,10 +592,7 @@ class NanoUnit {
       ctx.fillStyle = '#ff2255';
       ctx.font = 'bold 13px Orbitron, sans-serif';
       ctx.textAlign = 'center';
-      ctx.shadowColor = '#ff2255';
-      ctx.shadowBlur = 8;
       ctx.fillText(secs.toString(), 0, -32);
-      ctx.shadowBlur = 0;
     }
 
     if (this.hasPlasmaCutter && this.state === STATE.WALKING) {
@@ -611,14 +608,17 @@ class NanoUnit {
     }
 
     if (isHovered) {
-      ctx.strokeStyle = '#00f3ff';
-      ctx.lineWidth = 1.8;
-      ctx.shadowColor = '#00f3ff';
-      ctx.shadowBlur = 10;
+      ctx.strokeStyle = 'rgba(0, 243, 255, 0.4)';
+      ctx.lineWidth = 3.5;
       ctx.beginPath();
       ctx.arc(0, -12, 16, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = '#00f3ff';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0, -12, 16, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     if (this.dir < 0) {
@@ -661,8 +661,6 @@ class NanoUnit {
         ctx.save();
         if (isFiring) {
           // Intense cutting beam during rhythmic strike pulse
-          ctx.shadowColor = '#00f3ff';
-          ctx.shadowBlur = 14;
           ctx.strokeStyle = 'rgba(0, 243, 255, 0.45)';
           ctx.lineWidth = 6;
           ctx.beginPath();
@@ -683,8 +681,6 @@ class NanoUnit {
           ctx.fill();
         } else {
           // Glowing ready nozzle during recharge interval
-          ctx.shadowColor = '#00f3ff';
-          ctx.shadowBlur = 6;
           ctx.fillStyle = '#00f3ff';
           ctx.beginPath();
           ctx.arc(12, -14, 2.0, 0, Math.PI * 2);
@@ -712,8 +708,6 @@ class NanoUnit {
 
         ctx.save();
         if (isStriking) {
-          ctx.shadowColor = '#f0a028';
-          ctx.shadowBlur = 14;
           ctx.strokeStyle = 'rgba(240, 160, 40, 0.55)';
           ctx.lineWidth = 6;
           ctx.beginPath();
@@ -733,8 +727,6 @@ class NanoUnit {
           ctx.arc(24, 4, 3.5, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          ctx.shadowColor = '#f0a028';
-          ctx.shadowBlur = 6;
           ctx.fillStyle = '#ffb700';
           ctx.beginPath();
           ctx.arc(10, -10, 2.0, 0, Math.PI * 2);
@@ -765,8 +757,6 @@ class NanoUnit {
 
         ctx.strokeStyle = `rgba(0, 243, 255, ${0.85 + pulse * 0.15})`;
         ctx.lineWidth = 1.8;
-        ctx.shadowColor = '#00f3ff';
-        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.arc(0, -13, 17.5, 0, Math.PI * 2);
         ctx.stroke();
@@ -778,8 +768,6 @@ class NanoUnit {
         ctx.stroke();
 
         ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#00f3ff';
-        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.arc(0, -30.5, 1.8, 0, Math.PI * 2);
         ctx.arc(0, 4.5, 1.8, 0, Math.PI * 2);
@@ -809,8 +797,6 @@ class NanoUnit {
         const botArmY = -10 - Math.sin(armPhase) * 4;
 
         ctx.fillStyle = '#00f3ff';
-        ctx.shadowColor = '#00f3ff';
-        ctx.shadowBlur = 8;
         ctx.fillRect(0, topArmY, 3, 4);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(1, topArmY + 1, 2, 2);
@@ -842,8 +828,6 @@ class NanoUnit {
 
         ctx.save();
         const thrusterFlicker = 8 + Math.sin(this.animFrame * 0.5) * 4;
-        ctx.shadowColor = '#00f3ff';
-        ctx.shadowBlur = 10;
         
         ctx.fillStyle = '#00f3ff';
         ctx.beginPath();

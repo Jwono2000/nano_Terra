@@ -390,6 +390,12 @@ class GameEngine {
     });
 
     bindBtn('btn-start-mission', () => {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement && window.innerWidth < 900) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
       this.startMissionWithCountdown();
     });
 
@@ -1021,8 +1027,6 @@ class GameEngine {
     for (let i = 0; i < 4; i++) {
       this.ctx.strokeStyle = (i % 2 === 0) ? '#bf00ff' : '#00f3ff';
       this.ctx.lineWidth = 2.5;
-      this.ctx.shadowColor = (i % 2 === 0) ? '#bf00ff' : '#00f3ff';
-      this.ctx.shadowBlur = 12;
       this.ctx.beginPath();
       this.ctx.ellipse(0, 0, 20 - i * 3, 12 - i * 2, (i * Math.PI) / 4, 0, Math.PI * 2);
       this.ctx.stroke();
@@ -1031,8 +1035,6 @@ class GameEngine {
 
     const coreScale = 1.0 + Math.sin(time * 3) * 0.2;
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.shadowColor = '#00f3ff';
-    this.ctx.shadowBlur = 14;
     this.ctx.beginPath();
     this.ctx.arc(0, 0, 6 * coreScale, 0, Math.PI * 2);
     this.ctx.fill();
@@ -1092,8 +1094,6 @@ class GameEngine {
       this.ctx.rotate(time);
       this.ctx.strokeStyle = '#00f3ff';
       this.ctx.lineWidth = 3;
-      this.ctx.shadowColor = '#00f3ff';
-      this.ctx.shadowBlur = 14;
       this.ctx.beginPath();
       this.ctx.ellipse(0, 0, 18, 11, 0, 0, Math.PI * 2);
       this.ctx.stroke();
@@ -1113,8 +1113,6 @@ class GameEngine {
       this.ctx.rotate(-time);
       this.ctx.strokeStyle = '#bf00ff';
       this.ctx.lineWidth = 3;
-      this.ctx.shadowColor = '#bf00ff';
-      this.ctx.shadowBlur = 14;
       this.ctx.beginPath();
       this.ctx.ellipse(0, 0, 18, 11, 0, 0, Math.PI * 2);
       this.ctx.stroke();
@@ -1160,14 +1158,11 @@ class GameEngine {
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillStyle = '#00f3ff';
-      this.ctx.shadowColor = '#00f3ff';
-      this.ctx.shadowBlur = 28;
       this.ctx.globalAlpha = alpha;
       this.ctx.fillText(currentSec > 0 ? currentSec.toString() : "GO!", 0, 0);
       
       this.ctx.font = '700 16px Orbitron, sans-serif';
       this.ctx.fillStyle = '#ffffff';
-      this.ctx.shadowBlur = 10;
       const subtitle = currentSec === 3 ? "GET READY..." : (currentSec === 2 ? "PLAN YOUR ROUTE" : "MISSION START!");
       this.ctx.fillText(subtitle, 0, 56);
       this.ctx.restore();
@@ -1175,8 +1170,14 @@ class GameEngine {
   }
 
   gameLoop(timestamp) {
+    const now = performance.now();
+    if (!this.lastTime) this.lastTime = now;
+    let delta = now - this.lastTime;
+    this.lastTime = now;
+    if (delta > 100) delta = 100; // Clamp large lag spikes
+
     if (this.gameState === GAME_STATE.COUNTDOWN) {
-      const elapsed = performance.now() - this.countdownStart;
+      const elapsed = now - this.countdownStart;
       const remainingMs = Math.max(0, this.countdownTotalMs - elapsed);
       const currentSec = Math.ceil(remainingMs / 1000);
 
@@ -1190,10 +1191,16 @@ class GameEngine {
         SFX.playTone(880, 'sine', 0.25, 0.2);
       }
       this.particles.update();
-    } else if (this.gameState === GAME_STATE.PLAYING) {
-      const ticks = this.gameSpeed;
-      for (let i = 0; i < ticks; i++) {
+    } else if (this.gameState === GAME_STATE.PLAYING && this.gameSpeed > 0) {
+      // Fixed 60Hz delta-time accumulator physics loop for consistent 100% full speed across all devices
+      if (!this.accumulator) this.accumulator = 0;
+      this.accumulator += delta * this.gameSpeed;
+      const fixedStep = 1000 / 60; // 16.666ms
+      let steps = 0;
+      while (this.accumulator >= fixedStep && steps < 8) {
         this.updateSimulation();
+        this.accumulator -= fixedStep;
+        steps++;
       }
     }
 

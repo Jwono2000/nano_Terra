@@ -7,6 +7,10 @@ desktop.ini
 .vscode/
 .idea/
 
+# Antigravity & Agent configs
+.agents/
+.gemini/
+
 # Browser & runtime cache
 temp_profile/
 .user_uploaded/

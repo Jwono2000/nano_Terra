@@ -24,8 +24,8 @@
 
 html, body {
   width: 100%;
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
   background-color: var(--bg-dark);
   color: var(--text-main);
   font-family: 'Pretendard', 'Noto Sans KR', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -40,8 +40,8 @@ html, body {
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -55,8 +55,10 @@ html, body {
   position: relative;
   width: 100%;
   height: 100%;
-  max-width: min(100vw, calc(100dvh * 16 / 9), calc(100vh * 16 / 9));
-  max-height: min(100dvh, 100vh);
+  max-width: calc(100vh * 16 / 9);
+  max-width: calc(100dvh * 16 / 9);
+  max-height: calc(100vw * 9 / 16);
+  aspect-ratio: 16 / 9;
   margin: auto;
   box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
   background: #060913;

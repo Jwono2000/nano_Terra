@@ -123,13 +123,13 @@ class NanoUnit {
     const isFloater = this.hasAntiGrav || this.state === STATE.FLOATING;
     
     if (isFloater) {
-      this.vy = 0.22;
+      this.vy = 0.85;
       if (Math.random() < 0.5) {
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 6, this.y + 2, '#cceeff', 2, 1.2);
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 4, this.y + 1, '#00f3ff', 2, 1.0);
       }
     } else {
-      this.vy = Math.min(0.45, (this.vy || 0) + 0.02 * speedScale);
+      this.vy = Math.min(3.2, (this.vy || 0) + 0.15 * speedScale);
     }
 
     this.y += this.vy * speedScale;
@@ -192,14 +192,14 @@ class NanoUnit {
       if (u.id !== this.id && u.state === STATE.BLOCKING_SHIELD) {
         if (Math.abs(this.x - u.x) < 18 && Math.abs(this.y - u.y) < 18) {
           this.dir = (this.x < u.x) ? -1 : 1;
-          this.vx = this.dir * 0.25;
+          this.vx = this.dir * 0.85;
           this.x += this.dir * 2;
           return;
         }
       }
     }
 
-    const nextX = this.x + this.dir * 0.25 * speedScale;
+    const nextX = this.x + this.dir * 0.85 * speedScale;
 
     if (Math.random() < 0.08) {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
@@ -264,7 +264,7 @@ class NanoUnit {
           }
         } else {
           this.dir = -this.dir;
-          this.vx = this.dir * 0.25;
+          this.vx = this.dir * 0.85;
         }
       }
     } else {
@@ -273,9 +273,9 @@ class NanoUnit {
   }
 
   updateClimbing(terrain, particles, speedScale) {
-    // Steady, realistic climbing speed matching walking pace (0.25px/frame)
-    this.y -= 0.25 * speedScale;
-    this.climbStep = (this.climbStep || 0) + 0.18 * speedScale;
+    // Steady, realistic climbing speed matching walking pace (0.8px/frame)
+    this.y -= 0.8 * speedScale;
+    this.climbStep = (this.climbStep || 0) + 0.35 * speedScale;
 
     if (Math.random() < 0.2) {
       const armOffset = (Math.floor(this.climbStep) % 2 === 0) ? -18 : -10;
@@ -284,7 +284,7 @@ class NanoUnit {
 
     if (terrain.isSolid(this.x, this.y - 22)) {
       this.dir = -this.dir;
-      this.vx = this.dir * 0.25;
+      this.vx = this.dir * 0.85;
       this.state = STATE.FALLING;
       this.fallDistance = 0;
       this.vy = 0;
@@ -301,7 +301,7 @@ class NanoUnit {
         this.x += this.dir * 7;
         this.y -= 2;
         this.state = STATE.WALKING;
-        this.vx = this.dir * 0.25;
+        this.vx = this.dir * 0.85;
         this.hasMagnetizer = false; // 1-time usage consumed upon climbing over wall!
         particles.spawnBurst(this.x, this.y - 4, '#00f3ff', 8, 1.2);
         particles.spawnFloatingText(this.x, this.y - 20, "등반 완료!", "#00ff88");
@@ -329,7 +329,7 @@ class NanoUnit {
       if (isObstacleAhead) {
         SFX.stopContinuousBeam('laser_' + this.id);
         this.dir = -this.dir;
-        this.vx = this.dir * 0.25;
+        this.vx = this.dir * 0.85;
         this.state = STATE.WALKING;
         this.y = this.cutStartY;
         this.cutSteps = 0;
@@ -339,8 +339,8 @@ class NanoUnit {
         return;
       }
 
-      // Smooth continuous forward advancement (0.25px/frame)
-      this.x += this.dir * 0.5 * speedScale;
+      // Smooth continuous forward advancement
+      this.x += this.dir * 0.9 * speedScale;
       if (Math.random() < 0.45) {
         particles.spawnBurst(this.x + this.dir * 18, this.cutStartY - 14, '#00f3ff', 2, 1.2);
       }
@@ -418,7 +418,7 @@ class NanoUnit {
       }
 
       // Smooth continuous downward progression
-      this.y += 0.5 * speedScale;
+      this.y += 0.9 * speedScale;
       if (Math.random() < 0.4) {
         particles.spawnBurst(this.x, this.y, '#ff6600', 4, 1.5);
       }
@@ -448,15 +448,16 @@ class NanoUnit {
         SFX.stopContinuousBeam('drill_' + this.id);
         const cutW = 20;
         const cutH = 18;
-        terrain.carveRect(this.x - 10, this.y - 4, cutW, cutH, particles);
+        const cutX = this.x - 10;
+        terrain.carveRect(cutX, this.y - 4, cutW, cutH, particles);
 
-        this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
+        this.state = STATE.FALLING;
         this.fallDistance = 0;
         this.vy = 0;
         this.cutSteps = 0;
         this.exitSteps = 0;
-        particles.spawnBurst(this.x, this.y, '#ff6600', 16, 2.5);
-        particles.spawnFloatingText(this.x, this.y - 20, "천공 완료 (관통 성공)!", "#00ff88");
+        particles.spawnBurst(this.x, this.y, '#00ff88', 16, 2.2);
+        particles.spawnFloatingText(this.x, this.y - 20, "천공 완료 (하부 도달)!", "#00ff88");
       }
     }
   }
@@ -477,7 +478,7 @@ class NanoUnit {
       if (isObstacleAhead) {
         SFX.stopContinuousBeam('mine_' + this.id);
         this.dir = -this.dir;
-        this.vx = this.dir * 0.25;
+        this.vx = this.dir * 0.85;
         this.state = STATE.WALKING;
         this.cutSteps = 0;
         this.exitSteps = 0;
@@ -486,8 +487,8 @@ class NanoUnit {
       }
 
       // Smooth diagonal progression
-      this.x += this.dir * 0.5 * speedScale;
-      this.y += 0.45 * speedScale;
+      this.x += this.dir * 0.85 * speedScale;
+      this.y += 0.75 * speedScale;
       this.fallDistance = 0;
       if (Math.random() < 0.4) {
         particles.spawnBurst(this.x + this.dir * 6, this.y - 8, '#f0a028', 3, 1.2);
@@ -541,8 +542,8 @@ class NanoUnit {
 
   update3DPrinter(terrain, particles, speedScale) {
     this.timer += speedScale;
-    // Build 1 step (4px x 2px) every 16 frames = exact 0.25px/frame walking pace
-    if (this.timer >= 16) {
+    // Build 1 step (4px x 2px) every 6 frames = brisk building pace
+    if (this.timer >= 6) {
       this.timer = 0;
       SFX.playBuild();
       
@@ -557,7 +558,7 @@ class NanoUnit {
       const waistY = this.y - 6;
       if (terrain.isSolid(headX, headY) || terrain.isSolid(headX, waistY) || terrain.isSolid(this.x, this.y - 18)) {
         this.dir = -this.dir;
-        this.vx = this.dir * 0.25;
+        this.vx = this.dir * 0.85;
         this.state = STATE.WALKING;
         this.stepCount = 0;
         return;

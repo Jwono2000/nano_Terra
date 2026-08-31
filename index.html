@@ -34,44 +34,40 @@
             <span class="hud-label">STAGE</span>
             <span class="hud-value highlight" id="hud-stage-num">01/10</span>
           </div>
-          <div class="hud-badge" id="badge-mission">
-            <span class="hud-label">MISSION</span>
-            <span class="hud-value" id="hud-level-title">GENESIS DROP</span>
-          </div>
           <div class="hud-badge" id="badge-rescued">
             <span class="hud-label">GOAL</span>
-            <span class="hud-value" id="hud-rescued-count"><span class="highlight" id="hud-rescued-num">0</span>/11 (70%)</span>
-          </div>
-          <div class="hud-badge" id="badge-alive">
-            <span class="hud-label">ALIVE</span>
-            <span class="hud-value" id="hud-active-count">0/15</span>
+            <span class="hud-value" id="hud-rescued-count"><span class="highlight" id="hud-rescued-num">0</span>/11</span>
           </div>
           <div class="hud-badge" id="badge-time">
             <span class="hud-label">TIME</span>
             <span class="hud-value" id="hud-time-left">04:00</span>
           </div>
-          <div class="hud-badge" id="badge-score">
+          <div class="hud-badge hud-badge-desktop" id="badge-alive">
+            <span class="hud-label">ALIVE</span>
+            <span class="hud-value" id="hud-active-count">0/15</span>
+          </div>
+          <div class="hud-badge hud-badge-desktop" id="badge-score">
             <span class="hud-label">SCORE</span>
             <span class="hud-value score-val" id="hud-score">0</span>
           </div>
         </div>
 
-        <div class="hud-group" id="hud-ctrl-group">
-          <!-- Integrated Segmented Speed Controls -->
-          <div class="segmented-control">
-            <button class="btn-seg" id="btn-pause" title="일시정지 (Space)">⏸</button>
-            <button class="btn-seg active" id="btn-speed-1" title="1배속">1x</button>
-            <button class="btn-seg" id="btn-speed-2" title="2배속">2x</button>
-            <button class="btn-seg" id="btn-speed-4" title="4배속">4x</button>
-          </div>
+        <!-- Integrated Segmented Speed Controls -->
+        <div class="segmented-control" id="hud-speed-group">
+          <button class="btn-seg" id="btn-pause" title="일시정지 (Space)">⏸</button>
+          <button class="btn-seg active" id="btn-speed-1" title="1배속">1x</button>
+          <button class="btn-seg" id="btn-speed-2" title="2배속">2x</button>
+          <button class="btn-seg" id="btn-speed-4" title="4배속">4x</button>
+        </div>
 
+        <div class="hud-group" id="hud-ctrl-group">
           <!-- Action Buttons -->
           <button class="btn-hud btn-restart" id="btn-quick-restart" title="구역 즉시 재시작 (R)">🔄 재시작</button>
-          <button class="btn-hud btn-solve" id="btn-hud-solve" title="AI 정답 자동 클리어 시연">🤖 AI풀이</button>
-          <button class="btn-hud" id="btn-open-editor" title="현재 맵 수정 에디터">🛠️ 에디터</button>
-          <button class="btn-hud" style="border-color: #ffb700; color: #ffb700;" id="btn-hud-creator" title="완전 빈 캔버스에서 새 맵 제작">✨ 신규맵</button>
-          <button class="btn-hud" id="btn-open-stage-manager" title="10개 구역 목록 & 커스텀 슬롯">📁 맵목록</button>
+          <button class="btn-hud btn-solve" id="btn-hud-solve" title="AI 정답 자동 클리어 시연">🤖 AI</button>
           <button class="btn-hud btn-nuke" id="btn-nuke" title="긴급 전원 차단 (NUKE)">💥 폭파</button>
+          <button class="btn-hud hud-btn-desktop" id="btn-open-editor" title="현재 맵 수정 에디터">🛠️</button>
+          <button class="btn-hud hud-btn-desktop" style="border-color: #ffb700; color: #ffb700;" id="btn-hud-creator" title="새 맵 제작">✨</button>
+          <button class="btn-hud hud-btn-desktop" id="btn-open-stage-manager" title="10개 구역 목록 & 커스텀 슬롯">📁</button>
           <button class="btn-hud" id="btn-audio" title="사운드 토글">🔊</button>
         </div>
       </div>

@@ -201,7 +201,7 @@ class GameEngine {
     StageDataEngine.buildTerrainFromData(this.terrain, lvl);
 
     this.units = [];
-    this.spawnTimer = 180;
+    this.spawnTimer = 999; // Trigger first unit spawn immediately on start!
     this.spawnedCount = 0;
     this.rescuedCount = 0;
     this.deadCount = 0;
@@ -776,8 +776,8 @@ class GameEngine {
 
     if (this.spawnedCount < currentLvl.totalUnits && !this.isNuking) {
       this.spawnTimer += 1;
-      const spawnInterval = currentLvl.spawnRate || 20;
-      if (this.spawnTimer >= spawnInterval * 6) {
+      const spawnInterval = (currentLvl.spawnRate || 20) * 2.5; // ~50 frames (~0.8s) per unit
+      if (this.spawnTimer >= spawnInterval) {
         this.spawnTimer = 0;
         this.spawnedCount++;
         const unit = new NanoUnit(this.spawnedCount, spX, spY, 1);

@@ -670,7 +670,7 @@ class GameEngine {
 
       case 'bomb':
         if (unit.bombTimer <= 0) {
-          unit.bombTimer = 300;
+          unit.bombTimer = 240;
           applied = true;
           skillLabel = "+코어 오버로드";
           skillColor = "#ff2255";

@@ -589,7 +589,7 @@ class NanoUnit {
     ctx.translate(this.x, this.y);
 
     if (this.bombTimer > 0) {
-      const secs = Math.ceil(this.bombTimer / 60);
+      const secs = Math.ceil(this.bombTimer / 48);
       ctx.fillStyle = '#ff2255';
       ctx.font = 'bold 13px Orbitron, sans-serif';
       ctx.textAlign = 'center';
@@ -631,7 +631,7 @@ class NanoUnit {
       let destX = -10, destY = -26, destW = 20, destH = 26;
 
       if (this.bombTimer > 0) {
-        const bombPhase = Math.floor((300 - this.bombTimer) / 50) % 6;
+        const bombPhase = Math.max(0, Math.floor((240 - this.bombTimer) / 40)) % 6;
         const singleBombFrames = [
           { sx: 512, sy: 753, sw: 124, sh: 120 },
           { sx: 640, sy: 754, sw: 127, sh: 120 },

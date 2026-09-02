@@ -10,14 +10,14 @@
     "spawnRate": 20,
     "timeLimit": 240,
     "skills": {
-      "climb": 4,
-      "float": 4,
-      "bash": 6,
-      "mine": 4,
-      "drill": 4,
-      "bomb": 3,
-      "build": 8,
-      "block": 4,
+      "climb": 1,
+      "float": 1,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
       "portal": 1
     },
     "spawnX": 210,
@@ -81,27 +81,27 @@
   },
   {
     "id": 2,
-    "title": "MAGMA CREVASSE",
+    "title": "[NORMAL] MAGMA CREVASSE",
     "bgImg": "assets/bg_level_2.jpg",
     "terrainTheme": "red",
     "desc": "2구역: 화산 균열 지대입니다. 붉은 현무암과 마그마 암벽이 펼쳐집니다. 레이저(Bash)로 중앙 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill) 또는 대각 굴착(Mine)으로 뚫어 탈출하십시오!<br><span style='color: #ffb700;'>※ 강철 격벽은 파괴 불가!</span>",
-    "totalUnits": 20,
-    "needPercent": 75,
-    "spawnRate": 25,
-    "timeLimit": 240,
+    "totalUnits": 10,
+    "needPercent": 80,
+    "spawnRate": 20,
+    "timeLimit": 200,
     "skills": {
-      "climb": 3,
-      "float": 5,
-      "bash": 5,
-      "mine": 4,
-      "drill": 4,
-      "bomb": 2,
-      "build": 6,
-      "block": 3,
+      "climb": 1,
+      "float": 1,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
       "portal": 1
     },
     "spawnX": 80,
-    "spawnY": 50,
+    "spawnY": 130,
     "gateX": 720,
     "gateY": 254,
     "solutionDna": [
@@ -111,14 +111,6 @@
     ],
     "difficultyScore": 60,
     "elements": [
-      {
-        "type": "platform",
-        "x": 40,
-        "y": 110,
-        "w": 140,
-        "h": 20,
-        "palette": "red"
-      },
       {
         "type": "volcanicBasalt",
         "x": 40,
@@ -134,14 +126,6 @@
           14,
           12
         ]
-      },
-      {
-        "type": "rockWall",
-        "x": 250,
-        "y": 120,
-        "w": 70,
-        "h": 70,
-        "palette": "red"
       },
       {
         "type": "steelBarrier",
@@ -173,19 +157,19 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "3구역: 양자 크리스탈 유적지입니다. 신비로운 보랏빛 유적 지형입니다. 1층에서 2층으로 하강 -> 강철벽 앞에서 바닥 드릴(Drill) -> 3층 암벽 레이저(Bash) 관통으로 웜홀에 도달하십시오.",
-    "totalUnits": 20,
+    "totalUnits": 15,
     "needPercent": 80,
     "spawnRate": 30,
     "timeLimit": 240,
     "skills": {
-      "climb": 4,
-      "float": 5,
-      "bash": 5,
-      "mine": 4,
-      "drill": 4,
-      "bomb": 2,
-      "build": 6,
-      "block": 3,
+      "climb": 1,
+      "float": 1,
+      "bash": 1,
+      "mine": 2,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
       "portal": 1
     },
     "spawnX": 90,
@@ -231,7 +215,7 @@
         "x": 400,
         "y": 90,
         "w": 20,
-        "h": 150
+        "h": 100
       },
       {
         "type": "quantumCrystal",
@@ -247,14 +231,6 @@
           32,
           22
         ]
-      },
-      {
-        "type": "rockWall",
-        "x": 480,
-        "y": 210,
-        "w": 70,
-        "h": 70,
-        "palette": "purple"
       }
     ]
   },
@@ -264,25 +240,25 @@
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "brown",
     "desc": "4구역: 심층 황무지 코어 발전소입니다. 1층 드릴 관통 -> 2층 레이저 절삭 -> 계단 생성으로 25기 나노봇 전원을 손실 없이 구출하십시오!",
-    "totalUnits": 25,
+    "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 30,
+    "spawnRate": 50,
     "timeLimit": 240,
     "skills": {
-      "climb": 3,
-      "float": 5,
-      "bash": 5,
-      "mine": 4,
-      "drill": 4,
-      "bomb": 2,
-      "build": 8,
-      "block": 3,
+      "climb": 12,
+      "float": 1,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
       "portal": 1
     },
-    "spawnX": 70,
-    "spawnY": 50,
-    "gateX": 730,
-    "gateY": 314,
+    "spawnX": 160,
+    "spawnY": 200,
+    "gateX": 590,
+    "gateY": 210,
     "solutionDna": [
       "DRILL",
       "FLOAT",
@@ -292,64 +268,33 @@
     "difficultyScore": 85,
     "elements": [
       {
-        "type": "platform",
-        "x": 30,
-        "y": 110,
-        "w": 130,
-        "h": 22,
-        "palette": "brown"
-      },
-      {
         "type": "craggyRock",
-        "x": 90,
-        "y": 190,
-        "w": 280,
-        "h": 22,
+        "x": 140,
+        "y": 250,
+        "w": 480,
+        "h": 40,
         "palette": "brown",
         "profile": [
-          14,
-          22,
-          36,
-          18
+          27,
+          40,
+          67,
+          32
         ]
       },
       {
         "type": "steelBarrier",
-        "x": 350,
-        "y": 80,
-        "w": 20,
-        "h": 110
-      },
-      {
-        "type": "craggyRock",
-        "x": 200,
-        "y": 270,
-        "w": 360,
-        "h": 24,
-        "palette": "brown",
-        "profile": [
-          18,
-          32,
-          44,
-          20,
-          16
-        ]
+        "x": 330,
+        "y": 180,
+        "w": 30,
+        "h": 70
       },
       {
         "type": "rockWall",
-        "x": 420,
-        "y": 200,
+        "x": 360,
+        "y": 180,
         "w": 90,
         "h": 70,
         "palette": "brown"
-      },
-      {
-        "type": "platform",
-        "x": 460,
-        "y": 340,
-        "w": 310,
-        "h": 32,
-        "palette": "green"
       }
     ]
   },
@@ -359,25 +304,25 @@
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "green",
     "desc": "5구역: 외계 바이오 에덴 성역입니다. 다단 녹색 테라스와 암벽을 방어막(Block)으로 나노봇의 진로를 반전시키고 흡착 등반(Climb)을 활용해 웜홀로 집결시키십시오.",
-    "totalUnits": 20,
+    "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 25,
+    "spawnRate": 50,
     "timeLimit": 240,
     "skills": {
-      "climb": 5,
-      "float": 5,
-      "bash": 4,
-      "mine": 4,
-      "drill": 4,
-      "bomb": 2,
-      "build": 8,
-      "block": 5,
-      "portal": 1
+      "climb": 1,
+      "float": 15,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 2,
+      "portal": 0
     },
-    "spawnX": 80,
-    "spawnY": 60,
-    "gateX": 710,
-    "gateY": 210,
+    "spawnX": 90,
+    "spawnY": 90,
+    "gateX": 670,
+    "gateY": 240,
     "solutionDna": [
       "BLOCK",
       "BUILD",
@@ -387,93 +332,55 @@
     "difficultyScore": 95,
     "elements": [
       {
-        "type": "platform",
-        "x": 40,
-        "y": 120,
-        "w": 180,
-        "h": 20,
-        "palette": "green"
-      },
-      {
         "type": "craggyRock",
-        "x": 160,
-        "y": 200,
-        "w": 380,
-        "h": 30,
-        "palette": "green",
-        "profile": [
-          20,
-          33,
-          45,
-          27,
-          23
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 520,
-        "y": 110,
-        "w": 20,
-        "h": 90
-      },
-      {
-        "type": "rockWall",
-        "x": 300,
+        "x": 70,
         "y": 130,
-        "w": 70,
-        "h": 70,
-        "palette": "green"
-      },
-      {
-        "type": "craggyRock",
-        "x": 80,
-        "y": 300,
-        "w": 400,
-        "h": 26,
+        "w": 380,
+        "h": 40,
         "palette": "green",
         "profile": [
-          18,
-          28,
-          38,
-          24,
-          18
+          27,
+          44,
+          60,
+          36,
+          31
         ]
       },
       {
         "type": "platform",
-        "x": 440,
-        "y": 250,
-        "w": 330,
-        "h": 22,
+        "x": 320,
+        "y": 280,
+        "w": 390,
+        "h": 40,
         "palette": "green"
       }
     ]
   },
   {
     "id": 6,
-    "title": "VOLCANIC SPEEDWAY",
+    "title": "[HARD] VOLCANIC SPEEDWAY",
     "bgImg": "assets/bg_level_2.jpg",
     "terrainTheme": "red",
     "desc": "6구역: 마그마 고속 회랑입니다. 낙하 지점 아래의 용암 바닥을 조심하십시오! 역추진(Float)으로 감속 낙하 후 연속 드릴(Drill)로 2개 층을 신속히 관통하십시오.",
-    "totalUnits": 25,
+    "totalUnits": 15,
     "needPercent": 85,
     "spawnRate": 20,
     "timeLimit": 220,
     "skills": {
-      "climb": 4,
-      "float": 8,
+      "climb": 1,
+      "float": 1,
       "bash": 6,
-      "mine": 4,
-      "drill": 6,
-      "bomb": 3,
-      "build": 6,
-      "block": 4,
-      "portal": 1
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
+      "portal": 0
     },
-    "spawnX": 70,
-    "spawnY": 50,
-    "gateX": 730,
-    "gateY": 290,
+    "spawnX": 90,
+    "spawnY": 80,
+    "gateX": 640,
+    "gateY": 250,
     "solutionDna": [
       "FLOAT",
       "DRILL",
@@ -484,62 +391,41 @@
     "elements": [
       {
         "type": "platform",
-        "x": 30,
-        "y": 100,
-        "w": 140,
+        "x": 40,
+        "y": 120,
+        "w": 180,
         "h": 20,
         "palette": "red"
       },
       {
         "type": "volcanicBasalt",
-        "x": 120,
-        "y": 180,
-        "w": 340,
-        "h": 22,
+        "x": 450,
+        "y": 290,
+        "w": 230,
+        "h": 40,
         "palette": "red",
         "profile": [
-          14,
-          24,
-          34,
-          20
+          30,
+          29,
+          32,
+          37,
+          39
         ]
       },
       {
-        "type": "steelBarrier",
-        "x": 440,
-        "y": 80,
-        "w": 20,
-        "h": 100
-      },
-      {
-        "type": "volcanicBasalt",
-        "x": 200,
-        "y": 260,
-        "w": 380,
-        "h": 24,
+        "type": "quantumCrystal",
+        "x": 180,
+        "y": 170,
+        "w": 280,
+        "h": 140,
         "palette": "red",
         "profile": [
-          16,
-          28,
-          38,
-          22
+          107,
+          122,
+          172,
+          145,
+          154
         ]
-      },
-      {
-        "type": "rockWall",
-        "x": 480,
-        "y": 190,
-        "w": 70,
-        "h": 70,
-        "palette": "red"
-      },
-      {
-        "type": "platform",
-        "x": 400,
-        "y": 310,
-        "w": 360,
-        "h": 24,
-        "palette": "red"
       }
     ]
   },
@@ -549,25 +435,25 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "7구역: 하이페리온 양자 요새입니다. 공중에 떠 있는 다중 섬 지형입니다. 3D 계단(Build)으로 절벽을 잇거나 차원 포탈(Portal)을 생성해 강철벽을 우회하십시오.",
-    "totalUnits": 22,
+    "totalUnits": 15,
     "needPercent": 85,
     "spawnRate": 30,
     "timeLimit": 240,
     "skills": {
-      "climb": 4,
-      "float": 6,
-      "bash": 4,
-      "mine": 4,
-      "drill": 4,
-      "bomb": 2,
+      "climb": 1,
+      "float": 1,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
       "build": 10,
       "block": 4,
-      "portal": 2
+      "portal": 0
     },
-    "spawnX": 80,
-    "spawnY": 70,
-    "gateX": 730,
-    "gateY": 300,
+    "spawnX": 130,
+    "spawnY": 160,
+    "gateX": 670,
+    "gateY": 170,
     "solutionDna": [
       "BUILD",
       "PORTAL",
@@ -578,8 +464,8 @@
     "elements": [
       {
         "type": "quantumCrystal",
-        "x": 40,
-        "y": 150,
+        "x": 70,
+        "y": 200,
         "w": 160,
         "h": 22,
         "palette": "purple",
@@ -592,30 +478,9 @@
       },
       {
         "type": "quantumCrystal",
-        "x": 240,
-        "y": 130,
-        "w": 180,
-        "h": 30,
-        "palette": "purple",
-        "profile": [
-          23,
-          33,
-          30,
-          20
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 400,
-        "y": 50,
-        "w": 20,
-        "h": 80
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 120,
+        "x": 190,
         "y": 250,
-        "w": 320,
+        "w": 400,
         "h": 24,
         "palette": "purple",
         "profile": [
@@ -626,18 +491,10 @@
         ]
       },
       {
-        "type": "rockWall",
-        "x": 340,
-        "y": 200,
-        "w": 70,
-        "h": 50,
-        "palette": "purple"
-      },
-      {
         "type": "quantumCrystal",
-        "x": 460,
+        "x": 470,
         "y": 200,
-        "w": 300,
+        "w": 230,
         "h": 24,
         "palette": "purple",
         "profile": [
@@ -655,25 +512,25 @@
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "brown",
     "desc": "8구역: 소행성 지하 채굴 기지입니다. 단단한 황무지 암반층과 복합 격벽이 있습니다. 코어 폭파(Bomb)와 융해 드릴(Drill)을 결합하여 심층 탈출로를 뚫으십시오.",
-    "totalUnits": 30,
+    "totalUnits": 15,
     "needPercent": 85,
     "spawnRate": 25,
     "timeLimit": 240,
     "skills": {
-      "climb": 6,
-      "float": 6,
-      "bash": 5,
-      "mine": 5,
-      "drill": 5,
-      "bomb": 4,
-      "build": 8,
-      "block": 4,
-      "portal": 1
+      "climb": 1,
+      "float": 1,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 3,
+      "block": 1,
+      "portal": 0
     },
-    "spawnX": 80,
-    "spawnY": 50,
-    "gateX": 730,
-    "gateY": 320,
+    "spawnX": 400,
+    "spawnY": 200,
+    "gateX": 210,
+    "gateY": 260,
     "solutionDna": [
       "DRILL",
       "BOMB",
@@ -684,98 +541,54 @@
     "elements": [
       {
         "type": "platform",
-        "x": 40,
-        "y": 100,
-        "w": 80,
+        "x": 370,
+        "y": 230,
+        "w": 120,
         "h": 20,
         "palette": "brown"
       },
       {
         "type": "craggyRock",
-        "x": 60,
-        "y": 180,
+        "x": 180,
+        "y": 290,
         "w": 460,
-        "h": 24,
+        "h": 40,
         "palette": "brown",
         "profile": [
-          18,
-          30,
-          42,
-          28,
-          16
+          31,
+          51,
+          71,
+          47,
+          27
         ]
-      },
-      {
-        "type": "rockWall",
-        "x": 240,
-        "y": 110,
-        "w": 70,
-        "h": 70,
-        "palette": "brown"
-      },
-      {
-        "type": "steelBarrier",
-        "x": 500,
-        "y": 90,
-        "w": 20,
-        "h": 90
-      },
-      {
-        "type": "craggyRock",
-        "x": 160,
-        "y": 260,
-        "w": 400,
-        "h": 26,
-        "palette": "brown",
-        "profile": [
-          20,
-          32,
-          40,
-          24
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 300,
-        "y": 190,
-        "w": 20,
-        "h": 70
-      },
-      {
-        "type": "platform",
-        "x": 360,
-        "y": 340,
-        "w": 400,
-        "h": 28,
-        "palette": "brown"
       }
     ]
   },
   {
     "id": 9,
-    "title": "PLASMA VOID RIFT",
+    "title": "[NIGHTMARE] PLASMA VOID RIFT",
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "cyan",
     "desc": "9구역: 플라즈마 에너지 심연입니다. 높고 좁은 수직 낭떠러지 구조입니다. 역추진(Float)과 방어막(Block), 3D 계단을 적재적소에 배치하여 낭떠러지 추락을 방지하십시오.",
-    "totalUnits": 25,
+    "totalUnits": 15,
     "needPercent": 90,
-    "spawnRate": 25,
+    "spawnRate": 35,
     "timeLimit": 240,
     "skills": {
-      "climb": 5,
-      "float": 6,
-      "bash": 6,
-      "mine": 5,
-      "drill": 5,
-      "bomb": 3,
-      "build": 10,
-      "block": 5,
-      "portal": 2
+      "climb": 0,
+      "float": 0,
+      "bash": 0,
+      "mine": 0,
+      "drill": 0,
+      "bomb": 0,
+      "build": 0,
+      "block": 0,
+      "portal": 1
     },
-    "spawnX": 80,
-    "spawnY": 50,
+    "spawnX": 90,
+    "spawnY": 100,
     "gateX": 730,
-    "gateY": 270,
+    "gateY": 280,
     "solutionDna": [
       "BLOCK",
       "DRILL",
@@ -787,38 +600,17 @@
     "elements": [
       {
         "type": "platform",
-        "x": 30,
-        "y": 100,
+        "x": 50,
+        "y": 160,
         "w": 150,
         "h": 20,
         "palette": "cyan"
       },
       {
         "type": "craggyRock",
-        "x": 100,
-        "y": 180,
+        "x": 160,
+        "y": 230,
         "w": 340,
-        "h": 24,
-        "palette": "cyan",
-        "profile": [
-          16,
-          28,
-          38,
-          22
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 420,
-        "y": 80,
-        "w": 20,
-        "h": 100
-      },
-      {
-        "type": "craggyRock",
-        "x": 200,
-        "y": 250,
-        "w": 300,
         "h": 24,
         "palette": "cyan",
         "profile": [
@@ -829,55 +621,60 @@
         ]
       },
       {
-        "type": "rockWall",
-        "x": 380,
-        "y": 180,
-        "w": 70,
-        "h": 70,
-        "palette": "cyan"
-      },
-      {
         "type": "steelBarrier",
-        "x": 480,
-        "y": 170,
-        "w": 20,
+        "x": 400,
+        "y": 150,
+        "w": 100,
         "h": 80
       },
       {
-        "type": "platform",
-        "x": 360,
-        "y": 290,
-        "w": 400,
-        "h": 26,
+        "type": "rockWall",
+        "x": 440,
+        "y": 310,
+        "w": 330,
+        "h": 40,
         "palette": "cyan"
+      },
+      {
+        "type": "craggyRock",
+        "x": 440,
+        "y": 290,
+        "w": 20,
+        "h": 20,
+        "palette": "cyan",
+        "profile": [
+          23,
+          25,
+          20
+        ]
       }
     ]
   },
   {
     "id": 10,
-    "title": "TERRAFORM ALPHA CORE",
+    "title": "[NIGHTMARE] TERRAFORM ALPHA CORE",
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "purple",
     "desc": "10구역: [최종 결전] 행성 중심 테라포밍 알파 코어입니다. 9종 나노 스킬을 종합 운용하여 30기 나노봇을 전원 무사 구출하고 테라포밍 미션을 최종 완수하십시오!",
-    "totalUnits": 30,
+    "totalUnits": 15,
     "needPercent": 90,
     "spawnRate": 25,
     "timeLimit": 270,
     "skills": {
-      "climb": 6,
-      "float": 8,
-      "bash": 6,
-      "mine": 6,
-      "drill": 6,
-      "bomb": 4,
-      "build": 12,
-      "block": 5,
-      "portal": 2
+      "climb": 0,
+      "float": 0,
+      "bash": 0,
+      "mine": 0,
+      "drill": 0,
+      "bomb": 2,
+      "build": 0,
+      "block": 0,
+      "portal": 0
     },
     "spawnX": 80,
-    "spawnY": 50,
-    "gateX": 730,
-    "gateY": 340,
+    "spawnY": 120,
+    "gateX": 660,
+    "gateY": 260,
     "solutionDna": [
       "FLOAT",
       "BASH",
@@ -889,92 +686,59 @@
     "difficultyScore": 180,
     "elements": [
       {
-        "type": "platform",
-        "x": 30,
-        "y": 100,
-        "w": 160,
+        "type": "craggyRock",
+        "x": 90,
+        "y": 220,
+        "w": 430,
         "h": 20,
-        "palette": "purple"
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 80,
-        "y": 170,
-        "w": 360,
-        "h": 24,
-        "palette": "purple",
-        "profile": [
-          16,
-          28,
-          40,
-          24
-        ]
-      },
-      {
-        "type": "rockWall",
-        "x": 260,
-        "y": 100,
-        "w": 70,
-        "h": 70,
-        "palette": "purple"
-      },
-      {
-        "type": "steelBarrier",
-        "x": 420,
-        "y": 70,
-        "w": 20,
-        "h": 100
-      },
-      {
-        "type": "volcanicBasalt",
-        "x": 160,
-        "y": 250,
-        "w": 380,
-        "h": 26,
         "palette": "red",
         "profile": [
-          18,
-          30,
-          42,
-          26
+          17,
+          19,
+          19,
+          15,
+          25,
+          23,
+          19,
+          25,
+          15,
+          23,
+          17
         ]
       },
       {
         "type": "steelBarrier",
-        "x": 260,
-        "y": 180,
-        "w": 20,
-        "h": 70
-      },
-      {
-        "type": "rockWall",
-        "x": 420,
-        "y": 180,
-        "w": 70,
+        "x": 490,
+        "y": 150,
+        "w": 30,
         "h": 70,
-        "palette": "red"
+        "palette": "purple"
       },
       {
         "type": "craggyRock",
-        "x": 300,
-        "y": 330,
+        "x": 410,
+        "y": 290,
         "w": 280,
-        "h": 26,
-        "palette": "cyan",
+        "h": 20,
+        "palette": "red",
         "profile": [
-          16,
           26,
-          36,
-          22
+          17,
+          18,
+          21,
+          20,
+          26,
+          23,
+          25
         ]
       },
       {
         "type": "platform",
-        "x": 520,
-        "y": 360,
-        "w": 250,
-        "h": 28,
-        "palette": "purple"
+        "x": 50,
+        "y": 160,
+        "w": 110,
+        "h": 20,
+        "palette": "red"
       }
     ]
   }

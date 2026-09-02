@@ -70,7 +70,7 @@
           <button class="btn-hud btn-restart" id="btn-quick-restart" title="구역 즉시 재시작 (R)">🔄 재시작</button>
           <button class="btn-hud" id="btn-open-editor" title="현재 맵 수정 에디터">🛠️ 에디터</button>
           <button class="btn-hud" style="border-color: #ffb700; color: #ffb700;" id="btn-hud-creator" title="완전 빈 캔버스에서 새 맵 제작">✨ 신규맵</button>
-          <button class="btn-hud" id="btn-open-stage-manager" title="10개 구역 목록 & 커스텀 슬롯">📁 맵목록</button>
+          <button class="btn-hud" id="btn-open-stage-manager" title="캠페인 구역 목록 & 커스텀 슬롯">📁 맵목록</button>
           <button class="btn-hud btn-nuke" id="btn-nuke" title="긴급 전원 차단 (NUKE)">💥 폭파</button>
           <button class="btn-hud" id="btn-audio" title="사운드 토글">🔊</button>
         </div>
@@ -357,7 +357,7 @@
       <div class="modal-title">📁 STAGE LIBRARY & JSON</div>
 
       <div class="modal-tabs">
-        <button class="modal-tab-btn active" data-tab="tab-campaign">캠페인 1~10구역</button>
+        <button class="modal-tab-btn active" id="tab-btn-campaign" data-tab="tab-campaign">캠페인 구역</button>
         <button class="modal-tab-btn" data-tab="tab-custom">커스텀 슬롯</button>
         <button class="modal-tab-btn" id="tab-btn-json" data-tab="tab-json">JSON 입출력</button>
       </div>
@@ -365,12 +365,14 @@
       <!-- 1. Campaign Tab -->
       <div class="tab-content active" id="tab-campaign">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
-          <span style="font-size: 11px; color: var(--text-dim);">총 10개 캠페인 구역 (순차 진행)</span>
+          <span style="font-size: 11px; color: var(--text-dim);" id="campaign-stage-count-text">총 10개 캠페인 구역 (순차 진행)</span>
           <div style="display: flex; gap: 4px; align-items: center;">
+            <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #00f3ff; color: #00f3ff;"
+              id="btn-campaign-add-slot" title="새 구역(11구역~) 슬롯 추가 제작">➕ 새 구역 추가</button>
             <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #00ff88; color: #00ff88;"
-              id="btn-download-campaign-json" title="현재 수정된 10개 구역을 campaign.json 파일로 다운로드하여 stages/ 폴더에 넣고 git push하면 깃허브 전체 동기화">💾 campaign.json 다운로드</button>
+              id="btn-download-campaign-json" title="현재 등록/수정된 모든 구역을 campaign.json 파일로 다운로드하여 stages/ 폴더에 넣고 git push하면 깃허브 전체 동기화">💾 campaign.json 다운로드</button>
             <button class="btn-tool btn-tool-danger" style="padding: 3px 8px; font-size: 10px;"
-              id="btn-reset-all-campaign" title="전체 10개 구역을 기본 맵으로 초기화">🔄 전체 기본값 복원</button>
+              id="btn-reset-all-campaign" title="전체 구역 수정을 초기화하고 기본 맵으로 복원">🔄 전체 기본값 복원</button>
           </div>
         </div>
         <div class="stage-card-list" id="campaign-stage-list"></div>
@@ -412,19 +414,30 @@
 
   <!-- Save Target Slot Modal -->
   <div class="modal-overlay" id="modal-save-slot" style="display: none;">
-    <div class="modal-card" style="max-width: 480px;">
-      <div class="modal-title" style="color: #00ff88;">💾 맵 저장 슬롯 선택</div>
-      <div class="modal-subtitle">현재 맵을 캠페인 1~10구역 슬롯에 덮어쓰거나, 새 커스텀 맵으로 독립 보관할 수 있습니다.</div>
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-title" style="color: #00ff88;">💾 맵 저장 (슬롯 선택 / 추가)</div>
+      <div class="modal-subtitle" id="modal-save-subtitle">11구역 이후로 계속 신규 슬롯을 추가하거나, 기존 구역 슬롯에 덮어쓸 수 있습니다.</div>
 
-      <div class="prop-form-grid" style="grid-template-columns: 1fr; margin-top: 8px;">
+      <!-- Quick mode buttons: 슬롯추가 vs 슬롯선택 vs 커스텀 -->
+      <div style="display: flex; gap: 6px; margin-top: 10px; margin-bottom: 8px;">
+        <button type="button" class="btn-tool" id="btn-save-mode-add"
+          style="flex: 1.1; border-color: #00ff88; color: #00ff88; font-weight: bold; font-size: 11px; padding: 7px 4px; background: rgba(0,255,136,0.12);">➕ 새 슬롯 추가</button>
+        <button type="button" class="btn-tool" id="btn-save-mode-select"
+          style="flex: 1; font-size: 11px; padding: 7px 4px;">📂 기존 슬롯 선택</button>
+        <button type="button" class="btn-tool" id="btn-save-mode-custom"
+          style="flex: 0.9; font-size: 11px; padding: 7px 4px;">📁 커스텀 보관</button>
+      </div>
+
+      <div class="prop-form-grid" style="grid-template-columns: 1fr; margin-top: 6px;">
         <div class="prop-group">
-          <label class="prop-label">저장 대상 슬롯 (TARGET SLOT)</label>
+          <label class="prop-label" id="label-target-slot">저장 대상 슬롯 (TARGET SLOT)</label>
           <select class="prop-select" id="save-target-slot-select"></select>
+          <div id="save-slot-info-box" style="margin-top: 6px; padding: 7px 10px; border-radius: 5px; font-size: 11px; line-height: 1.5; background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); color: #00ff88;"></div>
         </div>
 
         <div class="prop-group">
           <label class="prop-label">스테이지 명칭</label>
-          <input type="text" class="prop-input" id="save-target-title-input" value="CUSTOM SECTOR">
+          <input type="text" class="prop-input" id="save-target-title-input" value="11구역 SECTOR">
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">

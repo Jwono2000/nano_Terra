@@ -382,9 +382,8 @@ class LevelEditor {
     }
 
     if (this.game && this.game.stageMgr) {
-      const defaultSlot = (this.game.isCustomPlay || this.levelData.id === 'NEW_MAP' || this.levelData.id === 'CUSTOM') 
-        ? 'custom' 
-        : this.game.currentLevelIdx;
+      const isNewMap = (this.game.isCustomPlay || this.levelData.id === 'NEW_MAP' || this.levelData.id === 'CUSTOM' || !this.levelData.id || typeof this.levelData.id === 'string');
+      const defaultSlot = isNewMap ? 'add_new' : this.game.currentLevelIdx;
       this.game.stageMgr.openSaveSlotModal(this.levelData, defaultSlot);
     }
   }

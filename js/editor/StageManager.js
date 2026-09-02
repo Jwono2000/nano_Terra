@@ -424,38 +424,58 @@ class StageManager {
       ? DEFAULT_CAMPAIGN_LEVELS 
       : BUILTIN_10_STAGES;
 
-    LEVELS = source.map((defLvl, idx) => {
-      let lvlObj = null;
+    const overrideKeys = Object.keys(overrides)
+      .map(k => parseInt(k, 10))
+      .filter(n => !isNaN(n) && n >= 0);
+
+    const maxIdx = Math.max(
+      source.length - 1,
+      overrideKeys.length > 0 ? Math.max(...overrideKeys) : -1
+    );
+
+    const newLevels = [];
+    for (let idx = 0; idx <= maxIdx; idx++) {
+      const defLvl = (idx < source.length) ? source[idx] : null;
       const ov = overrides[idx] || overrides[idx.toString()];
+
+      if (!defLvl && !ov) {
+        continue;
+      }
+
+      let lvlObj = null;
       if (ov && Array.isArray(ov.elements)) {
         lvlObj = JSON.parse(JSON.stringify(ov));
         lvlObj.isOverridden = true;
-      } else {
+      } else if (defLvl) {
         lvlObj = JSON.parse(JSON.stringify(defLvl));
         lvlObj.isOverridden = false;
+      } else {
+        continue;
       }
+
       lvlObj.id = idx + 1;
-      lvlObj.title = lvlObj.title || defLvl.title || `${idx + 1}구역`;
-      lvlObj.desc = lvlObj.desc || defLvl.desc || "테라포밍 작전 구역입니다.";
-      lvlObj.bgImg = lvlObj.bgImg || defLvl.bgImg || `assets/bg_level_${(idx % 5) + 1}.jpg`;
-      lvlObj.terrainTheme = lvlObj.terrainTheme || defLvl.terrainTheme || 'cyan';
-      lvlObj.totalUnits = (typeof lvlObj.totalUnits === 'number' && !isNaN(lvlObj.totalUnits) && lvlObj.totalUnits > 0) ? lvlObj.totalUnits : (defLvl.totalUnits || 15);
-      lvlObj.needPercent = (typeof lvlObj.needPercent === 'number' && !isNaN(lvlObj.needPercent)) ? lvlObj.needPercent : (defLvl.needPercent || 70);
-      lvlObj.timeLimit = (typeof lvlObj.timeLimit === 'number' && !isNaN(lvlObj.timeLimit) && lvlObj.timeLimit > 0) ? lvlObj.timeLimit : (defLvl.timeLimit || 240);
-      lvlObj.spawnRate = (typeof lvlObj.spawnRate === 'number' && !isNaN(lvlObj.spawnRate) && lvlObj.spawnRate > 0) ? lvlObj.spawnRate : (defLvl.spawnRate || 20);
+      lvlObj.title = lvlObj.title || (defLvl ? defLvl.title : `${idx + 1}구역 SECTOR`);
+      lvlObj.desc = lvlObj.desc || (defLvl ? defLvl.desc : `${idx + 1}구역: 나노봇 군단 테라포밍 전술 구역입니다.`);
+      lvlObj.bgImg = lvlObj.bgImg || (defLvl ? defLvl.bgImg : `assets/bg_level_${(idx % 5) + 1}.jpg`);
+      lvlObj.terrainTheme = lvlObj.terrainTheme || (defLvl ? defLvl.terrainTheme : 'cyan');
+      lvlObj.totalUnits = (typeof lvlObj.totalUnits === 'number' && !isNaN(lvlObj.totalUnits) && lvlObj.totalUnits > 0) ? lvlObj.totalUnits : (defLvl ? (defLvl.totalUnits || 15) : 15);
+      lvlObj.needPercent = (typeof lvlObj.needPercent === 'number' && !isNaN(lvlObj.needPercent)) ? lvlObj.needPercent : (defLvl ? (defLvl.needPercent || 70) : 70);
+      lvlObj.timeLimit = (typeof lvlObj.timeLimit === 'number' && !isNaN(lvlObj.timeLimit) && lvlObj.timeLimit > 0) ? lvlObj.timeLimit : (defLvl ? (defLvl.timeLimit || 240) : 240);
+      lvlObj.spawnRate = (typeof lvlObj.spawnRate === 'number' && !isNaN(lvlObj.spawnRate) && lvlObj.spawnRate > 0) ? lvlObj.spawnRate : (defLvl ? (defLvl.spawnRate || 20) : 20);
       
-      const defaultSkills = defLvl.skills || { climb: 4, float: 4, bash: 4, mine: 4, drill: 4, bomb: 2, build: 6, block: 3, portal: 1 };
+      const defaultSkills = (defLvl && defLvl.skills) ? defLvl.skills : { climb: 4, float: 4, bash: 4, mine: 4, drill: 4, bomb: 2, build: 6, block: 3, portal: 1 };
       lvlObj.skills = Object.assign({}, defaultSkills, lvlObj.skills || {});
 
-      if (typeof lvlObj.spawnX !== 'number' || isNaN(lvlObj.spawnX)) lvlObj.spawnX = defLvl.spawnX || 90;
-      if (typeof lvlObj.spawnY !== 'number' || isNaN(lvlObj.spawnY)) lvlObj.spawnY = defLvl.spawnY || 60;
-      if (typeof lvlObj.gateX !== 'number' || isNaN(lvlObj.gateX)) lvlObj.gateX = defLvl.gateX || 710;
-      if (typeof lvlObj.gateY !== 'number' || isNaN(lvlObj.gateY)) lvlObj.gateY = defLvl.gateY || 254;
+      if (typeof lvlObj.spawnX !== 'number' || isNaN(lvlObj.spawnX)) lvlObj.spawnX = defLvl ? (defLvl.spawnX || 90) : 90;
+      if (typeof lvlObj.spawnY !== 'number' || isNaN(lvlObj.spawnY)) lvlObj.spawnY = defLvl ? (defLvl.spawnY || 60) : 60;
+      if (typeof lvlObj.gateX !== 'number' || isNaN(lvlObj.gateX)) lvlObj.gateX = defLvl ? (defLvl.gateX || 710) : 710;
+      if (typeof lvlObj.gateY !== 'number' || isNaN(lvlObj.gateY)) lvlObj.gateY = defLvl ? (defLvl.gateY || 254) : 254;
       if (!Array.isArray(lvlObj.elements) || lvlObj.elements.length === 0) {
-        lvlObj.elements = JSON.parse(JSON.stringify(defLvl.elements || []));
+        lvlObj.elements = JSON.parse(JSON.stringify((defLvl && defLvl.elements) ? defLvl.elements : []));
       }
-      return lvlObj;
-    });
+      newLevels.push(lvlObj);
+    }
+    LEVELS = newLevels;
   }
 
   loadCampaignOverridesFromStorage() {
@@ -481,7 +501,7 @@ class StageManager {
   }
 
   saveToCampaignSlot(slotIdx, stageData) {
-    if (slotIdx < 0 || slotIdx >= (DEFAULT_CAMPAIGN_LEVELS.length || 10)) return null;
+    if (slotIdx < 0) return null;
     const clone = JSON.parse(JSON.stringify(stageData));
     clone.id = slotIdx + 1;
     clone.isOverridden = true;
@@ -517,6 +537,38 @@ class StageManager {
       return true;
     }
     return false;
+  }
+
+  deleteCampaignSlot(slotIdx) {
+    const source = (DEFAULT_CAMPAIGN_LEVELS && DEFAULT_CAMPAIGN_LEVELS.length >= 10) 
+      ? DEFAULT_CAMPAIGN_LEVELS 
+      : BUILTIN_10_STAGES;
+    const sourceLen = source.length;
+
+    if (slotIdx < sourceLen) {
+      return this.resetCampaignSlot(slotIdx);
+    }
+
+    const newOverrides = {};
+    Object.keys(this.campaignOverrides).forEach(k => {
+      const idx = parseInt(k, 10);
+      if (idx < slotIdx) {
+        newOverrides[idx] = this.campaignOverrides[k];
+      } else if (idx > slotIdx) {
+        const shifted = JSON.parse(JSON.stringify(this.campaignOverrides[k]));
+        shifted.id = idx;
+        newOverrides[idx - 1] = shifted;
+      }
+    });
+
+    this.campaignOverrides = newOverrides;
+    this.saveCampaignOverridesToStorage();
+    this.renderStageList();
+
+    if (!this.game.isCustomPlay && this.game.currentLevelIdx >= LEVELS.length) {
+      this.game.loadLevel(Math.max(0, LEVELS.length - 1), false);
+    }
+    return true;
   }
 
   resetAllCampaignSlots() {
@@ -594,40 +646,152 @@ class StageManager {
     const titleInput = document.getElementById('save-target-title-input');
     if (!modal || !select) return;
 
+    const nextSlotNum = LEVELS.length + 1;
+    const subTitle = document.getElementById('modal-save-subtitle');
+    if (subTitle) {
+      subTitle.innerText = `${nextSlotNum}구역 이후로 계속 신규 슬롯을 추가하거나, 기존 구역 슬롯에 덮어쓸 수 있습니다.`;
+    }
+
+    const btnAddMode = document.getElementById('btn-save-mode-add');
+    if (btnAddMode) {
+      btnAddMode.innerText = `➕ 새 슬롯 추가 (${nextSlotNum}구역)`;
+    }
+
     select.innerHTML = '';
 
-    // Campaign 1 ~ 10 options
+    // 1. Add New Slot Option (Always at top)
+    const addNewOpt = document.createElement('option');
+    addNewOpt.value = 'add_new';
+    addNewOpt.innerText = `➕ [새 슬롯 추가] ${nextSlotNum}구역 슬롯 신규 등록 (11구역+)`;
+    addNewOpt.style.fontWeight = 'bold';
+    addNewOpt.style.color = '#00ff88';
+    select.appendChild(addNewOpt);
+
+    // 2. Existing Campaign Slots
+    const campGroup = document.createElement('optgroup');
+    campGroup.label = `--- 기존 캠페인 구역 슬롯 (1~${LEVELS.length}구역) ---`;
+    const source = (DEFAULT_CAMPAIGN_LEVELS && DEFAULT_CAMPAIGN_LEVELS.length >= 10) 
+      ? DEFAULT_CAMPAIGN_LEVELS 
+      : BUILTIN_10_STAGES;
+    const sourceLen = source.length;
     LEVELS.forEach((lvl, idx) => {
       const opt = document.createElement('option');
       opt.value = idx.toString();
       const isMod = !!this.campaignOverrides[idx];
-      opt.innerText = `[${idx + 1}구역 슬롯] ${lvl.title} ${isMod ? '★(커스텀 수정됨)' : '(기본 맵)'}`;
-      select.appendChild(opt);
+      const isAdded = idx >= sourceLen;
+      const tag = isAdded ? '★(추가된 구역)' : (isMod ? '★(수정됨)' : '(기본)');
+      opt.innerText = `[${idx + 1}구역] ${lvl.title} ${tag}`;
+      campGroup.appendChild(opt);
     });
+    select.appendChild(campGroup);
 
-    // Custom slot option
+    // 3. Custom Slot
+    const custGroup = document.createElement('optgroup');
+    custGroup.label = '--- 독립 커스텀 보관함 ---';
     const customOpt = document.createElement('option');
     customOpt.value = 'custom';
     customOpt.innerText = `[📁 커스텀 슬롯] 새 커스텀 맵으로 독립 보관`;
-    select.appendChild(customOpt);
+    custGroup.appendChild(customOpt);
+    select.appendChild(custGroup);
 
-    // Determine preselected value
-    if (defaultSlot === 'custom') {
+    // Determine default selection
+    if (defaultSlot === 'add_new') {
+      select.value = 'add_new';
+    } else if (defaultSlot === 'custom') {
       select.value = 'custom';
-    } else if (defaultSlot !== null && defaultSlot !== undefined && !isNaN(defaultSlot)) {
+    } else if (defaultSlot !== null && defaultSlot !== undefined && !isNaN(defaultSlot) && defaultSlot >= 0 && defaultSlot < LEVELS.length) {
       select.value = defaultSlot.toString();
-    } else if (!this.game.isCustomPlay) {
-      select.value = this.game.currentLevelIdx.toString();
     } else {
-      select.value = 'custom';
+      select.value = 'add_new';
     }
 
     if (titleInput) {
-      titleInput.value = this.pendingSaveData.title || 'CUSTOM SECTOR';
+      let curTitle = this.pendingSaveData.title || '';
+      if (!curTitle || curTitle === 'NEW CREATED SECTOR' || curTitle === 'CUSTOM SECTOR') {
+        if (select.value === 'add_new') {
+          curTitle = `${nextSlotNum}구역 SECTOR`;
+        } else if (select.value !== 'custom') {
+          const idx = parseInt(select.value, 10);
+          curTitle = LEVELS[idx] ? LEVELS[idx].title : `${idx + 1}구역 SECTOR`;
+        } else {
+          curTitle = 'CUSTOM SECTOR';
+        }
+      }
+      titleInput.value = curTitle;
     }
+
+    this.updateSaveSlotUI();
 
     modal.style.display = 'flex';
     SFX.playClick();
+  }
+
+  updateSaveSlotUI() {
+    const select = document.getElementById('save-target-slot-select');
+    const infoBox = document.getElementById('save-slot-info-box');
+    const btnAdd = document.getElementById('btn-save-mode-add');
+    const btnSelect = document.getElementById('btn-save-mode-select');
+    const btnCustom = document.getElementById('btn-save-mode-custom');
+    if (!select) return;
+
+    const val = select.value;
+    const nextSlotNum = LEVELS.length + 1;
+
+    // Reset button styles
+    const resetBtn = (btn) => {
+      if (!btn) return;
+      btn.style.background = 'transparent';
+      btn.style.borderColor = 'rgba(255,255,255,0.2)';
+      btn.style.color = 'var(--text-dim)';
+      btn.style.fontWeight = 'normal';
+    };
+    resetBtn(btnAdd);
+    resetBtn(btnSelect);
+    resetBtn(btnCustom);
+
+    if (val === 'add_new') {
+      if (btnAdd) {
+        btnAdd.style.background = 'rgba(0, 255, 136, 0.15)';
+        btnAdd.style.borderColor = '#00ff88';
+        btnAdd.style.color = '#00ff88';
+        btnAdd.style.fontWeight = 'bold';
+      }
+      if (infoBox) {
+        infoBox.style.background = 'rgba(0, 255, 136, 0.1)';
+        infoBox.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+        infoBox.style.color = '#00ff88';
+        infoBox.innerHTML = `✨ <strong>[${nextSlotNum}구역 신규 슬롯]</strong>으로 자동 생성됩니다. 캠페인이 총 ${nextSlotNum}개 구역으로 확장되며, 순차적으로 플레이할 수 있습니다.`;
+      }
+    } else if (val === 'custom') {
+      if (btnCustom) {
+        btnCustom.style.background = 'rgba(0, 243, 255, 0.15)';
+        btnCustom.style.borderColor = 'var(--neon-cyan)';
+        btnCustom.style.color = 'var(--neon-cyan)';
+        btnCustom.style.fontWeight = 'bold';
+      }
+      if (infoBox) {
+        infoBox.style.background = 'rgba(0, 243, 255, 0.1)';
+        infoBox.style.borderColor = 'rgba(0, 243, 255, 0.3)';
+        infoBox.style.color = 'var(--neon-cyan)';
+        infoBox.innerHTML = `📁 <strong>[커스텀 슬롯 보관함]</strong>에 독립 저장됩니다. 스테이지 라이브러리에서 언제든 원하는 캠페인 구역으로 등록할 수 있습니다.`;
+      }
+    } else {
+      if (btnSelect) {
+        btnSelect.style.background = 'rgba(255, 183, 0, 0.15)';
+        btnSelect.style.borderColor = 'var(--neon-gold)';
+        btnSelect.style.color = 'var(--neon-gold)';
+        btnSelect.style.fontWeight = 'bold';
+      }
+      const idx = parseInt(val, 10);
+      const targetLvl = LEVELS[idx];
+      const targetTitle = targetLvl ? targetLvl.title : `${idx + 1}구역`;
+      if (infoBox) {
+        infoBox.style.background = 'rgba(255, 183, 0, 0.1)';
+        infoBox.style.borderColor = 'rgba(255, 183, 0, 0.3)';
+        infoBox.style.color = 'var(--neon-gold)';
+        infoBox.innerHTML = `⚠️ <strong>[${idx + 1}구역 슬롯]</strong>의 기존 맵(${targetTitle})을 덮어씁니다. 라이브러리에서 언제든 기본값으로 복원할 수 있습니다.`;
+      }
+    }
   }
 
   closeSaveSlotModal() {
@@ -649,15 +813,71 @@ class StageManager {
 
     const select = document.getElementById('save-target-slot-select');
     const titleInput = document.getElementById('save-target-title-input');
+
+    const btnAddMode = document.getElementById('btn-save-mode-add');
+    if (btnAddMode) {
+      btnAddMode.onclick = () => {
+        if (select) {
+          select.value = 'add_new';
+          const nextSlotNum = LEVELS.length + 1;
+          if (titleInput && (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR' || titleInput.value.includes('구역'))) {
+            titleInput.value = `${nextSlotNum}구역 SECTOR`;
+          }
+          this.updateSaveSlotUI();
+          SFX.playClick();
+        }
+      };
+    }
+
+    const btnSelectMode = document.getElementById('btn-save-mode-select');
+    if (btnSelectMode) {
+      btnSelectMode.onclick = () => {
+        if (select) {
+          if (select.value === 'add_new' || select.value === 'custom') {
+            const defaultIdx = (this.game && !this.game.isCustomPlay && this.game.currentLevelIdx < LEVELS.length)
+              ? this.game.currentLevelIdx
+              : 0;
+            select.value = defaultIdx.toString();
+          }
+          const idx = parseInt(select.value, 10);
+          if (titleInput && LEVELS[idx] && (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR' || titleInput.value.includes('구역'))) {
+            titleInput.value = LEVELS[idx].title;
+          }
+          this.updateSaveSlotUI();
+          SFX.playClick();
+        }
+      };
+    }
+
+    const btnCustomMode = document.getElementById('btn-save-mode-custom');
+    if (btnCustomMode) {
+      btnCustomMode.onclick = () => {
+        if (select) {
+          select.value = 'custom';
+          if (titleInput && (!titleInput.value || titleInput.value.includes('구역'))) {
+            titleInput.value = 'CUSTOM SECTOR';
+          }
+          this.updateSaveSlotUI();
+          SFX.playClick();
+        }
+      };
+    }
+
     if (select && titleInput) {
       select.onchange = () => {
         const val = select.value;
-        if (val !== 'custom') {
+        if (val === 'add_new') {
+          const nextSlotNum = LEVELS.length + 1;
+          if (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR' || titleInput.value.includes('구역')) {
+            titleInput.value = `${nextSlotNum}구역 SECTOR`;
+          }
+        } else if (val !== 'custom') {
           const idx = parseInt(val, 10);
-          if (LEVELS[idx] && (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR')) {
+          if (LEVELS[idx] && (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR' || titleInput.value.includes('구역'))) {
             titleInput.value = LEVELS[idx].title;
           }
         }
+        this.updateSaveSlotUI();
       };
     }
   }
@@ -668,8 +888,24 @@ class StageManager {
     const titleInput = document.getElementById('save-target-title-input');
     const downloadCheck = document.getElementById('save-download-json-check');
 
-    const targetVal = select ? select.value : 'custom';
-    const newTitle = titleInput && titleInput.value.trim() ? titleInput.value.trim() : (this.pendingSaveData.title || 'CUSTOM SECTOR');
+    const targetVal = select ? select.value : 'add_new';
+    let newTitle = titleInput && titleInput.value.trim() ? titleInput.value.trim() : (this.pendingSaveData.title || 'CUSTOM SECTOR');
+
+    let slotIdx = -1;
+    let isAddNew = false;
+
+    if (targetVal === 'add_new') {
+      slotIdx = LEVELS.length;
+      isAddNew = true;
+      if (newTitle === 'CUSTOM SECTOR' || newTitle === 'NEW CREATED SECTOR') {
+        newTitle = `${slotIdx + 1}구역 SECTOR`;
+      }
+    } else if (targetVal === 'custom') {
+      slotIdx = -1;
+    } else {
+      slotIdx = parseInt(targetVal, 10);
+    }
+
     this.pendingSaveData.title = newTitle;
 
     // Deep clone data before any modal closing
@@ -677,27 +913,32 @@ class StageManager {
 
     let savedResult = null;
     let savedLabel = '';
+    let downloadFileName = '';
 
     if (targetVal === 'custom') {
       savedResult = this.saveCustomLevel(finalSavedData);
       savedLabel = `[📁 커스텀 슬롯] '${newTitle}' 저장 완료!`;
+      const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
+      downloadFileName = `custom_${cleanTitle}.json`;
     } else {
-      const slotIdx = parseInt(targetVal, 10);
+      finalSavedData.id = slotIdx + 1;
       savedResult = this.saveToCampaignSlot(slotIdx, finalSavedData);
-      savedLabel = `[${slotIdx + 1}구역 슬롯] '${newTitle}' 캠페인 적용 완료!`;
+      savedLabel = isAddNew
+        ? `[➕ ${slotIdx + 1}구역 신규 슬롯] '${newTitle}' 추가 완료!`
+        : `[${slotIdx + 1}구역 슬롯] '${newTitle}' 캠페인 적용 완료!`;
+      const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
+      downloadFileName = `stage_${slotIdx + 1}_${cleanTitle}.json`;
     }
 
     // Download JSON if checked
     if (downloadCheck && downloadCheck.checked) {
-      const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
-      const fileName = targetVal === 'custom' ? `custom_${cleanTitle}.json` : `stage_${parseInt(targetVal, 10) + 1}_${cleanTitle}.json`;
       try {
         const jsonStr = JSON.stringify(finalSavedData, null, 2);
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = fileName;
+        a.download = downloadFileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -761,12 +1002,25 @@ class StageManager {
     const btnResetAll = document.getElementById('btn-reset-all-campaign');
     if (btnResetAll) {
       btnResetAll.onclick = () => {
-        if (confirm("전체 10개 캠페인 구역을 오리지널 기본 맵으로 초기화하시겠습니까?")) {
+        if (confirm("모든 캠페인 구역 수정 및 신규 추가 슬롯을 초기화하고 기본 맵세트로 복원하시겠습니까?")) {
           this.resetAllCampaignSlots();
           SFX.playExplosion();
           if (this.game && this.game.particles) {
-            this.game.particles.spawnFloatingText(400, 180, "🔄 전체 10개 구역 기본 맵으로 초기화 완료!", "#ffb700");
+            this.game.particles.spawnFloatingText(400, 180, "🔄 전체 구역 기본 맵으로 초기화 완료!", "#ffb700");
           }
+        }
+      };
+    }
+
+    const btnAddCampSlot = document.getElementById('btn-campaign-add-slot');
+    if (btnAddCampSlot) {
+      btnAddCampSlot.onclick = () => {
+        this.closeModal();
+        const blank = StageDataEngine.createBlankStage();
+        blank.title = `${LEVELS.length + 1}구역 SECTOR`;
+        this.game.enterEditor(blank);
+        if (this.game.particles) {
+          this.game.particles.spawnFloatingText(400, 180, `➕ ${LEVELS.length + 1}구역 제작 모드`, "#00ff88");
         }
       };
     }
@@ -849,15 +1103,46 @@ class StageManager {
     const campList = document.getElementById('campaign-stage-list');
     const customList = document.getElementById('custom-stage-list');
     
+    const countEl = document.getElementById('campaign-stage-count-text');
+    if (countEl) {
+      countEl.innerText = `총 ${LEVELS.length}개 캠페인 구역 (순차 진행)`;
+    }
+    const tabCampaignBtn = document.getElementById('tab-btn-campaign');
+    if (tabCampaignBtn) {
+      tabCampaignBtn.innerText = `캠페인 구역 (${LEVELS.length}구역)`;
+    }
+
     if (campList) {
       campList.innerHTML = '';
+      const source = (DEFAULT_CAMPAIGN_LEVELS && DEFAULT_CAMPAIGN_LEVELS.length >= 10) 
+        ? DEFAULT_CAMPAIGN_LEVELS 
+        : BUILTIN_10_STAGES;
+      const sourceLen = source.length;
+
       LEVELS.forEach((lvl, idx) => {
         const item = document.createElement('div');
         item.className = 'stage-item-card';
         const isMod = !!this.campaignOverrides[idx];
-        const modBadge = isMod ? ` <span style="background: rgba(255,183,0,0.25); color:var(--neon-gold); border:1px solid var(--neon-gold); border-radius:4px; padding:1px 5px; font-size:9px;">★커스텀 수정됨</span>` : ` <span style="background: rgba(0,255,136,0.15); color:#00ff88; border:1px solid #00ff88; border-radius:4px; padding:1px 5px; font-size:9px;">기본</span>`;
+        const isAdded = idx >= sourceLen;
+
+        let modBadge = '';
+        if (isAdded) {
+          modBadge = ` <span style="background: rgba(0,255,136,0.25); color:#00ff88; border:1px solid #00ff88; border-radius:4px; padding:1px 5px; font-size:9px; font-weight:bold;">★신규 추가 구역</span>`;
+        } else if (isMod) {
+          modBadge = ` <span style="background: rgba(255,183,0,0.25); color:var(--neon-gold); border:1px solid var(--neon-gold); border-radius:4px; padding:1px 5px; font-size:9px;">★커스텀 수정됨</span>`;
+        } else {
+          modBadge = ` <span style="background: rgba(0,243,255,0.15); color:var(--neon-cyan); border:1px solid var(--neon-cyan); border-radius:4px; padding:1px 5px; font-size:9px;">기본</span>`;
+        }
+
         const scoreBadge = lvl.difficultyScore ? ` <span style="color:var(--neon-gold); font-size:10px;">(${lvl.difficultyScore}pt)</span>` : '';
         const dnaBadge = lvl.solutionDna ? ` | <span style="color:var(--neon-cyan); font-size:10px;">DNA: ${lvl.solutionDna.join('→')}</span>` : '';
+
+        let actionBtn = '';
+        if (isAdded) {
+          actionBtn = `<button class="btn-tool btn-tool-danger" data-act="del-campaign-slot" data-idx="${idx}" title="추가된 구역 슬롯 삭제">🗑️ 삭제</button>`;
+        } else if (isMod) {
+          actionBtn = `<button class="btn-tool" style="border-color: #ffb700; color: #ffb700;" data-act="reset-slot" data-idx="${idx}" title="기본 맵으로 복원">🔄 복원</button>`;
+        }
 
         item.innerHTML = `
           <div class="stage-item-info">
@@ -867,7 +1152,7 @@ class StageManager {
           <div class="stage-item-actions">
             <button class="btn-tool btn-tool-play" data-act="play" data-idx="${idx}">▶️ 플레이</button>
             <button class="btn-tool" data-act="edit" data-idx="${idx}">✏️ 수정</button>
-            ${isMod ? `<button class="btn-tool" style="border-color: #ffb700; color: #ffb700;" data-act="reset-slot" data-idx="${idx}" title="기본 맵으로 복원">🔄 복원</button>` : ''}
+            ${actionBtn}
           </div>
         `;
         campList.appendChild(item);
@@ -892,8 +1177,8 @@ class StageManager {
           const quota = lvl.needPercent || 70;
           const elemCount = (lvl.elements || []).length;
 
-          let slotOptions = '';
-          for (let s = 0; s < 10; s++) {
+          let slotOptions = `<option value="add_new">➕ [새 슬롯 추가] ${LEVELS.length + 1}구역</option>`;
+          for (let s = 0; s < LEVELS.length; s++) {
             slotOptions += `<option value="${s}">캠페인 ${s + 1}구역</option>`;
           }
 
@@ -941,6 +1226,13 @@ class StageManager {
             this.resetCampaignSlot(idx);
             SFX.playClick();
           }
+        } else if (act === 'del-campaign-slot') {
+          const target = LEVELS[idx];
+          const name = target ? target.title : `${idx + 1}구역`;
+          if (confirm(`신규 추가된 [${idx + 1}구역: ${name}] 슬롯을 삭제하시겠습니까?`)) {
+            this.deleteCampaignSlot(idx);
+            SFX.playExplosion();
+          }
         } else if (act === 'play-custom') {
           this.closeModal();
           if (this.customStages[idx]) {
@@ -953,16 +1245,28 @@ class StageManager {
           }
         } else if (act === 'assign-campaign-slot') {
           const selectEl = document.getElementById(`custom-slot-select-${idx}`);
-          const targetSlot = selectEl ? parseInt(selectEl.value, 10) : 0;
+          const targetVal = selectEl ? selectEl.value : '0';
           const customStage = this.customStages[idx];
           if (customStage) {
-            if (confirm(`'${customStage.title}' 맵을 [캠페인 ${targetSlot + 1}구역] 슬롯에 등록(덮어쓰기)하시겠습니까?\n등록 후 상단의 '💾 campaign.json 다운로드'를 통해 깃허브에도 동기화할 수 있습니다.`)) {
+            let targetSlot = 0;
+            let isNew = false;
+            if (targetVal === 'add_new') {
+              targetSlot = LEVELS.length;
+              isNew = true;
+            } else {
+              targetSlot = parseInt(targetVal, 10);
+            }
+            const confirmMsg = isNew
+              ? `'${customStage.title}' 맵을 [캠페인 ${targetSlot + 1}구역] 신규 슬롯으로 추가하시겠습니까?\n등록 후 상단의 '💾 campaign.json 다운로드'를 통해 깃허브에도 동기화할 수 있습니다.`
+              : `'${customStage.title}' 맵을 [캠페인 ${targetSlot + 1}구역] 슬롯에 등록(덮어쓰기)하시겠습니까?\n등록 후 상단의 '💾 campaign.json 다운로드'를 통해 깃허브에도 동기화할 수 있습니다.`;
+
+            if (confirm(confirmMsg)) {
               this.saveToCampaignSlot(targetSlot, customStage);
               SFX.playTeleport();
               if (this.game && this.game.particles) {
                 this.game.particles.spawnFloatingText(400, 180, `✅ [캠페인 ${targetSlot + 1}구역]에 '${customStage.title}' 등록 완료!`, "#00ff88");
               }
-              alert(`✅ '${customStage.title}' 맵이 캠페인 [${targetSlot + 1}구역]으로 성공적으로 등록되었습니다!\n'캠페인 1~10구역' 탭에서 확인하거나 바로 플레이할 수 있습니다.`);
+              alert(`✅ '${customStage.title}' 맵이 캠페인 [${targetSlot + 1}구역]으로 성공적으로 등록되었습니다!\n'캠페인 구역' 탭에서 확인하거나 바로 플레이할 수 있습니다.`);
             }
           }
         } else if (act === 'del-custom') {

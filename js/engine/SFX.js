@@ -121,33 +121,69 @@ const SFX = {
       osc2.start(now);
       lfo.start(now);
 
-      this.activeBeams[id] = { osc1, osc2, lfo, gain, filter };
+      this.activeBeams[id] = { osc1, osc2, lfo, lfoGain, gain, filter };
     } catch(e) { }
   },
 
   stopContinuousBeam(id = 'default') {
     const beam = this.activeBeams[id];
-    if (!beam || !this.ctx) return;
+    if (!beam) return;
     delete this.activeBeams[id];
+
+    if (!this.ctx) return;
 
     try {
       const now = this.ctx.currentTime;
-      beam.gain.gain.cancelScheduledValues(now);
-      beam.gain.gain.setValueAtTime(0, now);
+      // 1. Instantly disconnect gain from destination so sound cuts out immediately with zero leak
+      if (beam.gain) {
+        try {
+          beam.gain.gain.cancelScheduledValues(now);
+          beam.gain.gain.setValueAtTime(0, now);
+        } catch(e) {}
+        try {
+          beam.gain.disconnect();
+        } catch(e) {}
+      }
 
-      try {
-        beam.osc1.stop();
-        beam.osc2.stop();
-        beam.lfo.stop();
-        beam.osc1.disconnect();
-        beam.osc2.disconnect();
-        beam.gain.disconnect();
-      } catch(e) {}
+      // 2. Stop and disconnect all audio nodes safely in isolated blocks
+      if (beam.osc1) {
+        try { beam.osc1.stop(); } catch(e) {}
+        try { beam.osc1.disconnect(); } catch(e) {}
+      }
+      if (beam.osc2) {
+        try { beam.osc2.stop(); } catch(e) {}
+        try { beam.osc2.disconnect(); } catch(e) {}
+      }
+      if (beam.lfo) {
+        try { beam.lfo.stop(); } catch(e) {}
+        try { beam.lfo.disconnect(); } catch(e) {}
+      }
+      if (beam.lfoGain) {
+        try { beam.lfoGain.disconnect(); } catch(e) {}
+      }
+      if (beam.filter) {
+        try { beam.filter.disconnect(); } catch(e) {}
+      }
     } catch(e) {}
   },
 
-  stopAllContinuousBeams() {
+  stopUnitSounds(unitId) {
+    if (unitId === undefined || unitId === null) return;
+    this.stopContinuousBeam('laser_' + unitId);
+    this.stopContinuousBeam('drill_' + unitId);
+    this.stopContinuousBeam('mine_' + unitId);
+
+    // Deep sweep for any beam identifier associated with this unit
     for (const id in this.activeBeams) {
+      if (id.endsWith('_' + unitId) || id.includes('_' + unitId + '_')) {
+        this.stopContinuousBeam(id);
+      }
+    }
+  },
+
+  stopAllContinuousBeams() {
+    const keys = Object.keys(this.activeBeams);
+    for (const id of keys) {
       this.stopContinuousBeam(id);
     }
     this.activeBeams = {};

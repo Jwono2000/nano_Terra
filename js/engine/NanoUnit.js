@@ -42,8 +42,30 @@ class NanoUnit {
     this.animFrame = Math.floor(Math.random() * 60);
   }
 
+  stopSounds() {
+    if (typeof SFX !== 'undefined' && SFX && SFX.stopUnitSounds) {
+      SFX.stopUnitSounds(this.id);
+    }
+  }
+
+  die(particles, deathType = 'splat') {
+    if (this.state === STATE.DEAD) return;
+    this.state = STATE.DEAD;
+    this.stopSounds();
+
+    if (deathType === 'explosion') {
+      SFX.playExplosion();
+    } else {
+      SFX.playSplat();
+    }
+  }
+
   update(terrain, particles, exitGate, portalPair, otherUnits, speedScale = 1) {
-    if (this.state === STATE.DEAD || this.state === STATE.EXITING) return;
+    if (this.state === STATE.DEAD) {
+      this.stopSounds();
+      return;
+    }
+    if (this.state === STATE.EXITING) return;
     this.animFrame += speedScale;
 
     // Mission Exit Gate Trigger
@@ -54,6 +76,7 @@ class NanoUnit {
     const distToGate = Math.hypot(dx, dy);
     if (distToGate < 36 || (dx < 26 && dy < 34)) {
       this.state = STATE.EXITING;
+      this.stopSounds();
       SFX.playTeleport();
       particles.spawnBurst(this.x, this.y - 10, '#bf00ff', 24, 3.5);
       return;
@@ -83,9 +106,8 @@ class NanoUnit {
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 16, this.y - 12 + (Math.random() - 0.5) * 16, '#00f3ff', 2, 1.5);
       }
       if (this.bombTimer <= 0) {
-        this.state = STATE.DEAD;
+        this.die(particles, 'explosion');
         terrain.carveCircle(this.x, this.y - 10, 32, particles);
-        SFX.playExplosion();
         return;
       }
     }
@@ -137,8 +159,7 @@ class NanoUnit {
 
     // Bottom Screen Abyss / Void Kill Zone
     if (this.y >= 425) {
-      this.state = STATE.DEAD;
-      SFX.playSplat();
+      this.die(particles, 'splat');
       particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
       return;
     }
@@ -149,8 +170,7 @@ class NanoUnit {
       }
 
       if (this.fallDistance > this.maxSafeFall && !isFloater) {
-        this.state = STATE.DEAD;
-        SFX.playSplat();
+        this.die(particles, 'splat');
         particles.spawnBurst(this.x, this.y - 8, '#ff2255', 20, 3);
         particles.spawnFloatingText(this.x, this.y - 20, "으아악~!", "#ff4466");
       } else {
@@ -165,8 +185,7 @@ class NanoUnit {
   updateWalking(terrain, particles, otherUnits, speedScale) {
     // Abyss / Screen Edge Out-of-Bounds Check
     if (this.y >= 425 || this.x < -30 || this.x > 830) {
-      this.state = STATE.DEAD;
-      SFX.playSplat();
+      this.die(particles, 'splat');
       particles.spawnBurst(Math.max(10, Math.min(790, this.x)), 425, '#ff2255', 18, 3);
       return;
     }
@@ -282,7 +301,14 @@ class NanoUnit {
       particles.spawnBurst(this.x + (this.dir > 0 ? 5 : -5), this.y + armOffset, '#00f3ff', 2, 1.0);
     }
 
+    if (this.y >= 425) {
+      this.die(particles, 'splat');
+      particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
+      return;
+    }
+
     if (terrain.isSolid(this.x, this.y - 22)) {
+      this.stopSounds();
       this.dir = -this.dir;
       this.vx = this.dir * 1.25;
       this.state = STATE.FALLING;
@@ -310,6 +336,13 @@ class NanoUnit {
   }
 
   updatePlasmaCutter(terrain, particles, speedScale) {
+    // Abyss check
+    if (this.y >= 425) {
+      this.die(particles, 'splat');
+      particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
+      return;
+    }
+
     if (!this.cutStartY) this.cutStartY = Math.round(this.y);
     this.y = this.cutStartY;
 
@@ -327,7 +360,7 @@ class NanoUnit {
                               terrain.isSteel(this.x + this.dir * 6, this.cutStartY - 22) ||
                               terrain.isSteel(this.x + this.dir * 6, this.cutStartY - 6);
       if (isObstacleAhead) {
-        SFX.stopContinuousBeam('laser_' + this.id);
+        this.stopSounds();
         this.dir = -this.dir;
         this.vx = this.dir * 1.25;
         this.state = STATE.WALKING;
@@ -349,7 +382,7 @@ class NanoUnit {
 
     // Screen border bounds
     if (this.x < 10 || this.x > 790) {
-      SFX.stopContinuousBeam('laser_' + this.id);
+      this.stopSounds();
       this.state = STATE.WALKING;
       this.y = this.cutStartY;
       this.cutSteps = 0;
@@ -374,10 +407,24 @@ class NanoUnit {
     if (isSolidAhead) {
       this.exitSteps = 0; // Still cutting solid wall, keep streaming
     } else {
-      // Breached single wall! Follow-through for 16 steps to let unit's body step cleanly outside
       this.exitSteps = (this.exitSteps || 0) + 1;
-      if (this.exitSteps > 16 && this.cutSteps > 16) {
-        SFX.stopContinuousBeam('laser_' + this.id);
+
+      // If wall is breached and there is no floor beneath feet, drop immediately into falling!
+      const hasFloorUnderFeet = terrain.isSolid(this.x, this.y + 1) || terrain.isSolid(this.x, this.y + 4);
+      if (!hasFloorUnderFeet && this.exitSteps > 4) {
+        this.stopSounds();
+        this.state = this.hasAntiGrav ? STATE.FLOATING : STATE.FALLING;
+        this.fallDistance = 0;
+        this.vy = 0;
+        this.cutSteps = 0;
+        this.cutStartY = 0;
+        this.exitSteps = 0;
+        return;
+      }
+
+      // Breached single wall! Follow-through for 14 steps to let unit's body step cleanly outside
+      if (this.exitSteps > 14 && this.cutSteps > 14) {
+        this.stopSounds();
         const cutW = 38;
         const cutH = 28;
         const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
@@ -409,7 +456,7 @@ class NanoUnit {
                               terrain.isSteel(this.x - 4, this.y + 4) || 
                               terrain.isSteel(this.x + 4, this.y + 4);
       if (isObstacleBelow) {
-        SFX.stopContinuousBeam('drill_' + this.id);
+        this.stopSounds();
         this.state = STATE.WALKING;
         this.cutSteps = 0;
         this.exitSteps = 0;
@@ -425,11 +472,9 @@ class NanoUnit {
     }
     this.cutSteps++;
 
-    // Out of screen / abyss check
+    // Out of screen / abyss check - die with stopSounds() and splat!
     if (this.y >= 425) {
-      SFX.stopContinuousBeam('drill_' + this.id);
-      this.state = STATE.DEAD;
-      SFX.playSplat();
+      this.die(particles, 'splat');
       particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
       return;
     }
@@ -442,16 +487,16 @@ class NanoUnit {
     if (isSolidBelow) {
       this.exitSteps = 0; // Still drilling through current floor, keep going
     } else {
-      // Breached the underside into the air gap! Follow-through for 12 steps so body drops cleanly
+      // Breached the underside into the air gap! Follow-through for up to 8 steps
       this.exitSteps = (this.exitSteps || 0) + 1;
-      if (this.exitSteps > 12 && this.cutSteps > 14) {
-        SFX.stopContinuousBeam('drill_' + this.id);
+      if (this.exitSteps > 8 || this.cutSteps > 12) {
+        this.stopSounds();
         const cutW = 20;
         const cutH = 18;
         const cutX = this.x - 10;
         terrain.carveRect(cutX, this.y - 4, cutW, cutH, particles);
 
-        this.state = STATE.FALLING;
+        this.state = this.hasAntiGrav ? STATE.FLOATING : STATE.FALLING;
         this.fallDistance = 0;
         this.vy = 0;
         this.cutSteps = 0;
@@ -476,7 +521,7 @@ class NanoUnit {
       const isObstacleAhead = terrain.isSteel(this.x + this.dir * 4, this.y + 2) || 
                               terrain.isSteel(this.x + this.dir * 4, this.y - 8);
       if (isObstacleAhead) {
-        SFX.stopContinuousBeam('mine_' + this.id);
+        this.stopSounds();
         this.dir = -this.dir;
         this.vx = this.dir * 1.25;
         this.state = STATE.WALKING;
@@ -498,10 +543,9 @@ class NanoUnit {
 
     // Out of screen bounds check
     if (this.y >= 425 || this.x < 10 || this.x > 790) {
-      SFX.stopContinuousBeam('mine_' + this.id);
+      this.stopSounds();
       if (this.y >= 425) {
-        this.state = STATE.DEAD;
-        SFX.playSplat();
+        this.die(particles, 'splat');
         particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
       } else {
         this.state = STATE.WALKING;
@@ -522,8 +566,8 @@ class NanoUnit {
     } else {
       // Breached through current floor! Follow-through for 8 steps
       this.exitSteps = (this.exitSteps || 0) + 1;
-      if (this.exitSteps > 8 && this.cutSteps > 12) {
-        SFX.stopContinuousBeam('mine_' + this.id);
+      if (this.exitSteps > 8 || this.cutSteps > 12) {
+        this.stopSounds();
         const cutW = 20;
         const cutH = 20;
         const cutX = this.dir > 0 ? this.x - 4 : this.x - (cutW - 4);
@@ -541,6 +585,12 @@ class NanoUnit {
   }
 
   update3DPrinter(terrain, particles, speedScale) {
+    if (this.y >= 425) {
+      this.die(particles, 'splat');
+      particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
+      return;
+    }
+
     this.timer += speedScale;
     // Build 1 step (4px x 2px) every 6 frames = brisk building pace
     if (this.timer >= 6) {

@@ -376,6 +376,7 @@ class GameEngine {
       this.units.forEach((u, i) => {
         if (u.state !== STATE.DEAD && u.state !== STATE.EXITING) {
           activeCount++;
+          u.stopSounds();
           u.bombTimer = Math.min(u.bombTimer || 999, (i + 1) * 8);
         }
       });
@@ -628,6 +629,7 @@ class GameEngine {
 
         if (hasWallRightNow) {
           // Immediately start continuous piercing
+          unit.stopSounds();
           unit.state = STATE.PLASMA_CUTTING;
           unit.hasPlasmaCutter = false;
           unit.cutSteps = 0;
@@ -649,6 +651,7 @@ class GameEngine {
           this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
+        unit.stopSounds();
         unit.state = STATE.DIAGONAL_MINING;
         unit.cutSteps = 0;
         applied = true;
@@ -661,6 +664,7 @@ class GameEngine {
           this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
+        unit.stopSounds();
         unit.state = STATE.THERMAL_DRILLING;
         unit.cutSteps = 0;
         applied = true;
@@ -682,6 +686,7 @@ class GameEngine {
           this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
+        unit.stopSounds();
         unit.state = STATE.BUILDING_3D_PRINT;
         unit.stepCount = 0;
         unit.timer = 0;
@@ -695,6 +700,7 @@ class GameEngine {
           this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
+        unit.stopSounds();
         if (unit.state === STATE.BLOCKING_SHIELD) {
           unit.state = STATE.WALKING;
           applied = true;

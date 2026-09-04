@@ -579,7 +579,6 @@ class GameEngine {
         if (!unit.hasMagnetizer) {
           unit.hasMagnetizer = true;
           applied = true;
-          skillLabel = "+전자기 흡착 (등반 모드)";
           skillColor = "#ffb700";
         }
         break;
@@ -589,9 +588,6 @@ class GameEngine {
           unit.hasAntiGrav = true;
           if (unit.state === STATE.FALLING) {
             unit.state = STATE.FLOATING;
-            skillLabel = "+역추진 감쇄 가동";
-          } else {
-            skillLabel = "+역추진 감쇄 (낙하 시 자동 점화)";
           }
           applied = true;
           skillColor = "#00ff88";
@@ -600,7 +596,6 @@ class GameEngine {
 
       case 'bash':
         if (isFalling) {
-          this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
 
@@ -623,7 +618,6 @@ class GameEngine {
         }
 
         if (hasWallRightNow && isSteelRightNow) {
-          this.particles.spawnFloatingText(unit.x, unit.y - 20, "강철 격벽 (절삭 불가)", "#ffaa00");
           return;
         }
 
@@ -635,40 +629,34 @@ class GameEngine {
           unit.cutSteps = 0;
           unit.cutStartY = Math.round(unit.y);
           applied = true;
-          skillLabel = "⚡ 플라즈마 레이저 즉시 절삭!";
           skillColor = "#00f3ff";
         } else {
           // Pre-reservation: unit equips laser, displays badge, keeps walking, and fires automatically upon touching any wall!
           unit.hasPlasmaCutter = true;
           applied = true;
-          skillLabel = "⚡ 레이저 가공 예약 (벽 도달 시 자동 절삭)";
           skillColor = "#00f3ff";
         }
         break;
 
       case 'mine':
         if (isFalling) {
-          this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
         unit.stopSounds();
         unit.state = STATE.DIAGONAL_MINING;
         unit.cutSteps = 0;
         applied = true;
-        skillLabel = "⛏️ 대각선 연속 굴착 개시!";
         skillColor = "#f0a028";
         break;
 
       case 'drill':
         if (isFalling) {
-          this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
         unit.stopSounds();
         unit.state = STATE.THERMAL_DRILLING;
         unit.cutSteps = 0;
         applied = true;
-        skillLabel = "🔥 융해 드릴 가동 (바닥 수직 관통)";
         skillColor = "#ff6600";
         break;
 
@@ -676,14 +664,12 @@ class GameEngine {
         if (unit.bombTimer <= 0) {
           unit.bombTimer = 240;
           applied = true;
-          skillLabel = "+코어 오버로드";
           skillColor = "#ff2255";
         }
         break;
 
       case 'build':
         if (isFalling) {
-          this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
         unit.stopSounds();
@@ -691,25 +677,21 @@ class GameEngine {
         unit.stepCount = 0;
         unit.timer = 0;
         applied = true;
-        skillLabel = "+3D 계단";
         skillColor = "#00f3ff";
         break;
 
       case 'block':
         if (isFalling) {
-          this.particles.spawnFloatingText(unit.x, unit.y - 20, "공중 사용 불가", "#ff2255");
           return;
         }
         unit.stopSounds();
         if (unit.state === STATE.BLOCKING_SHIELD) {
           unit.state = STATE.WALKING;
           applied = true;
-          skillLabel = "방어막 해제";
           skillColor = "#00f3ff";
         } else {
           unit.state = STATE.BLOCKING_SHIELD;
           applied = true;
-          skillLabel = "+위상 방어막 돔 (양방향 차단)";
           skillColor = "#00ff88";
         }
         break;
@@ -723,7 +705,6 @@ class GameEngine {
       SFX.playClick();
       if (navigator.vibrate) navigator.vibrate(20);
       this.particles.spawnBurst(unit.x, unit.y - 10, skillColor, 16, 2.5);
-      this.particles.spawnFloatingText(unit.x, unit.y - 22, skillLabel, skillColor);
     }
   }
 
@@ -817,7 +798,7 @@ class GameEngine {
 
     if (newlyRescued > 0) {
       this.rescuedCount += newlyRescued;
-      this.particles.spawnFloatingText(currentLvl.gateX, currentLvl.gateY - 28, `+1,000 pt (구출 ${this.rescuedCount})`, '#00ff88');
+      this.particles.spawnFloatingText(currentLvl.gateX, currentLvl.gateY - 28, `${this.rescuedCount}`, '#00ff88');
     }
 
     this.particles.update();

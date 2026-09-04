@@ -250,6 +250,7 @@ class TerrainEngine {
     x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
     const pal = this.getPalette(paletteKey, 'cyan');
     
+    // Natural stratified rock heights: undulating geological crags
     const heights = new Array(w);
     for (let i = 0; i < w; i++) {
       let customH = baseH;
@@ -261,10 +262,12 @@ class TerrainEngine {
         const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
         customH = h0 + (h1 - h0) * frac;
       }
-      const roughness = Math.sin(i * 0.25) * 3 + Math.cos(i * 0.1) * 2;
-      heights[i] = Math.max(10, Math.floor(customH + roughness));
+      // Natural rolling sediment wave with rocky steps
+      const crags = Math.sin(i * 0.18) * 4 + Math.sin(i * 0.05) * 5 + (Math.floor(i / 16) % 2) * 2;
+      heights[i] = Math.max(12, Math.floor(customH + crags));
     }
 
+    // Set bitmask grid (1 = destructible natural rock)
     for (let dx = 0; dx < w; dx++) {
       const px = x + dx;
       if (px < 0 || px >= this.width) continue;
@@ -276,44 +279,110 @@ class TerrainEngine {
       }
     }
 
+    // Define the craggy rock boundary path
+    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(x, y);
     this.ctx.lineTo(x + w, y);
-    for (let dx = w - 1; dx >= 0; dx -= 3) {
+    for (let dx = w - 1; dx >= 0; dx -= 2) {
       this.ctx.lineTo(x + dx, y + heights[dx]);
     }
     this.ctx.closePath();
 
-    this.ctx.save();
-    this.ctx.shadowColor = pal.shadow;
+    // Drop shadow
+    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     this.ctx.shadowBlur = 14;
     this.ctx.shadowOffsetY = 6;
     this.ctx.fillStyle = pal.base;
     this.ctx.fill();
     this.ctx.restore();
 
-    if (this.pattern) {
-      this.ctx.fillStyle = this.pattern;
-      this.ctx.fill();
-      this.ctx.fillStyle = pal.overlay;
-      this.ctx.fill();
-    } else {
-      this.ctx.fillStyle = pal.base;
-      this.ctx.fill();
-    }
-
-    this.ctx.fillStyle = pal.top;
-    this.ctx.fillRect(x, y, w, 1.2);
-
+    // Now render rich sedimentary strata & rock texture inside boundary
     this.ctx.save();
-    this.ctx.strokeStyle = pal.vein;
-    this.ctx.lineWidth = 1;
-    for (let dx = 20; dx < w - 20; dx += 40) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x + dx, y + 3);
-      this.ctx.lineTo(x + dx + 10, y + heights[dx] - 4);
-      this.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + w, y);
+    for (let dx = w - 1; dx >= 0; dx -= 2) {
+      this.ctx.lineTo(x + dx, y + heights[dx]);
     }
+    this.ctx.closePath();
+    this.ctx.clip();
+
+    // Base rock gradient
+    const maxColH = Math.max(...heights);
+    const grad = this.ctx.createLinearGradient(x, y, x, y + maxColH);
+    grad.addColorStop(0, pal.base);
+    grad.addColorStop(1, '#101721');
+    this.ctx.fillStyle = grad;
+    this.ctx.fillRect(x, y, w, maxColH);
+
+    // 1. Sedimentary strata bands (3~4 wavy geological layers)
+    const bandCount = Math.max(2, Math.floor(baseH / 10));
+    for (let b = 1; b <= bandCount; b++) {
+      const bandY = y + (b / (bandCount + 1)) * baseH;
+      this.ctx.fillStyle = (b % 2 === 0) ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.28)';
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, bandY);
+      for (let dx = 0; dx <= w; dx += 10) {
+        const wave = Math.sin((x + dx) * 0.08 + b) * 2.5;
+        this.ctx.lineTo(x + dx, bandY + wave);
+      }
+      this.ctx.lineTo(x + w, bandY + 8);
+      this.ctx.lineTo(x, bandY + 8);
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
+
+    // 2. Angled rock cleavage cracks & fissures
+    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+    this.ctx.lineWidth = 1.4;
+    for (let cx = x + 16; cx < x + w - 10; cx += 28) {
+      const idx = cx - x;
+      const hLocal = heights[Math.min(w - 1, idx)] || baseH;
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx, y + 2);
+      this.ctx.lineTo(cx - 8, y + hLocal * 0.45);
+      this.ctx.lineTo(cx + 4, y + hLocal - 3);
+      this.ctx.stroke();
+
+      // Rock bevel highlight adjacent to crack
+      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      this.ctx.lineWidth = 0.8;
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx + 1, y + 2);
+      this.ctx.lineTo(cx - 7, y + hLocal * 0.45);
+      this.ctx.lineTo(cx + 5, y + hLocal - 3);
+      this.ctx.stroke();
+      this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+      this.ctx.lineWidth = 1.4;
+    }
+
+    // 3. Embedded mineral grains / rock flecks
+    this.ctx.fillStyle = pal.vein;
+    for (let fx = x + 8; fx < x + w - 8; fx += 14) {
+      const seed = Math.sin(fx * 3.7);
+      const fy = y + 4 + Math.abs(seed) * (baseH - 8);
+      this.ctx.fillRect(fx, fy, 2, 1.5);
+    }
+
+    this.ctx.restore();
+
+    // Rock top surface line with stony highlights
+    this.ctx.save();
+    this.ctx.fillStyle = pal.top;
+    this.ctx.fillRect(x, y, w, 1.5);
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    this.ctx.fillRect(x, y, w, 0.6);
+
+    // Rough craggy bottom outline
+    this.ctx.strokeStyle = pal.border;
+    this.ctx.lineWidth = 1.0;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w, y + heights[w - 1]);
+    for (let dx = w - 1; dx >= 0; dx -= 2) {
+      this.ctx.lineTo(x + dx, y + heights[dx]);
+    }
+    this.ctx.stroke();
     this.ctx.restore();
   }
 
@@ -321,6 +390,7 @@ class TerrainEngine {
     x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
     const pal = this.getPalette(paletteKey, 'red');
     
+    // Columnar basalt profile: vertical prismatic steps and sharp dips
     const heights = new Array(w);
     for (let i = 0; i < w; i++) {
       let customH = baseH;
@@ -332,10 +402,14 @@ class TerrainEngine {
         const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
         customH = h0 + (h1 - h0) * frac;
       }
-      const jagged = Math.sin(i * 0.3) * 4 + Math.sin(i * 0.08) * 3;
-      heights[i] = Math.max(12, Math.floor(customH + jagged));
+      // Columnar block joints: distinct 20px stepped columns with spiky slag
+      const colStep = (Math.floor(i / 20) % 2 === 0) ? 4 : -3;
+      const slagDrip = ((i % 10) === 5) ? 6 : 0;
+      const jagged = Math.sin(i * 0.4) * 3 + colStep + slagDrip;
+      heights[i] = Math.max(14, Math.floor(customH + jagged));
     }
 
+    // Set bitmask grid (1 = destructible)
     for (let dx = 0; dx < w; dx++) {
       const px = x + dx;
       if (px < 0 || px >= this.width) continue;
@@ -347,6 +421,176 @@ class TerrainEngine {
       }
     }
 
+    // Define boundary path
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + w, y);
+    for (let dx = w - 1; dx >= 0; dx -= 2) {
+      this.ctx.lineTo(x + dx, y + heights[dx]);
+    }
+    this.ctx.closePath();
+
+    // Hot magma underglow shadow
+    this.ctx.shadowColor = 'rgba(255, 50, 0, 0.7)';
+    this.ctx.shadowBlur = 16;
+    this.ctx.shadowOffsetY = 6;
+    this.ctx.fillStyle = '#180e12';
+    this.ctx.fill();
+    this.ctx.restore();
+
+    // Clip & render dark basalt columns with glowing magma veins
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + w, y);
+    for (let dx = w - 1; dx >= 0; dx -= 2) {
+      this.ctx.lineTo(x + dx, y + heights[dx]);
+    }
+    this.ctx.closePath();
+    this.ctx.clip();
+
+    // 1. Dark charcoal/obsidian base
+    const maxColH = Math.max(...heights);
+    const grad = this.ctx.createLinearGradient(x, y, x, y + maxColH);
+    grad.addColorStop(0, '#221016');
+    grad.addColorStop(0.5, '#15090d');
+    grad.addColorStop(1, '#0e0508');
+    this.ctx.fillStyle = grad;
+    this.ctx.fillRect(x, y, w, maxColH);
+
+    // 2. Columnar basalt vertical joint lines (주상절리)
+    for (let colX = x + 20; colX < x + w; colX += 20) {
+      // Column shade alternation
+      const colIdx = Math.floor((colX - x) / 20);
+      if (colIdx % 2 === 0) {
+        this.ctx.fillStyle = 'rgba(255, 60, 40, 0.05)';
+        this.ctx.fillRect(colX - 20, y, 20, maxColH);
+      }
+      // Joint fissure
+      this.ctx.strokeStyle = '#0a0305';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(colX, y + 2);
+      this.ctx.lineTo(colX, y + maxColH);
+      this.ctx.stroke();
+
+      this.ctx.strokeStyle = 'rgba(255, 80, 50, 0.2)';
+      this.ctx.lineWidth = 0.8;
+      this.ctx.beginPath();
+      this.ctx.moveTo(colX + 1, y + 2);
+      this.ctx.lineTo(colX + 1, y + maxColH);
+      this.ctx.stroke();
+    }
+
+    // 3. GLOWING MAGMA VEINS (Brilliant molten lava fissures)
+    for (let vx = x + 15; vx < x + w - 10; vx += 32) {
+      const idx = vx - x;
+      const hLocal = heights[Math.min(w - 1, idx)] || baseH;
+      const midY = y + hLocal * 0.55;
+      
+      // Outer intense lava glow
+      this.ctx.save();
+      this.ctx.strokeStyle = '#ff3700';
+      this.ctx.lineWidth = 3.5;
+      this.ctx.shadowColor = '#ff4400';
+      this.ctx.shadowBlur = 8;
+      this.ctx.beginPath();
+      this.ctx.moveTo(vx, y + 4);
+      this.ctx.lineTo(vx + 6, midY);
+      this.ctx.lineTo(vx - 2, y + hLocal - 2);
+      this.ctx.stroke();
+
+      // Branching fissure
+      this.ctx.beginPath();
+      this.ctx.moveTo(vx + 6, midY);
+      this.ctx.lineTo(vx + 14, midY + 6);
+      this.ctx.stroke();
+
+      // Hot core (Yellow/White hot lava)
+      this.ctx.strokeStyle = '#ffdd44';
+      this.ctx.lineWidth = 1.2;
+      this.ctx.shadowBlur = 0;
+      this.ctx.beginPath();
+      this.ctx.moveTo(vx, y + 4);
+      this.ctx.lineTo(vx + 6, midY);
+      this.ctx.lineTo(vx - 2, y + hLocal - 2);
+      this.ctx.stroke();
+      this.ctx.beginPath();
+      this.ctx.moveTo(vx + 6, midY);
+      this.ctx.lineTo(vx + 14, midY + 6);
+      this.ctx.stroke();
+      this.ctx.restore();
+    }
+
+    // 4. Volcanic vesicles (porous air bubble pockets)
+    this.ctx.fillStyle = '#0a0305';
+    for (let px = x + 6; px < x + w - 6; px += 18) {
+      const seed = Math.cos(px * 4.3);
+      const py = y + 5 + Math.abs(seed) * (baseH - 10);
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, 1.8, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    this.ctx.restore();
+
+    // Top surface: Scorched crust with fiery ember line
+    this.ctx.save();
+    this.ctx.fillStyle = '#ff3300';
+    this.ctx.fillRect(x, y, w, 1.8);
+    this.ctx.fillStyle = '#ffea66';
+    this.ctx.fillRect(x, y, w, 0.7);
+
+    // Bottom slag border outline with lava drip hints
+    this.ctx.strokeStyle = '#ff4400';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w, y + heights[w - 1]);
+    for (let dx = w - 1; dx >= 0; dx -= 2) {
+      this.ctx.lineTo(x + dx, y + heights[dx]);
+    }
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  drawQuantumCrystalFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'purple') {
+    x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
+    const pal = this.getPalette(paletteKey, 'purple');
+    
+    // Prismatic crystal silhouette: sharp 45° and 60° downward facets and stepped crystal points
+    const heights = new Array(w);
+    for (let i = 0; i < w; i++) {
+      let customH = baseH;
+      if (thicknessProfile.length > 0) {
+        const seg = (i / w) * (thicknessProfile.length - 1);
+        const idx = Math.floor(seg);
+        const frac = seg - idx;
+        const h0 = thicknessProfile[idx];
+        const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
+        customH = h0 + (h1 - h0) * frac;
+      }
+      // Sharp triangular crystal points repeating every 24px
+      const crystalPhase = (i % 24);
+      const crystalTip = (crystalPhase < 12) ? (crystalPhase * 0.9) : ((24 - crystalPhase) * 0.9);
+      const steppedPillar = Math.floor(i / 24) % 2 === 0 ? 3 : -3;
+      heights[i] = Math.max(14, Math.floor(customH + crystalTip + steppedPillar));
+    }
+
+    // Set bitmask grid (1 = destructible)
+    for (let dx = 0; dx < w; dx++) {
+      const px = x + dx;
+      if (px < 0 || px >= this.width) continue;
+      const colH = heights[dx];
+      for (let dy = 0; dy < colH; dy++) {
+        const py = y + dy;
+        if (py < 0 || py >= this.height) continue;
+        this.grid[py * this.width + px] = 1;
+      }
+    }
+
+    // Define crystal boundary
+    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.moveTo(x, y);
     this.ctx.lineTo(x + w, y);
@@ -355,108 +599,109 @@ class TerrainEngine {
     }
     this.ctx.closePath();
 
-    this.ctx.save();
-    this.ctx.shadowColor = pal.shadow;
-    this.ctx.shadowBlur = 14;
+    // Neon violet/cyan quantum shadow
+    this.ctx.shadowColor = 'rgba(191, 0, 255, 0.75)';
+    this.ctx.shadowBlur = 16;
     this.ctx.shadowOffsetY = 6;
-    this.ctx.fillStyle = pal.base;
+    this.ctx.fillStyle = '#160824';
     this.ctx.fill();
     this.ctx.restore();
 
-    if (this.pattern) {
-      this.ctx.fillStyle = this.pattern;
-      this.ctx.fill();
-      this.ctx.fillStyle = pal.overlay;
-      this.ctx.fill();
-    } else {
-      this.ctx.fillStyle = pal.base;
-      this.ctx.fill();
-    }
-
-    this.ctx.fillStyle = pal.top;
-    this.ctx.fillRect(x, y, w, 1.2);
-
+    // Clip & render alien quantum crystal facets and refractive energy conduits
     this.ctx.save();
-    this.ctx.strokeStyle = pal.vein;
-    this.ctx.lineWidth = 1;
-    for (let dx = 15; dx < w - 15; dx += 35) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x + dx, y + 3);
-      this.ctx.lineTo(x + dx + 6, y + heights[dx] / 2);
-      this.ctx.lineTo(x + dx + 12, y + heights[dx] - 2);
-      this.ctx.stroke();
-    }
-    this.ctx.restore();
-  }
-
-  drawQuantumCrystalFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'purple') {
-    x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
-    const pal = this.getPalette(paletteKey, 'purple');
-    
-    const heights = new Array(w);
-    for (let i = 0; i < w; i++) {
-      let customH = baseH;
-      if (thicknessProfile.length > 0) {
-        const seg = (i / w) * (thicknessProfile.length - 1);
-        const idx = Math.floor(seg);
-        const frac = seg - idx;
-        const h0 = thicknessProfile[idx];
-        const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
-        customH = h0 + (h1 - h0) * frac;
-      }
-      const geomStep = Math.floor((i % 24) / 12) * 3;
-      heights[i] = Math.max(12, Math.floor(customH + geomStep));
-    }
-
-    for (let dx = 0; dx < w; dx++) {
-      const px = x + dx;
-      if (px < 0 || px >= this.width) continue;
-      const colH = heights[dx];
-      for (let dy = 0; dy < colH; dy++) {
-        const py = y + dy;
-        if (py < 0 || py >= this.height) continue;
-        this.grid[py * this.width + px] = 1;
-      }
-    }
-
     this.ctx.beginPath();
     this.ctx.moveTo(x, y);
     this.ctx.lineTo(x + w, y);
-    for (let dx = w - 1; dx >= 0; dx -= 4) {
+    for (let dx = w - 1; dx >= 0; dx -= 3) {
       this.ctx.lineTo(x + dx, y + heights[dx]);
     }
     this.ctx.closePath();
+    this.ctx.clip();
 
-    this.ctx.save();
-    this.ctx.shadowColor = pal.shadow;
-    this.ctx.shadowBlur = 14;
-    this.ctx.shadowOffsetY = 6;
-    this.ctx.fillStyle = pal.base;
-    this.ctx.fill();
-    this.ctx.restore();
+    // 1. Cosmic violet/indigo crystal gradient
+    const maxColH = Math.max(...heights);
+    const grad = this.ctx.createLinearGradient(x, y, x + w * 0.5, y + maxColH);
+    grad.addColorStop(0, '#260c3e');
+    grad.addColorStop(0.5, '#160726');
+    grad.addColorStop(1, '#0c0316');
+    this.ctx.fillStyle = grad;
+    this.ctx.fillRect(x, y, w, maxColH);
 
-    if (this.pattern) {
-      this.ctx.fillStyle = this.pattern;
-      this.ctx.fill();
-      this.ctx.fillStyle = pal.overlay;
-      this.ctx.fill();
-    } else {
-      this.ctx.fillStyle = pal.base;
-      this.ctx.fill();
-    }
-
-    this.ctx.fillStyle = pal.top;
-    this.ctx.fillRect(x, y, w, 1.2);
-
-    this.ctx.save();
-    this.ctx.strokeStyle = pal.vein;
-    this.ctx.lineWidth = 1;
-    for (let dx = 24; dx < w - 24; dx += 48) {
+    // 2. Polygonal crystal facets (rhombus / triangular gem planes)
+    for (let fx = x; fx < x + w; fx += 24) {
+      const hLocal = heights[Math.min(w - 1, fx - x)] || baseH;
+      // Top-left facet
+      this.ctx.fillStyle = 'rgba(191, 0, 255, 0.15)';
       this.ctx.beginPath();
-      this.ctx.moveTo(x + dx, y + 2);
-      this.ctx.lineTo(x + dx + 12, y + heights[dx] - 4);
+      this.ctx.moveTo(fx, y);
+      this.ctx.lineTo(fx + 12, y + hLocal * 0.5);
+      this.ctx.lineTo(fx, y + hLocal);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // Top-right specular crystal facet
+      this.ctx.fillStyle = 'rgba(0, 243, 255, 0.12)';
+      this.ctx.beginPath();
+      this.ctx.moveTo(fx + 12, y + hLocal * 0.5);
+      this.ctx.lineTo(fx + 24, y);
+      this.ctx.lineTo(fx + 24, y + hLocal);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // Sharp facet ridge lines
+      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      this.ctx.lineWidth = 0.9;
+      this.ctx.beginPath();
+      this.ctx.moveTo(fx, y);
+      this.ctx.lineTo(fx + 12, y + hLocal * 0.5);
+      this.ctx.lineTo(fx, y + hLocal);
       this.ctx.stroke();
     }
+
+    // 3. Glowing quantum circuit lines & crystalline nodes
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(0, 243, 255, 0.6)';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.shadowColor = '#00f3ff';
+    this.ctx.shadowBlur = 6;
+    for (let qx = x + 12; qx < x + w - 8; qx += 36) {
+      const idx = qx - x;
+      const hLocal = heights[Math.min(w - 1, idx)] || baseH;
+      const midY = y + hLocal * 0.5;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(qx, y + 2);
+      this.ctx.lineTo(qx + 8, midY);
+      this.ctx.lineTo(qx + 16, midY);
+      this.ctx.lineTo(qx + 24, y + hLocal - 3);
+      this.ctx.stroke();
+
+      // Glowing quantum node dot
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.beginPath();
+      this.ctx.arc(qx + 12, midY, 1.8, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+    this.ctx.restore();
+
+    this.ctx.restore();
+
+    // Polished crystal top edge with laser refraction
+    this.ctx.save();
+    this.ctx.fillStyle = '#bf00ff';
+    this.ctx.fillRect(x, y, w, 1.6);
+    this.ctx.fillStyle = '#00f3ff';
+    this.ctx.fillRect(x, y, w, 0.7);
+
+    // Sharp crystal facet bottom outline
+    this.ctx.strokeStyle = 'rgba(191, 0, 255, 0.85)';
+    this.ctx.lineWidth = 1.4;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + w, y + heights[w - 1]);
+    for (let dx = w - 1; dx >= 0; dx -= 3) {
+      this.ctx.lineTo(x + dx, y + heights[dx]);
+    }
+    this.ctx.stroke();
     this.ctx.restore();
   }
 
@@ -464,6 +709,7 @@ class TerrainEngine {
     x = Math.floor(x); y = Math.floor(y); w = Math.floor(w); h = Math.floor(h);
     const pal = this.getPalette(paletteKey, 'cyan');
 
+    // Fill bitmask grid (1 = destructible)
     for (let py = y; py < y + h; py++) {
       if (py < 0 || py >= this.height) continue;
       for (let px = x; px < x + w; px++) {
@@ -472,29 +718,86 @@ class TerrainEngine {
       }
     }
 
+    // Shadow
     this.ctx.save();
     this.ctx.shadowColor = pal.shadow;
-    this.ctx.shadowBlur = 10;
-    this.ctx.shadowOffsetY = 4;
+    this.ctx.shadowBlur = 14;
+    this.ctx.shadowOffsetY = 6;
     this.ctx.fillStyle = pal.base;
     this.ctx.fillRect(x, y, w, h);
     this.ctx.restore();
 
-    if (this.pattern) {
-      this.ctx.fillStyle = this.pattern;
-      this.ctx.fillRect(x, y, w, h);
-      this.ctx.fillStyle = pal.overlay;
-      this.ctx.fillRect(x, y, w, h);
-    } else {
-      this.ctx.fillStyle = pal.base;
-      this.ctx.fillRect(x, y, w, h);
+    // Render rugged natural cliff face texture
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rect(x, y, w, h);
+    this.ctx.clip();
+
+    // 1. Cliff gradient background
+    const grad = this.ctx.createLinearGradient(x, y, x + w, y + h);
+    grad.addColorStop(0, pal.base);
+    grad.addColorStop(1, '#0e1722');
+    this.ctx.fillStyle = grad;
+    this.ctx.fillRect(x, y, w, h);
+
+    // 2. Horizontal rock strata shelves
+    const strataStep = 22;
+    for (let sy = y + strataStep; sy < y + h; sy += strataStep) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      this.ctx.fillRect(x, sy, w, 2);
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      this.ctx.fillRect(x, sy + 2, w, 1);
     }
 
+    // 3. Vertical cliff cleavage fault cracks (stone monolith pillars)
+    const faultStep = Math.max(20, Math.floor(w / 3));
+    for (let fx = x + faultStep; fx < x + w; fx += faultStep) {
+      this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+      this.ctx.lineWidth = 1.8;
+      this.ctx.beginPath();
+      this.ctx.moveTo(fx, y);
+      for (let cy = y; cy < y + h; cy += 16) {
+        const offset = Math.sin(cy * 0.1) * 3;
+        this.ctx.lineTo(fx + offset, cy + 16);
+      }
+      this.ctx.stroke();
+
+      // Stone bevel highlight alongside crack
+      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+      this.ctx.lineWidth = 1.0;
+      this.ctx.beginPath();
+      this.ctx.moveTo(fx + 1.5, y);
+      for (let cy = y; cy < y + h; cy += 16) {
+        const offset = Math.sin(cy * 0.1) * 3;
+        this.ctx.lineTo(fx + offset + 1.5, cy + 16);
+      }
+      this.ctx.stroke();
+    }
+
+    // 4. Embedded mineral veins / rock flecks
+    this.ctx.fillStyle = pal.vein;
+    for (let rx = x + 10; rx < x + w - 8; rx += 16) {
+      for (let ry = y + 10; ry < y + h - 8; ry += 20) {
+        if (Math.sin(rx * 3.1 + ry * 2.3) > 0.4) {
+          this.ctx.fillRect(rx, ry, 3, 2);
+        }
+      }
+    }
+
+    this.ctx.restore();
+
+    // Cliff outer stone bevel borders
+    this.ctx.save();
     this.ctx.strokeStyle = pal.border;
-    this.ctx.lineWidth = 1.2;
+    this.ctx.lineWidth = 1.5;
     this.ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+    // Top lighted cliff edge
     this.ctx.fillStyle = pal.top;
-    this.ctx.fillRect(x, y, w, 1.2);
+    this.ctx.fillRect(x, y, w, 1.8);
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.fillRect(x, y, w, 0.7);
+    this.ctx.restore();
   }
 
   drawSteelBarrier(x, y, w, h) {

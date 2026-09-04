@@ -94,7 +94,6 @@ class NanoUnit {
           SFX.playTeleport();
           particles.spawnBurst(portalPair.entry.x, portalPair.entry.y, '#00f3ff', 22, 3);
           particles.spawnBurst(portalPair.exit.x, portalPair.exit.y, '#bf00ff', 22, 3);
-          particles.spawnFloatingText(portalPair.exit.x, portalPair.exit.y - 22, "WARP!", '#00f3ff');
           return;
         }
       }
@@ -172,7 +171,6 @@ class NanoUnit {
       if (this.fallDistance > this.maxSafeFall && !isFloater) {
         this.die(particles, 'splat');
         particles.spawnBurst(this.x, this.y - 8, '#ff2255', 20, 3);
-        particles.spawnFloatingText(this.x, this.y - 20, "으아악~!", "#ff4466");
       } else {
         this.state = STATE.WALKING;
         this.fallDistance = 0;
@@ -260,7 +258,6 @@ class NanoUnit {
             this.dir = -this.dir;
             this.vx = this.dir * 1.25;
             this.hasPlasmaCutter = false;
-            particles.spawnFloatingText(this.x, this.y - 20, "강철 격벽 (절삭 불가)", "#ffaa00");
             return;
           }
 
@@ -270,7 +267,6 @@ class NanoUnit {
           this.cutStartY = Math.round(this.y);
           SFX.playLaser();
           particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 16, 2.5);
-          particles.spawnFloatingText(this.x, this.y - 20, "⚡ 플라즈마 절삭 가동!", '#00f3ff');
           return;
         }
 
@@ -330,7 +326,6 @@ class NanoUnit {
         this.vx = this.dir * 1.25;
         this.hasMagnetizer = false; // 1-time usage consumed upon climbing over wall!
         particles.spawnBurst(this.x, this.y - 4, '#00f3ff', 8, 1.2);
-        particles.spawnFloatingText(this.x, this.y - 20, "등반 완료!", "#00ff88");
       }
     }
   }
@@ -368,7 +363,6 @@ class NanoUnit {
         this.cutSteps = 0;
         this.cutStartY = 0;
         this.exitSteps = 0;
-        particles.spawnFloatingText(this.x, this.y - 20, "구조물/격벽 (절삭 불가)", "#ffaa00");
         return;
       }
 
@@ -436,7 +430,6 @@ class NanoUnit {
         this.cutStartY = 0;
         this.exitSteps = 0;
         particles.spawnBurst(this.x, this.y - 12, '#00ff88', 18, 2.5);
-        particles.spawnFloatingText(this.x, this.y - 20, "절삭 완료 (관통 성공)!", "#00ff88");
       }
     }
   }
@@ -460,7 +453,6 @@ class NanoUnit {
         this.state = STATE.WALKING;
         this.cutSteps = 0;
         this.exitSteps = 0;
-        particles.spawnFloatingText(this.x, this.y - 20, "구조물/격벽 (천공 불가)", "#ffaa00");
         return;
       }
 
@@ -502,7 +494,6 @@ class NanoUnit {
         this.cutSteps = 0;
         this.exitSteps = 0;
         particles.spawnBurst(this.x, this.y, '#00ff88', 16, 2.2);
-        particles.spawnFloatingText(this.x, this.y - 20, "천공 완료 (하부 도달)!", "#00ff88");
       }
     }
   }
@@ -527,7 +518,6 @@ class NanoUnit {
         this.state = STATE.WALKING;
         this.cutSteps = 0;
         this.exitSteps = 0;
-        particles.spawnFloatingText(this.x, this.y - 20, "구조물/격벽 (대각 굴착 불가)", "#ffaa00");
         return;
       }
 
@@ -579,7 +569,6 @@ class NanoUnit {
         this.exitSteps = 0;
         this.fallDistance = 0;
         particles.spawnBurst(this.x, this.y, '#00ff88', 16, 2.5);
-        particles.spawnFloatingText(this.x, this.y - 20, "대각 굴착 완료!", "#00ff88");
       }
     }
   }
@@ -638,24 +627,79 @@ class NanoUnit {
     ctx.save();
     ctx.translate(this.x, this.y);
 
-    if (this.bombTimer > 0) {
-      const secs = Math.ceil(this.bombTimer / 48);
-      ctx.fillStyle = '#ff2255';
-      ctx.font = 'bold 13px Orbitron, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(secs.toString(), 0, -32);
+    // --- Streamlined Head Icon Badge System ---
+    const badges = [];
+
+    // 1. Executing action badge (slow blinking)
+    let executingIcon = null;
+    let executingColor = '#00f3ff';
+    if (this.state === STATE.PLASMA_CUTTING) {
+      executingIcon = '⚡';
+      executingColor = '#00f3ff';
+    } else if (this.state === STATE.CLIMBING) {
+      executingIcon = '🧗';
+      executingColor = '#ffb700';
+    } else if (this.state === STATE.THERMAL_DRILLING) {
+      executingIcon = '🔥';
+      executingColor = '#ff6600';
+    } else if (this.state === STATE.DIAGONAL_MINING) {
+      executingIcon = '⛏️';
+      executingColor = '#f0a028';
+    } else if (this.state === STATE.BUILDING_3D_PRINT) {
+      executingIcon = '🪜';
+      executingColor = '#00f3ff';
+    } else if (this.state === STATE.BLOCKING_SHIELD) {
+      executingIcon = '🛡️';
+      executingColor = '#00ff88';
+    } else if (this.state === STATE.FLOATING || (this.state === STATE.FALLING && this.hasAntiGrav)) {
+      executingIcon = '🚀';
+      executingColor = '#00ff88';
     }
 
-    if (this.hasPlasmaCutter && this.state === STATE.WALKING) {
-      ctx.fillStyle = '#00f3ff';
-      ctx.font = 'bold 11px Orbitron, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText("⚡", 0, -32);
-    } else if (this.hasAntiGrav && this.state === STATE.WALKING) {
-      ctx.fillStyle = '#00ff88';
-      ctx.font = 'bold 11px Orbitron, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText("🚀", 0, -32);
+    if (executingIcon) {
+      badges.push({ icon: executingIcon, executing: true, color: executingColor });
+    }
+
+    // 2. Reserved skills (steady, no blinking)
+    if (this.hasPlasmaCutter && this.state !== STATE.PLASMA_CUTTING) {
+      badges.push({ icon: '⚡', executing: false, color: '#00f3ff' });
+    }
+    if (this.hasMagnetizer && this.state !== STATE.CLIMBING) {
+      badges.push({ icon: '🧗', executing: false, color: '#ffb700' });
+    }
+    if (this.hasAntiGrav && this.state !== STATE.FLOATING && !(this.state === STATE.FALLING && this.hasAntiGrav)) {
+      badges.push({ icon: '🚀', executing: false, color: '#00ff88' });
+    }
+
+    // Bomb countdown
+    if (this.bombTimer > 0) {
+      const secs = Math.ceil(this.bombTimer / 48);
+      badges.push({ icon: `💣${secs}`, executing: true, color: '#ff2255' });
+    }
+
+    // Render badges horizontally centered above head at y = -32
+    if (badges.length > 0) {
+      ctx.save();
+      const spacing = 16;
+      const totalWidth = (badges.length - 1) * spacing;
+      const startX = -totalWidth / 2;
+
+      badges.forEach((b, idx) => {
+        const bx = startX + idx * spacing;
+        let alpha = 1.0;
+        if (b.executing) {
+          // Slow blink: rhythmic 16 frames on, 12 frames dimmed
+          const isBlinkOn = (Math.floor(this.animFrame / 16) % 2 === 0);
+          alpha = isBlinkOn ? 1.0 : 0.2;
+        }
+
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold 12px "Apple Color Emoji", "Segoe UI Emoji", Orbitron, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = b.color;
+        ctx.fillText(b.icon, bx, -32);
+      });
+      ctx.restore();
     }
 
     if (isHovered) {

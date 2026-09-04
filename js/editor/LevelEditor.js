@@ -745,11 +745,25 @@ class LevelEditor {
         palette: this.levelData.terrainTheme || 'cyan'
       };
 
-      if (newEl.type === 'craggyRock' || newEl.type === 'volcanicBasalt' || newEl.type === 'quantumCrystal') {
-        const segs = Math.max(3, Math.floor(w / 40));
+      if (newEl.type === 'craggyRock') {
+        const segs = Math.max(3, Math.floor(w / 35));
         newEl.profile = [];
         for (let i = 0; i < segs; i++) {
-          newEl.profile.push(Math.round(h * (0.7 + Math.random() * 0.6)));
+          newEl.profile.push(Math.round(h * (0.65 + Math.random() * 0.7)));
+        }
+      } else if (newEl.type === 'volcanicBasalt') {
+        const segs = Math.max(3, Math.floor(w / 28));
+        newEl.profile = [];
+        for (let i = 0; i < segs; i++) {
+          const colStep = (i % 2 === 0) ? 0.8 : 0.35;
+          newEl.profile.push(Math.round(h * (colStep + Math.random() * 0.5)));
+        }
+      } else if (newEl.type === 'quantumCrystal') {
+        const segs = Math.max(3, Math.floor(w / 30));
+        newEl.profile = [];
+        for (let i = 0; i < segs; i++) {
+          const crystalTip = (i % 3 === 1) ? 1.15 : 0.6;
+          newEl.profile.push(Math.round(h * (crystalTip + Math.random() * 0.35)));
         }
       }
 

@@ -6,10 +6,11 @@
   const WK = (typeof require === 'function') ? require('./MapWalker.js') : root;
   const PL = (typeof require === 'function') ? require('./MapPlanner.js') : root;
   const PR = (typeof require === 'function') ? require('./MapProbe.js') : root;
-  const api = factory(C, WK, PL, PR);
+  const FA = (typeof require === 'function') ? require('./FullCanvasLevelArchitect.js') : root;
+  const api = factory(C, WK, PL, PR, FA);
   if (typeof module === 'object' && module.exports) module.exports = api;
   Object.assign(root, api);
-})(typeof self !== 'undefined' ? self : this, function (C, WK, PL, PR) {
+})(typeof self !== 'undefined' ? self : this, function (C, WK, PL, PR, FA) {
   'use strict';
   const { W, H, PHYS, clamp, makeRNG } = C;
 
@@ -729,6 +730,16 @@
     }
 
     static generate(options = {}) {
+      const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
+        ? FullCanvasLevelArchitect
+        : (FA && FA.FullCanvasLevelArchitect)
+          ? FA.FullCanvasLevelArchitect
+          : null;
+      if (Architect) {
+        return Architect.generate(options);
+      }
+
+      // Fallback to legacy generator if Architect is not available
       const targetScore = this.mapDifficultyToScore(options.difficulty);
       const forceArch = this.mapLayoutToArchetype(options.layout);
       const forceBiome = this.mapThemeAndPaletteToBiome(options.theme, options.palette);
@@ -765,10 +776,52 @@
     }
 
     static generateCampaignBatch(arc = {}) {
+      const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
+        ? FullCanvasLevelArchitect
+        : (FA && FA.FullCanvasLevelArchitect)
+          ? FA.FullCanvasLevelArchitect
+          : null;
+      if (Architect && arc.stages) {
+        const stages = [];
+        const archs = ['cascade', 'zigzag', 'traverse', 'split', 'chamber', 'ascent'];
+        for (let i = 0; i < arc.stages; i++) {
+          const t = arc.stages === 1 ? 1 : i / (arc.stages - 1);
+          let diff = 'easy';
+          if (t > 0.75) diff = 'nightmare';
+          else if (t > 0.45) diff = 'hard';
+          else if (t > 0.2) diff = 'normal';
+
+          const map = Architect.generate({
+            difficulty: diff,
+            layout: archs[i % archs.length],
+            stageNo: (arc.startStage || 11) + i,
+            seed: (arc.seed || Date.now()) + i * 7919
+          });
+          stages.push(map);
+        }
+        return { stages };
+      }
       return this.metaGenerator.batch(arc);
     }
 
     static generateNextStage(currentStageNo = 11, prevMap = null, difficulty = 'normal') {
+      const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
+        ? FullCanvasLevelArchitect
+        : (FA && FA.FullCanvasLevelArchitect)
+          ? FA.FullCanvasLevelArchitect
+          : null;
+      if (Architect) {
+        const archs = ['cascade', 'zigzag', 'traverse', 'split', 'chamber', 'ascent'];
+        const prevArch = prevMap ? prevMap.layoutType : null;
+        const choices = archs.filter(a => a !== prevArch);
+        const layout = choices.length ? choices[Math.floor(Math.random() * choices.length)] : 'cascade';
+        return Architect.generate({
+          difficulty,
+          layout,
+          stageNo: currentStageNo,
+          seed: (Date.now() ^ (currentStageNo * 7919)) >>> 0
+        });
+      }
       const targetScore = this.mapDifficultyToScore(difficulty);
       const intent = {
         score: targetScore,

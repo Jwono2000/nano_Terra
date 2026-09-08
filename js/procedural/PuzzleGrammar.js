@@ -90,3 +90,8 @@ const DIFFICULTY_SPECS = {
     titlePrefix: "OMEGA SECTOR (NIGHTMARE)"
   }
 };
+
+if (typeof module === 'object' && module.exports) {
+  module.exports = { PUZZLE_ACTIONS, PUZZLE_COMBOS, DIFFICULTY_SPECS };
+}
+

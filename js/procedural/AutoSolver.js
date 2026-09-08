@@ -270,3 +270,10 @@ class AutoSolver {
     }
   }
 }
+
+if (typeof module === 'object' && module.exports) {
+  const PG = require('./PuzzleGrammar.js');
+  global.PUZZLE_ACTIONS = PG.PUZZLE_ACTIONS;
+  module.exports = { AutoSolver };
+}
+

@@ -349,6 +349,11 @@ class GameEngine {
       this.enterBlankEditor();
     });
 
+    bindBtn('btn-hud-ai-gen', () => {
+      this.enterEditor();
+      if (this.editor) this.editor.openGenerateModal();
+    });
+
     bindBtn('btn-open-stage-manager', () => {
       this.stageMgr.openModal();
     });

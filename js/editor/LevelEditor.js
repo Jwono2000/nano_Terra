@@ -189,26 +189,34 @@ class LevelEditor {
   }
 
   executeGenerate() {
-    const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
-    const difficulty = getVal('gen-difficulty') || 'normal';
-    const layout = getVal('gen-layout') || 'random';
-    const theme = getVal('gen-theme') || 'random';
-    const palette = getVal('gen-palette') || 'random';
-
-    const generatedData = ProceduralMapEngine.generate({ difficulty, layout, theme, palette });
-    this.levelData = generatedData;
-    this.selectedElementIndex = -1;
-    this.selectedSpecial = null;
-
-    if (this.game && this.game.bgImg) {
-      this.game.bgImg.src = this.levelData.bgImg;
-    }
-
-    this.saveHistory();
-    this.syncTerrain();
-    this.updateStatus();
     this.closeGenerateModal();
-    SFX.playTeleport();
+    try {
+      const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+      const difficulty = getVal('gen-difficulty') || 'normal';
+      const layout = getVal('gen-layout') || 'random';
+      const theme = getVal('gen-theme') || 'random';
+      const palette = getVal('gen-palette') || 'random';
+
+      const generatedData = ProceduralMapEngine.generate({ difficulty, layout, theme, palette });
+      this.levelData = generatedData;
+      this.selectedElementIndex = -1;
+      this.selectedSpecial = null;
+
+      if (this.game && this.game.bgImg) {
+        this.game.bgImg.src = this.levelData.bgImg;
+      }
+
+      this.saveHistory();
+      this.syncTerrain();
+      this.updateStatus();
+      if (typeof SFX !== 'undefined' && SFX.playTeleport) {
+        SFX.playTeleport();
+      }
+    } catch (err) {
+      console.error('[LevelEditor] executeGenerate error:', err);
+    } finally {
+      this.closeGenerateModal();
+    }
   }
 
   openSolutionGuideModal() {

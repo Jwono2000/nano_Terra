@@ -1,0 +1,15 @@
+const C=require('./00_core.js'), PL=require('./02_planner.js'), PR=require('./03_probe.js'), EN=require('./04_engine.js');
+const hr=()=>process.hrtime.bigint(), ms=(a,b)=>Number(b-a)/1e6;
+const seed=1234;
+let t=hr(); const rng=C.makeRNG(seed);
+const planner=new PL.PathPlanner();
+const plan=planner.plan(seed,{score:72,norm:0.48,dnaLen:3});
+console.log('plan', ms(t,hr()).toFixed(2),'ms  slabs',plan.slabs.length,'trig',plan.triggers.length);
+t=hr(); const em=new PL.Emitter(rng,plan.biome); const els=em.elements(plan); const rects=em.corridorRects(plan); console.log('emit',ms(t,hr()).toFixed(2),'els',els.length);
+t=hr(); const {grid}=PL.Assembler.build(plan,els,rects); console.log('assemble',ms(t,hr()).toFixed(2));
+t=hr(); const patcher=new EN.Patcher(); const r=patcher.patchProbes(grid,plan,10); console.log('patchProbes',ms(t,hr()).toFixed(2),'applied',r.applied);
+t=hr(); const sc=EN.DifficultyScorer.score(plan,grid,{}); console.log('score',ms(t,hr()).toFixed(2),sc.total);
+const map=EN.MapAssembler.assemble(plan,els,sc,{rng,stageNo:11});
+t=hr(); const v=new EN.Validator({units:5,trials:{scripted:1,reactive:0,passive:0}}); const res=v.validate(grid,plan,map); console.log('1 scripted trial',ms(t,hr()).toFixed(2),'rate',res.scriptedRate, 'deaths', JSON.stringify(res.trials[0].deaths.slice(0,3)));
+t=hr(); const v2=new EN.Validator({units:5}); const res2=v2.validate(grid,plan,map); console.log('full validate',ms(t,hr()).toFixed(2), 'scripted',res2.scriptedRate,'reactive',res2.reactiveRate.toFixed(2),'passive',res2.passiveRate.toFixed(2));
+console.log('deaths:', JSON.stringify(res2.trials.map(t=>({m:t.mode,saved:t.saved,d:t.deaths.slice(0,4)})),null,1).slice(0,1200));

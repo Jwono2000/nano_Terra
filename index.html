@@ -68,8 +68,9 @@
 
           <!-- Action Buttons -->
           <button class="btn-hud btn-restart" id="btn-quick-restart" title="구역 즉시 재시작 (R)">🔄 재시작</button>
-          <button class="btn-hud" id="btn-open-editor" title="현재 맵 수정 에디터">🛠️ 에디터</button>
-          <button class="btn-hud" style="border-color: #ffb700; color: #ffb700;" id="btn-hud-creator" title="완전 빈 캔버스에서 새 맵 제작">✨ 신규맵</button>
+          <button class="btn-hud" id="btn-open-editor" title="현재 맵 수정 에디터">🛠️ 맵 에디터</button>
+          <button class="btn-hud" style="border-color: #ffb700; color: #ffb700;" id="btn-hud-creator" title="완전 빈 캔버스에서 새 맵 제작">🎨 크리에이터 모드</button>
+          <button class="btn-hud" style="border-color: var(--neon-cyan); color: #fff;" id="btn-hud-ai-gen" title="AI 절차적 맵 자동 생성">🎲 AI 맵 생성</button>
           <button class="btn-hud" id="btn-open-stage-manager" title="캠페인 구역 목록 & 커스텀 슬롯">📁 맵목록</button>
           <button class="btn-hud btn-nuke" id="btn-nuke" title="긴급 전원 차단 (NUKE)">💥 폭파</button>
           <button class="btn-hud" id="btn-audio" title="사운드 토글">🔊</button>
@@ -116,7 +117,7 @@
                 id="btn-editor-guide" title="정답 단계별 가이드">📖 정답 가이드</button>
               <button class="btn-tool"
                 style="border-color: var(--neon-cyan); background: rgba(0, 243, 255, 0.15); color: #fff; font-weight: bold;"
-                id="btn-editor-generate" title="난이도별 지형 자동 생성">🎲 자동 생성</button>
+                id="btn-editor-generate" title="난이도별 AI 절차적 지형 자동 생성">🎲 AI 절차적 맵 생성기</button>
               <button class="btn-tool" id="btn-editor-props" title="스테이지 정보 & 스킬 수량">⚙️ 설정</button>
               <button class="btn-tool" id="btn-editor-export" title="JSON 보기 및 복사">📋 JSON</button>
               <button class="btn-tool btn-tool-play" id="btn-editor-play" title="현재 맵 즉시 테스트 플레이">▶️ 테스트</button>
@@ -476,13 +477,13 @@
         <div class="prop-group">
           <label class="prop-label">맵 레이아웃 형태</label>
           <select class="prop-select" id="gen-layout">
-            <option value="random" selected>🎲 완전 무작위 생성 (매번 새로운 맵)</option>
-            <option value="multi_tiered">다층 계단식 강하 (Multi-Tiered)</option>
-            <option value="zigzag">지그재그 반전 회랑 (Zigzag Turns)</option>
-            <option value="labyrinth">양자 분기 미궁 (Quantum Labyrinth)</option>
-            <option value="floating_islands">다중 징검다리 섬 (Floating Islands)</option>
-            <option value="speedway">스피드 런웨이 (Speed Runway)</option>
-            <option value="twin_towers">수직 쌍둥이 타워 (Twin Towers)</option>
+            <option value="random" selected>🎲 완전 무작위 아키타입 (매번 새로운 맵)</option>
+            <option value="descent">하강 캐스케이드 (Descent - 낙하/Float 중심)</option>
+            <option value="ascent">상승 스카이라인 (Ascent - Build/Climb 중심)</option>
+            <option value="traverse">장거리 횡단 (Traverse - Bash/Mine/Drill 돌파)</option>
+            <option value="split">상/하 2단 분기 (Split - Drill/Build 왕복)</option>
+            <option value="chamber">강철 챔버/고립섬 (Chamber - Bomb/Portal 우회)</option>
+            <option value="zigzag">지그재그 반전 회랑 (Zigzag - 정밀 회랑)</option>
           </select>
         </div>
 
@@ -494,6 +495,11 @@
             <option value="assets/bg_level_2.jpg">마그마 균열 지대 (Magma)</option>
             <option value="assets/bg_level_3.jpg">양자 크리스탈 유적 (Quantum)</option>
             <option value="assets/bg_level_4.jpg">심층 코어 붕괴지 (Core)</option>
+            <option value="assets/bg_level_5.jpg">생체 발광 정글 (Bio Jungle)</option>
+            <option value="assets/bg_level_6.jpg">혹한 빙하 동굴 (Cryo Glacier)</option>
+            <option value="assets/bg_level_7.jpg">항성 다이슨 스피어 (Solar Sphere)</option>
+            <option value="assets/bg_level_8.jpg">공허 특이점 심연 (Void Abyss)</option>
+            <option value="assets/bg_level_9.jpg">메인프레임 코어 (Mainframe)</option>
           </select>
         </div>
 
@@ -511,7 +517,7 @@
       </div>
 
       <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; margin-top: 10px;">
-        <button class="btn-tool" id="btn-gen-cancel">취소</button>
+        <button class="btn-tool" id="btn-gen-cancel" onclick="document.getElementById('modal-editor-generate').style.display='none'">취소</button>
         <button class="btn-tool btn-tool-play" id="btn-gen-execute">🎲 즉시 생성</button>
       </div>
     </div>
@@ -596,17 +602,21 @@
   </div>
 
   <!-- Modular Scripts Execution Pipeline -->
-  <script src="js/engine/SFX.js?v=6"></script>
-  <script src="js/engine/TerrainEngine.js?v=6"></script>
-  <script src="js/engine/NanoUnit.js?v=6"></script>
-  <script src="js/procedural/PuzzleGrammar.js?v=6"></script>
-  <script src="js/procedural/VirtualMapValidator.js?v=6"></script>
-  <script src="js/procedural/AutoSolver.js?v=6"></script>
-  <script src="js/procedural/ProceduralMapEngine.js?v=6"></script>
-  <script src="js/editor/StageManager.js?v=6"></script>
-  <script src="js/editor/LevelEditor.js?v=6"></script>
-  <script src="js/engine/GameEngine.js?v=6"></script>
-  <script src="js/main.js?v=6"></script>
+  <script src="js/engine/SFX.js?v=7"></script>
+  <script src="js/engine/TerrainEngine.js?v=7"></script>
+  <script src="js/engine/NanoUnit.js?v=7"></script>
+  <script src="js/procedural/MapCore.js?v=7"></script>
+  <script src="js/procedural/MapWalker.js?v=7"></script>
+  <script src="js/procedural/MapPlanner.js?v=7"></script>
+  <script src="js/procedural/MapProbe.js?v=7"></script>
+  <script src="js/procedural/PuzzleGrammar.js?v=7"></script>
+  <script src="js/procedural/VirtualMapValidator.js?v=7"></script>
+  <script src="js/procedural/AutoSolver.js?v=7"></script>
+  <script src="js/procedural/ProceduralMapEngine.js?v=7"></script>
+  <script src="js/editor/StageManager.js?v=7"></script>
+  <script src="js/editor/LevelEditor.js?v=7"></script>
+  <script src="js/engine/GameEngine.js?v=7"></script>
+  <script src="js/main.js?v=7"></script>
 </body>
 
 </html>

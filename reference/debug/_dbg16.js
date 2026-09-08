@@ -1,0 +1,11 @@
+const C=require('./00_core.js'), PL=require('./02_planner.js'), PR=require('./03_probe.js'), EN=require('./04_engine.js');
+const seed=5131;
+const rng=C.makeRNG(seed^0x9e3779b9);
+const plan=new PL.PathPlanner().plan(seed,{score:70,norm:0.47,dnaLen:3});
+const em=new PL.Emitter(rng,plan.biome);
+const build=pl=>{const els=em.elements(pl);const r=PL.Assembler.build(pl,els);return {grid:r.grid,elements:els,protect:r.protect};};
+let b=build(plan);
+console.log('issues before Patcher:',PR.probeAll(b.grid,plan).map(i=>(i.skill||i.scope)+':'+i.code));
+const patcher=new EN.Patcher(); const r=patcher.patchProbes(plan,build,3);
+console.log('patcher applied',r.applied,'log',JSON.stringify(patcher.log.map(l=>(l.skill||l.scope)+':'+l.code)));
+console.log('slabs after',JSON.stringify(plan.slabs.map(s=>[s.x0,s.x1,s.y])));

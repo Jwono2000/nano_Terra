@@ -1,11 +1,12 @@
 /* ============================================================================
- * ProceduralMapEngine.js — AI 역방향 제약 프로시저럴 맵 생성 엔진 (v2)
+ * 04_engine.js — 오케스트레이터(생성→검증→보정 루프) + 난이도 스코어러
+ *                + 메타 생성기(연속 스테이지 배치)     ★Q2, Q5, Q6
  * ==========================================================================*/
 (function (root, factory) {
-  const C = (typeof require === 'function') ? require('./MapCore.js') : root;
-  const WK = (typeof require === 'function') ? require('./MapWalker.js') : root;
-  const PL = (typeof require === 'function') ? require('./MapPlanner.js') : root;
-  const PR = (typeof require === 'function') ? require('./MapProbe.js') : root;
+  const C = (typeof require === 'function') ? require('./00_core.js') : root;
+  const WK = (typeof require === 'function') ? require('./01_walker.js') : root;
+  const PL = (typeof require === 'function') ? require('./02_planner.js') : root;
+  const PR = (typeof require === 'function') ? require('./03_probe.js') : root;
   const api = factory(C, WK, PL, PR);
   if (typeof module === 'object' && module.exports) module.exports = api;
   Object.assign(root, api);
@@ -361,7 +362,7 @@
     generate(intent = {}) {
       const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
       const t0 = now();
-      const seed0 = intent.seed != null ? intent.seed : (((Math.random() * 1e9) | 0) ^ (Date.now() & 0x7fffffff));
+      const seed0 = intent.seed != null ? intent.seed : (Math.random() * 1e9) | 0;
       const targetScore = intent.score != null ? intent.score : 65;
       const band = bandKey(targetScore);
       const tb = intent.timeBudgetMs || this.timeBudgetMs;
@@ -474,15 +475,15 @@
         }
       }
 
-      /* (J) 폴백 체인: 항상 새로운 시드로 생성된 최신 맵(last.map)을 우선 채택하여 중복 생성 방지 */
+      /* (J) 폴백 체인 */
       this.stats.fallbacks++;
-      if (last && last.map) return withFallbackMark(last.map, 'BEST_EFFORT', last);
       const cached = this.fallbackCache.get(band) || this.fallbackCache.get(nearestBand(this.fallbackCache, targetScore));
       if (cached) return withFallbackMark(structuredCloneLite(cached), 'CACHE', last);
       if (this.handAuthored.length) {
         const base = this.handAuthored[clamp(Math.floor(targetScore / 150 * this.handAuthored.length), 0, this.handAuthored.length - 1)];
         return withFallbackMark(structuredCloneLite(base), 'HAND_AUTHORED', last);
       }
+      if (last) return withFallbackMark(last.map, 'BEST_EFFORT', last);
       throw new Error('generation failed: no fallback available');
     }
 
@@ -621,167 +622,5 @@
     return rng.weighted(items).k;
   }
 
-  /* =====================================================================
-   * ProceduralMapEngine — 외부 게임 인터페이스 (LevelEditor, StageManager, main.js)
-   * ===================================================================*/
-  class ProceduralMapEngine {
-    static THEMES = [
-      'assets/bg_level_1.jpg',
-      'assets/bg_level_2.jpg',
-      'assets/bg_level_3.jpg',
-      'assets/bg_level_4.jpg',
-      'assets/bg_level_5.jpg',
-      'assets/bg_level_6.jpg',
-      'assets/bg_level_7.jpg',
-      'assets/bg_level_8.jpg',
-      'assets/bg_level_9.jpg'
-    ];
-
-    static PALETTES = ['cyan', 'red', 'brown', 'green', 'purple'];
-    static LAYOUTS = ['random', 'descent', 'ascent', 'traverse', 'split', 'chamber', 'zigzag'];
-
-    static SECTOR_NAMES = [
-      'GENESIS', 'VALKYRIE', 'HYPERION', 'NEBULA', 'ECLIPSE', 'QUANTUM',
-      'SOLARIS', 'CYBERDYNE', 'KRONOS', 'ABYSS', 'PROMETHEUS', 'TITAN',
-      'NEXUS', 'VORTEX', 'OLYMPUS', 'ANDROMEDA', 'AURORA', 'ZENITH'
-    ];
-
-    static _generator = null;
-    static _metaGenerator = null;
-
-    static get generator() {
-      if (!this._generator) {
-        this._generator = new NanoTerraGenerator({
-          timeBudgetMs: 1000,
-          maxAttempts: 20,
-          validator: { units: 5 }
-        });
-      }
-      return this._generator;
-    }
-
-    static get metaGenerator() {
-      if (!this._metaGenerator) {
-        this._metaGenerator = new MetaGenerator(this.generator, { window: 5 });
-      }
-      return this._metaGenerator;
-    }
-
-    static getRandomItem(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    static generateProfile(points = 5, minH = 14, maxH = 40) {
-      const res = [];
-      for (let i = 0; i < points; i++) {
-        res.push(Math.floor(Math.random() * (maxH - minH + 1)) + minH);
-      }
-      return res;
-    }
-
-    static mapDifficultyToScore(diff) {
-      if (typeof diff === 'number') return clamp(diff, 10, 150);
-      const d = (diff || 'normal').toLowerCase();
-      switch (d) {
-        case 'easy': return 32;
-        case 'normal': return 65;
-        case 'hard': return 98;
-        case 'nightmare': return 128;
-        default: return 65;
-      }
-    }
-
-    static mapLayoutToArchetype(layout) {
-      if (!layout || layout === 'random') return null;
-      const l = layout.toLowerCase();
-      const map = {
-        'multi_tiered': 'descent',
-        'speedway': 'traverse',
-        'twin_towers': 'ascent',
-        'labyrinth': 'split',
-        'floating_islands': 'chamber',
-        'zigzag': 'zigzag',
-        'descent': 'descent',
-        'ascent': 'ascent',
-        'traverse': 'traverse',
-        'split': 'split',
-        'chamber': 'chamber'
-      };
-      return map[l] || null;
-    }
-
-    static mapThemeAndPaletteToBiome(theme, palette) {
-      if (palette && palette !== 'random') {
-        if (palette === 'red') return 'volcanicRift';
-        if (palette === 'cyan') return 'cryoCavern';
-        if (palette === 'green') return 'verdantStrata';
-        if (palette === 'purple') return 'voidLattice';
-        if (palette === 'brown') return 'derelictStation';
-      }
-      if (theme && theme !== 'random') {
-        if (theme.includes('level_2') || theme.includes('level_7')) return 'volcanicRift';
-        if (theme.includes('level_1') || theme.includes('level_6')) return 'cryoCavern';
-        if (theme.includes('level_5')) return 'verdantStrata';
-        if (theme.includes('level_3') || theme.includes('level_8')) return 'voidLattice';
-        if (theme.includes('level_4') || theme.includes('level_9')) return 'derelictStation';
-      }
-      return null;
-    }
-
-    static generate(options = {}) {
-      const targetScore = this.mapDifficultyToScore(options.difficulty);
-      const forceArch = this.mapLayoutToArchetype(options.layout);
-      const forceBiome = this.mapThemeAndPaletteToBiome(options.theme, options.palette);
-      const seed = options.seed != null ? options.seed : (((Math.random() * 1e9) | 0) ^ (Date.now() & 0x7fffffff));
-
-      const intent = {
-        score: targetScore,
-        biome: forceBiome,
-        forceArch: forceArch,
-        dna: options.dna,
-        skillPool: options.skillPool,
-        stageNo: options.stageNo || 11,
-        id: options.id || 'CUSTOM',
-        seed
-      };
-
-      const map = this.generator.generate(intent);
-
-      // User explicit theme / palette override
-      if (options.theme && options.theme !== 'random') {
-        map.bgImg = options.theme;
-      }
-      if (options.palette && options.palette !== 'random') {
-        map.terrainTheme = options.palette;
-      }
-
-      // Decorate description for UI readability
-      if (!map.desc) {
-        const diffLabel = (options.difficulty || (map.difficultyScore < 50 ? 'EASY' : map.difficultyScore < 85 ? 'NORMAL' : map.difficultyScore < 115 ? 'HARD' : 'NIGHTMARE')).toUpperCase();
-        map.desc = `[${map.layoutType.toUpperCase()}] 아키타입의 AI 역방향 제약 전술 구역입니다. (난이도: ${diffLabel}, 점수: ${map.difficultyScore}pt, 솔루션: ${map.solutionDna.join(' → ')})`;
-      }
-
-      return map;
-    }
-
-    static generateCampaignBatch(arc = {}) {
-      return this.metaGenerator.batch(arc);
-    }
-
-    static generateNextStage(currentStageNo = 11, prevMap = null, difficulty = 'normal') {
-      const targetScore = this.mapDifficultyToScore(difficulty);
-      const intent = {
-        score: targetScore,
-        stageNo: currentStageNo,
-        avoidArch: prevMap ? prevMap.layoutType : null,
-        seed: (Date.now() ^ (currentStageNo * 7919)) >>> 0
-      };
-      return this.generator.generate(intent);
-    }
-  }
-
-  return {
-    WEIGHTS, DifficultyScorer, Validator, Patcher, MapAssembler,
-    NanoTerraGenerator, MetaGenerator, resyncElements, ProceduralMapEngine
-  };
+  return { WEIGHTS, DifficultyScorer, Validator, Patcher, MapAssembler, NanoTerraGenerator, MetaGenerator, resyncElements };
 });

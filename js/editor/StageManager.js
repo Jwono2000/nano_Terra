@@ -456,7 +456,7 @@ class StageManager {
       lvlObj.id = idx + 1;
       lvlObj.title = lvlObj.title || (defLvl ? defLvl.title : `${idx + 1}구역 SECTOR`);
       lvlObj.desc = lvlObj.desc || (defLvl ? defLvl.desc : `${idx + 1}구역: 나노봇 군단 테라포밍 전술 구역입니다.`);
-      lvlObj.bgImg = lvlObj.bgImg || (defLvl ? defLvl.bgImg : `assets/bg_level_${(idx % 5) + 1}.jpg`);
+      lvlObj.bgImg = lvlObj.bgImg || (defLvl ? defLvl.bgImg : `assets/bg_level_${(idx % 9) + 1}.jpg`);
       lvlObj.terrainTheme = lvlObj.terrainTheme || (defLvl ? defLvl.terrainTheme : 'cyan');
       lvlObj.totalUnits = (typeof lvlObj.totalUnits === 'number' && !isNaN(lvlObj.totalUnits) && lvlObj.totalUnits > 0) ? lvlObj.totalUnits : (defLvl ? (defLvl.totalUnits || 15) : 15);
       lvlObj.needPercent = (typeof lvlObj.needPercent === 'number' && !isNaN(lvlObj.needPercent)) ? lvlObj.needPercent : (defLvl ? (defLvl.needPercent || 70) : 70);

@@ -998,46 +998,24 @@ class GameEngine {
     const gtX = (typeof currentLvl.gateX === 'number' && !isNaN(currentLvl.gateX)) ? currentLvl.gateX : 710;
     const gtY = (typeof currentLvl.gateY === 'number' && !isNaN(currentLvl.gateY)) ? currentLvl.gateY : 254;
 
-    // Spawn Hatch
-    if (this.hatchImg.complete && this.hatchImg.naturalWidth > 0) {
-      this.ctx.drawImage(this.hatchImg, spX - 24, spY - 34, 48, 48);
-    } else {
-      this.ctx.fillStyle = '#ffaa00';
-      this.ctx.fillRect(spX - 16, spY - 20, 32, 20);
-    }
-
-    // High-Definition Animated Rotating Wormhole Extraction Gate
+    // Unified Futuristic Quantum Gateways (Spawn & Exit Gate)
     const time = performance.now() * 0.003;
-    this.ctx.save();
-    this.ctx.translate(gtX, gtY);
-
-    this.ctx.save();
-    this.ctx.rotate(time * 0.8);
-    this.ctx.strokeStyle = 'rgba(191, 0, 255, 0.4)';
-    this.ctx.lineWidth = 3;
-    this.ctx.setLineDash([8, 6]);
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, 26, 0, Math.PI * 2);
-    this.ctx.stroke();
-    this.ctx.restore();
-
-    this.ctx.save();
-    this.ctx.rotate(-time * 1.5);
-    for (let i = 0; i < 4; i++) {
-      this.ctx.strokeStyle = (i % 2 === 0) ? '#bf00ff' : '#00f3ff';
-      this.ctx.lineWidth = 2.5;
+    if (typeof GatewayRenderer !== 'undefined') {
+      GatewayRenderer.renderSpawn(this.ctx, spX, spY, time, false);
+      GatewayRenderer.renderGate(this.ctx, gtX, gtY, time, false);
+    } else {
+      // Fallback
+      if (this.hatchImg && this.hatchImg.complete && this.hatchImg.naturalWidth > 0) {
+        this.ctx.drawImage(this.hatchImg, spX - 24, spY - 34, 48, 48);
+      } else {
+        this.ctx.fillStyle = '#ffaa00';
+        this.ctx.fillRect(spX - 16, spY - 20, 32, 20);
+      }
+      this.ctx.fillStyle = '#bf00ff';
       this.ctx.beginPath();
-      this.ctx.ellipse(0, 0, 20 - i * 3, 12 - i * 2, (i * Math.PI) / 4, 0, Math.PI * 2);
-      this.ctx.stroke();
+      this.ctx.arc(gtX, gtY, 20, 0, Math.PI * 2);
+      this.ctx.fill();
     }
-    this.ctx.restore();
-
-    const coreScale = 1.0 + Math.sin(time * 3) * 0.2;
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, 6 * coreScale, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.restore();
 
     if (this.portalPair.entry) {
       const px = this.portalPair.entry.x;

@@ -1,4 +1,5 @@
 // --- Headless Virtual Physics Map Validator & Feasibility Verifier ---
+// CLIMB, BLOCK, MINE 시뮬레이션 추가 + needPercent 연동
 class VirtualMapValidator {
   static validate(levelData, maxSimulationTicks = 1200) {
     if (!levelData || !levelData.elements || levelData.elements.length === 0) {
@@ -47,7 +48,7 @@ class VirtualMapValidator {
         const activeUnits = units.filter(u => u.state !== STATE.DEAD && u.state !== STATE.EXITING);
         if (activeUnits.length === 0 && spawned >= testUnitCount) break;
 
-        // A. Proactive Float save
+        // A. Proactive Float save (치사 낙하 방지)
         for (const u of activeUnits) {
           if (u.state === STATE.FALLING && !u.hasAntiGrav && u.fallDistance >= 55) {
             if (skillCounts.float > 0 || skillCounts.float === undefined) {
@@ -77,15 +78,44 @@ class VirtualMapValidator {
             }
           }
 
-          // 1) Destructible Rock Wall -> BASH
-          if (isSolidAhead && !isSteelAhead && !scout.hasPlasmaCutter) {
+          // Check floor ahead (for BLOCK detection)
+          let hasFloorAhead = false;
+          for (let dy = 1; dy <= 14; dy++) {
+            if (vTerrain.isSolid(aheadX, scout.y + dy)) {
+              hasFloorAhead = true;
+              break;
+            }
+          }
+
+          // Check wall height ahead (for CLIMB detection)
+          let wallHeightAhead = 0;
+          if (isSolidAhead && !isSteelAhead) {
+            for (let h = 1; h <= 50; h++) {
+              if (vTerrain.isSolid(aheadX, scout.y - h)) {
+                wallHeightAhead = h;
+              } else {
+                break;
+              }
+            }
+          }
+
+          // 1) Destructible Rock Wall -> BASH (wall thickness <= 58px)
+          if (isSolidAhead && !isSteelAhead && !scout.hasPlasmaCutter && wallHeightAhead < 20) {
             if (skillCounts.bash > 0 || skillCounts.bash === undefined) {
               scout.hasPlasmaCutter = true;
               if (skillCounts.bash > 0) skillCounts.bash--;
               solverCooldown = 25;
             }
           }
-          // 2) Steel barrier blocking path & safe floor below -> DRILL
+          // 2) Tall climbable wall -> CLIMB (height 14~92px)
+          else if (isSolidAhead && !isSteelAhead && wallHeightAhead >= 18 && !scout.hasMagnetizer) {
+            if (skillCounts.climb > 0 || skillCounts.climb === undefined) {
+              scout.hasMagnetizer = true;
+              if (skillCounts.climb > 0) skillCounts.climb--;
+              solverCooldown = 25;
+            }
+          }
+          // 3) Steel barrier blocking path & safe floor below -> DRILL
           else if (isSteelAhead && hasLandingFloorBelow) {
             if (skillCounts.drill > 0 || skillCounts.drill === undefined) {
               scout.state = STATE.THERMAL_DRILLING;
@@ -94,7 +124,24 @@ class VirtualMapValidator {
               solverCooldown = 30;
             }
           }
-          // 3) Reached cliff / gap near gate -> BUILD
+          // 4) Diagonal obstacle -> MINE
+          else if (isSolidAhead && !isSteelAhead && hasLandingFloorBelow && wallHeightAhead >= 10 && wallHeightAhead < 18) {
+            if (skillCounts.mine > 0 || skillCounts.mine === undefined) {
+              scout.state = STATE.DIAGONAL_MINING;
+              scout.cutSteps = 0;
+              if (skillCounts.mine > 0) skillCounts.mine--;
+              solverCooldown = 25;
+            }
+          }
+          // 5) Cliff edge (no floor ahead) away from gate -> BLOCK (prevent death)
+          else if (!hasFloorAhead && !isSolidAhead && Math.abs(scout.x - gateX) > 100) {
+            if (skillCounts.block > 0 || skillCounts.block === undefined) {
+              scout.state = STATE.BLOCKING_SHIELD;
+              if (skillCounts.block > 0) skillCounts.block--;
+              solverCooldown = 20;
+            }
+          }
+          // 6) Reached cliff / gap near gate -> BUILD
           else if (Math.abs(scout.x - gateX) < 130 && !vTerrain.isSolid(aheadX, scout.y + 10)) {
             if (skillCounts.build > 0 || skillCounts.build === undefined) {
               scout.state = STATE.BUILDING_3D_PRINT;
@@ -118,19 +165,22 @@ class VirtualMapValidator {
           }
         }
 
-        if (rescued >= Math.ceil(testUnitCount * 0.6)) {
+        // 조기 성공 판정: needPercent 연동
+        const targetPct = Math.min(60, levelData.needPercent || 60);
+        if (rescued >= Math.ceil(testUnitCount * targetPct / 100)) {
           return {
             isValid: true,
             rescued,
             total: testUnitCount,
             percent: Math.round((rescued / testUnitCount) * 100),
-            reason: "검증 성공: 100% 클리어 가능한 정답 경로 확인됨!"
+            reason: "검증 성공: 클리어 가능한 정답 경로 확인됨!"
           };
         }
       }
 
       const rescuePct = Math.round((rescued / testUnitCount) * 100);
-      const isSuccess = rescuePct >= Math.min(60, levelData.needPercent || 60);
+      const minPct = Math.min(60, levelData.needPercent || 60);
+      const isSuccess = rescuePct >= minPct;
 
       return {
         isValid: isSuccess,
@@ -148,4 +198,3 @@ class VirtualMapValidator {
 if (typeof module === 'object' && module.exports) {
   module.exports = { VirtualMapValidator };
 }
-

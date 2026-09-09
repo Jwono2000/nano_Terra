@@ -79,6 +79,11 @@ class LevelEditor {
       btnGenerate.onclick = () => this.openGenerateModal();
     }
 
+    const btnReroll = document.getElementById('btn-editor-reroll');
+    if (btnReroll) {
+      btnReroll.onclick = () => this.executeGenerate(true);
+    }
+
     const btnGuide = document.getElementById('btn-editor-guide');
     if (btnGuide) {
       btnGuide.onclick = () => this.openSolutionGuideModal();
@@ -119,15 +124,20 @@ class LevelEditor {
     bindWidthBtn('btn-width-add10', 10);
     bindWidthBtn('btn-width-add20', 20);
 
-    // Thickness Adjustment Buttons
+    // Thickness Adjustment Buttons (-20, -10, +10, +20)
     const bindThickBtn = (id, delta) => {
       const btn = document.getElementById(id);
       if (btn) btn.onclick = () => this.adjustSelectedThickness(delta);
     };
-    bindThickBtn('btn-thick-sub5', -5);
-    bindThickBtn('btn-thick-sub1', -1);
-    bindThickBtn('btn-thick-add1', 1);
-    bindThickBtn('btn-thick-add5', 5);
+    bindThickBtn('btn-thick-sub20', -20);
+    bindThickBtn('btn-thick-sub10', -10);
+    bindThickBtn('btn-thick-add10', 10);
+    bindThickBtn('btn-thick-add20', 20);
+    // Legacy support
+    bindThickBtn('btn-thick-sub5', -10);
+    bindThickBtn('btn-thick-sub1', -10);
+    bindThickBtn('btn-thick-add1', 10);
+    bindThickBtn('btn-thick-add5', 10);
 
     // Color Palette Selector Buttons
     ['cyan', 'red', 'brown', 'green', 'purple'].forEach(palKey => {
@@ -142,7 +152,11 @@ class LevelEditor {
     }
     const btnGenExecute = document.getElementById('btn-gen-execute');
     if (btnGenExecute) {
-      btnGenExecute.onclick = () => this.executeGenerate();
+      btnGenExecute.onclick = () => this.executeGenerate(false);
+    }
+    const btnGenApply = document.getElementById('btn-gen-apply');
+    if (btnGenApply) {
+      btnGenApply.onclick = () => this.closeGenerateModal();
     }
 
     // Solution Guide Modal Close
@@ -179,6 +193,8 @@ class LevelEditor {
 
   openGenerateModal() {
     const modal = document.getElementById('modal-editor-generate');
+    const statusBox = document.getElementById('gen-modal-status');
+    if (statusBox) statusBox.style.display = 'none';
     if (modal) modal.style.display = 'flex';
     SFX.playClick();
   }
@@ -188,16 +204,16 @@ class LevelEditor {
     if (modal) modal.style.display = 'none';
   }
 
-  executeGenerate() {
-    this.closeGenerateModal();
+  executeGenerate(closeModal = false) {
     try {
       const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
       const difficulty = getVal('gen-difficulty') || 'normal';
       const layout = getVal('gen-layout') || 'random';
       const theme = getVal('gen-theme') || 'random';
       const palette = getVal('gen-palette') || 'random';
+      const seed = ((Math.random() * 1e9) | 0) ^ (Date.now() & 0x7fffffff);
 
-      const generatedData = ProceduralMapEngine.generate({ difficulty, layout, theme, palette });
+      const generatedData = ProceduralMapEngine.generate({ difficulty, layout, theme, palette, seed });
       this.levelData = generatedData;
       this.selectedElementIndex = -1;
       this.selectedSpecial = null;
@@ -209,13 +225,32 @@ class LevelEditor {
       this.saveHistory();
       this.syncTerrain();
       this.updateStatus();
+
+      const statusBox = document.getElementById('gen-modal-status');
+      if (statusBox) {
+        const dnaStr = (this.levelData.solutionDna || []).join(' → ') || 'CUSTOM';
+        const archStr = this.levelData.layoutType || 'random';
+        statusBox.style.display = 'block';
+        statusBox.innerHTML = `
+          <div style="color:#00ff88; font-weight:bold; font-size:12px; margin-bottom:4px;">
+            ✨ [${difficulty.toUpperCase()}] 새 맵 생성 완료! (${(this.levelData.elements || []).length}개 지형)
+          </div>
+          <div style="color:#a0e8ff; font-size:11px; line-height:1.4;">
+            • 레이아웃: <b style="color:#fff;">${archStr}</b> | 솔루션 DNA: <b style="color:#ffcc00;">${dnaStr}</b><br>
+            • 마음에 들 때까지 <b>'🎲 즉시 생성'</b>을 계속 눌러 새로운 맵을 뽑아볼 수 있습니다!
+          </div>
+        `;
+      }
+
       if (typeof SFX !== 'undefined' && SFX.playTeleport) {
         SFX.playTeleport();
       }
     } catch (err) {
       console.error('[LevelEditor] executeGenerate error:', err);
     } finally {
-      this.closeGenerateModal();
+      if (closeModal) {
+        this.closeGenerateModal();
+      }
     }
   }
 
@@ -273,7 +308,7 @@ class LevelEditor {
     setVal('prop-sk-bomb', skills.bomb !== undefined ? skills.bomb : 2);
     setVal('prop-sk-build', skills.build !== undefined ? skills.build : 6);
     setVal('prop-sk-block', skills.block !== undefined ? skills.block : 3);
-    setVal('prop-sk-portal', skills.portal !== undefined ? skills.portal : 1);
+    setVal('prop-sk-portal', skills.portal !== undefined ? skills.portal : 0);
 
     modal.style.display = 'flex';
     SFX.playClick();
@@ -401,6 +436,12 @@ class LevelEditor {
     document.querySelectorAll('.btn-tool[data-tool]').forEach(b => {
       b.classList.toggle('active', b.dataset.tool === tool);
     });
+    this.isMovingElement = false;
+    this.isMovingSpawn = false;
+    this.isMovingGate = false;
+    this.isResizingWidth = false;
+    this.isResizingThickness = false;
+    this.isDrawing = false;
     if (tool !== 'select') {
       this.selectedElementIndex = -1;
       this.selectedSpecial = null;
@@ -415,7 +456,9 @@ class LevelEditor {
     if (el.type === 'spawn' || el.type === 'gate') return;
 
     const oldW = el.w || 100;
-    const newW = Math.max(30, Math.min(760, oldW + delta));
+    const targetW = this.snap ? this.snapCoord(oldW + delta) : (oldW + delta);
+    const minW = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize * 2;
+    const newW = Math.max(minW, Math.min(760, targetW));
     if (newW === oldW) return;
 
     el.w = newW;
@@ -431,7 +474,9 @@ class LevelEditor {
     if (el.type === 'spawn' || el.type === 'gate') return;
 
     const oldH = el.h || 20;
-    const newH = Math.max(8, Math.min(220, oldH + delta));
+    const targetH = this.snap ? this.snapCoord(oldH + delta) : (oldH + delta);
+    const minH = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize;
+    const newH = Math.max(minH, Math.min(260, targetH));
     if (newH === oldH) return;
 
     el.h = newH;
@@ -557,41 +602,59 @@ class LevelEditor {
         const el = this.levelData.elements[this.selectedElementIndex];
         const hx = el.x + el.w / 2;
         const hy = el.y + el.h;
-        if (Math.abs(x - hx) < 40 && Math.abs(y - hy) < 14) {
+        if (Math.abs(x - hx) < 40 && Math.abs(y - hy) < 16) {
           this.isResizingThickness = true;
+          const minH = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize;
+          if (this.snap) {
+            el.y = this.snapCoord(el.y);
+            el.h = Math.max(minH, this.snapCoord(el.h));
+          }
           this.initialResizeH = el.h;
-          this.initialResizeY = y;
+          this.initialResizeY = el.y;
           return;
         }
 
         // Check for Width Drag Handle (Right Edge pill bar)
         const rx = el.x + el.w;
         const ry = el.y + el.h / 2;
-        if (Math.abs(x - rx) < 16 && Math.abs(y - ry) < 22) {
+        if (Math.abs(x - rx) < 18 && Math.abs(y - ry) < 24) {
           this.isResizingWidth = true;
+          const minW = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize * 2;
+          if (this.snap) {
+            el.x = this.snapCoord(el.x);
+            el.w = Math.max(minW, this.snapCoord(el.w));
+          }
           this.initialResizeW = el.w;
-          this.initialResizeX = x;
+          this.initialResizeX = el.x;
           return;
         }
       }
 
-      // Check Spawn Hatch selection
-      const distSpawn = Math.hypot(x - (this.levelData.spawnX || 90), y - (this.levelData.spawnY || 60));
-      if (distSpawn < 30) {
+      // Check Spawn Hatch selection (Hatch canopy + holographic beam bounding box)
+      const spX = this.levelData.spawnX || 90;
+      const spY = this.levelData.spawnY || 60;
+      const inSpawn = (Math.abs(x - spX) <= 34 && y >= spY - 50 && y <= spY + 32) || (Math.hypot(x - spX, y - spY) < 36);
+      if (inSpawn) {
         this.selectedSpecial = 'spawn';
         this.selectedElementIndex = -1;
         this.isMovingSpawn = true;
+        this.moveStartElementPos = { x: spX, y: spY };
+        this.moveStartPointer = { x: this.snapCoord(x), y: this.snapCoord(y) };
         this.updateStatus();
         SFX.playClick();
         return;
       }
 
-      // Check Warp Gate selection
-      const distGate = Math.hypot(x - (this.levelData.gateX || 710), y - (this.levelData.gateY || 254));
-      if (distGate < 30) {
+      // Check Warp Gate selection (Vortex ring + frame bounding box)
+      const gtX = this.levelData.gateX || 710;
+      const gtY = this.levelData.gateY || 254;
+      const inGate = (Math.abs(x - gtX) <= 36 && Math.abs(y - gtY) <= 36) || (Math.hypot(x - gtX, y - gtY) < 36);
+      if (inGate) {
         this.selectedSpecial = 'gate';
         this.selectedElementIndex = -1;
         this.isMovingGate = true;
+        this.moveStartElementPos = { x: gtX, y: gtY };
+        this.moveStartPointer = { x: this.snapCoord(x), y: this.snapCoord(y) };
         this.updateStatus();
         SFX.playClick();
         return;
@@ -604,7 +667,16 @@ class LevelEditor {
       if (foundIdx !== -1) {
         const el = this.levelData.elements[foundIdx];
         this.isMovingElement = true;
-        this.elementMoveOffset = { x: x - el.x, y: y - el.y };
+        const minW = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize * 2;
+        const minH = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize;
+        if (this.snap) {
+          el.x = this.snapCoord(el.x);
+          el.y = this.snapCoord(el.y);
+          el.w = Math.max(minW, this.snapCoord(el.w));
+          el.h = Math.max(minH, this.snapCoord(el.h));
+        }
+        this.moveStartElementPos = { x: el.x, y: el.y };
+        this.moveStartPointer = { x: this.snapCoord(x), y: this.snapCoord(y) };
         SFX.playClick();
       }
       this.updateStatus();
@@ -625,6 +697,8 @@ class LevelEditor {
       this.selectedSpecial = 'spawn';
       this.selectedElementIndex = -1;
       this.isMovingSpawn = true;
+      this.moveStartElementPos = { x: sx, y: sy };
+      this.moveStartPointer = { x: sx, y: sy };
       this.saveHistory();
       this.updateStatus();
       SFX.playClick();
@@ -634,6 +708,8 @@ class LevelEditor {
       this.selectedSpecial = 'gate';
       this.selectedElementIndex = -1;
       this.isMovingGate = true;
+      this.moveStartElementPos = { x: sx, y: sy };
+      this.moveStartPointer = { x: sx, y: sy };
       this.saveHistory();
       this.updateStatus();
       SFX.playClick();
@@ -646,15 +722,23 @@ class LevelEditor {
 
   handlePointerMove(x, y) {
     if (this.isMovingSpawn) {
-      this.levelData.spawnX = Math.max(30, Math.min(770, this.snapCoord(x)));
-      this.levelData.spawnY = Math.max(30, Math.min(420, this.snapCoord(y)));
+      const curPointerX = this.snapCoord(x);
+      const curPointerY = this.snapCoord(y);
+      const deltaX = curPointerX - this.moveStartPointer.x;
+      const deltaY = curPointerY - this.moveStartPointer.y;
+      this.levelData.spawnX = Math.max(30, Math.min(770, this.snapCoord(this.moveStartElementPos.x + deltaX)));
+      this.levelData.spawnY = Math.max(30, Math.min(420, this.snapCoord(this.moveStartElementPos.y + deltaY)));
       this.updateStatus();
       return;
     }
 
     if (this.isMovingGate) {
-      this.levelData.gateX = Math.max(30, Math.min(770, this.snapCoord(x)));
-      this.levelData.gateY = Math.max(30, Math.min(420, this.snapCoord(y)));
+      const curPointerX = this.snapCoord(x);
+      const curPointerY = this.snapCoord(y);
+      const deltaX = curPointerX - this.moveStartPointer.x;
+      const deltaY = curPointerY - this.moveStartPointer.y;
+      this.levelData.gateX = Math.max(30, Math.min(770, this.snapCoord(this.moveStartElementPos.x + deltaX)));
+      this.levelData.gateY = Math.max(30, Math.min(420, this.snapCoord(this.moveStartElementPos.y + deltaY)));
       this.updateStatus();
       return;
     }
@@ -662,8 +746,9 @@ class LevelEditor {
     if (this.isResizingThickness) {
       if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
         const el = this.levelData.elements[this.selectedElementIndex];
-        const dy = y - this.initialResizeY;
-        const targetH = Math.max(8, Math.min(220, this.snapCoord(this.initialResizeH + dy)));
+        const targetBottom = this.snapCoord(y);
+        const minH = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize;
+        const targetH = Math.max(minH, Math.min(260, targetBottom - el.y));
         if (targetH !== el.h) {
           const oldH = el.h;
           el.h = targetH;
@@ -681,8 +766,9 @@ class LevelEditor {
     if (this.isResizingWidth) {
       if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
         const el = this.levelData.elements[this.selectedElementIndex];
-        const dx = x - this.initialResizeX;
-        const targetW = Math.max(30, Math.min(760, this.snapCoord(this.initialResizeW + dx)));
+        const targetRight = this.snapCoord(x);
+        const minW = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize * 2;
+        const targetW = Math.max(minW, Math.min(800 - el.x, targetRight - el.x));
         if (targetW !== el.w) {
           el.w = targetW;
           this.syncTerrain();
@@ -694,8 +780,12 @@ class LevelEditor {
 
     if (this.isMovingElement && this.selectedElementIndex >= 0) {
       const el = this.levelData.elements[this.selectedElementIndex];
-      el.x = this.snapCoord(x - this.elementMoveOffset.x);
-      el.y = this.snapCoord(y - this.elementMoveOffset.y);
+      const curPointerX = this.snapCoord(x);
+      const curPointerY = this.snapCoord(y);
+      const deltaX = curPointerX - this.moveStartPointer.x;
+      const deltaY = curPointerY - this.moveStartPointer.y;
+      el.x = Math.max(0, Math.min(800 - el.w, this.snapCoord(this.moveStartElementPos.x + deltaX)));
+      el.y = Math.max(0, Math.min(450 - el.h, this.snapCoord(this.moveStartElementPos.y + deltaY)));
       this.syncTerrain();
       this.updateStatus();
       return;
@@ -710,12 +800,14 @@ class LevelEditor {
     if (this.isMovingSpawn) {
       this.isMovingSpawn = false;
       this.saveHistory();
+      this.updateStatus();
       return;
     }
 
     if (this.isMovingGate) {
       this.isMovingGate = false;
       this.saveHistory();
+      this.updateStatus();
       return;
     }
 
@@ -741,8 +833,12 @@ class LevelEditor {
       this.isDrawing = false;
       const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
       const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
-      const w = Math.max(20, Math.abs(this.dragCurrent.x - this.dragStart.x));
-      const h = Math.max(14, Math.abs(this.dragCurrent.y - this.dragStart.y));
+      const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
+      const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
+      const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
+      const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
+      const w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, Math.round(rawW));
+      const h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, Math.round(rawH));
 
       const newEl = {
         type: this.selectedTool,
@@ -796,22 +892,28 @@ class LevelEditor {
   }
 
   render(ctx) {
-    // 1. Grid lines
+    // 1. Grid lines (Clean cybernetic grid: 10px minor grid, 20px/50px major grid)
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 243, 255, 0.08)';
-    ctx.lineWidth = 1;
-    for (let gx = 0; gx < 800; gx += this.snapSize * 2) {
+    const snap = this.snapSize || 10;
+    for (let gx = 0; gx <= 800; gx += snap) {
+      const isMajor = (gx % (snap * 2) === 0);
+      ctx.strokeStyle = isMajor ? 'rgba(0, 243, 255, 0.12)' : 'rgba(0, 243, 255, 0.04)';
+      ctx.lineWidth = isMajor ? 1.0 : 0.6;
       ctx.beginPath();
       ctx.moveTo(gx, 0);
       ctx.lineTo(gx, 450);
       ctx.stroke();
     }
-    for (let gy = 0; gy < 450; gy += this.snapSize * 2) {
+    for (let gy = 0; gy <= 450; gy += snap) {
+      const isMajor = (gy % (snap * 2) === 0);
+      ctx.strokeStyle = isMajor ? 'rgba(0, 243, 255, 0.12)' : 'rgba(0, 243, 255, 0.04)';
+      ctx.lineWidth = isMajor ? 1.0 : 0.6;
       ctx.beginPath();
       ctx.moveTo(0, gy);
       ctx.lineTo(800, gy);
       ctx.stroke();
     }
+    ctx.restore();
 
     // 2. Selected element bounding box & resize handles
     if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
@@ -826,7 +928,8 @@ class LevelEditor {
       const palName = (TERRAIN_PALETTES[palKey] || TERRAIN_PALETTES.cyan).name;
       ctx.fillStyle = '#00f3ff';
       ctx.font = 'bold 12px Orbitron, sans-serif';
-      ctx.fillText(`[${el.type}] ${el.w}×${el.h}px | 🎨 ${palName} at (${el.x}, ${el.y})`, el.x, el.y - 8);
+      const stairSteps = Math.round(el.y / 24);
+      ctx.fillText(`[${el.type}] ${el.w}×${el.h}px | 🎨 ${palName} | (${el.x}, ${el.y}) [계단 ${stairSteps}단: ${stairSteps * 24}px]`, el.x, el.y - 8);
 
       // Width Resize Handle [↔] on right edge
       const rx = el.x + el.w;
@@ -853,12 +956,15 @@ class LevelEditor {
       ctx.fillText('↕ 두께', hx, hy);
     }
 
-    // 3. Current drawing preview box
+    // 3. Current drawing preview box (Snapped to grid)
     if (this.isDrawing) {
       const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
       const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
-      const w = Math.abs(this.dragCurrent.x - this.dragStart.x);
-      const h = Math.abs(this.dragCurrent.y - this.dragStart.y);
+      const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
+      const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
+      const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
+      const w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, rawW);
+      const h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, rawH);
 
       ctx.strokeStyle = '#ffb700';
       ctx.lineWidth = 1.5;
@@ -869,79 +975,29 @@ class LevelEditor {
       ctx.setLineDash([]);
     }
 
-    // 4. Spawn & Exit Gate markers
+    // 4. Spawn & Exit Gate markers (Unified High-Tech GatewayRenderer)
     const spX = this.levelData.spawnX || 90;
     const spY = this.levelData.spawnY || 60;
     const gtX = this.levelData.gateX || 710;
     const gtY = this.levelData.gateY || 254;
-
-    // Draw Spawn Hatch
-    ctx.save();
-    ctx.fillStyle = '#ffaa00';
-    ctx.strokeStyle = '#ffdd00';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(spX - 22, spY - 26, 44, 28, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#000000';
-    ctx.font = '900 10px Orbitron, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SPAWN', spX, spY - 12);
-
-    if (this.selectedSpecial === 'spawn') {
-      ctx.strokeStyle = '#00f3ff';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
-      ctx.strokeRect(spX - 26, spY - 30, 52, 36);
-      ctx.fillStyle = '#00f3ff';
-      ctx.font = 'bold 11px Orbitron, sans-serif';
-      ctx.fillText(`🚪 SPAWN (${spX}, ${spY})`, spX, spY - 38);
-    }
-    ctx.restore();
-
-    // Draw Warp Gate
-    ctx.save();
     const time = performance.now() * 0.003;
-    ctx.translate(gtX, gtY);
 
-    ctx.strokeStyle = 'rgba(191, 0, 255, 0.6)';
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.arc(0, 0, 24, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.strokeStyle = '#00f3ff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 18, 10, time, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = '#bf00ff';
-    ctx.beginPath();
-    ctx.arc(0, 0, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#bf00ff';
-    ctx.font = 'bold 10px Orbitron, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('WARP GATE', 0, -28);
-
-    if (this.selectedSpecial === 'gate') {
-      ctx.strokeStyle = '#00f3ff';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
-      ctx.strokeRect(-28, -28, 56, 56);
-      ctx.fillStyle = '#00f3ff';
-      ctx.font = 'bold 11px Orbitron, sans-serif';
-      ctx.fillText(`🌀 GATE (${gtX}, ${gtY})`, 0, -36);
+    if (typeof GatewayRenderer !== 'undefined') {
+      GatewayRenderer.renderSpawn(ctx, spX, spY, time, this.selectedSpecial === 'spawn');
+      GatewayRenderer.renderGate(ctx, gtX, gtY, time, this.selectedSpecial === 'gate');
+    } else {
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(spX - 16, spY - 20, 32, 20);
+      ctx.fillStyle = '#bf00ff';
+      ctx.beginPath();
+      ctx.arc(gtX, gtY, 20, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.restore();
-
     ctx.restore();
   }
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = LevelEditor;
+}
+

@@ -70,7 +70,9 @@ for (let i = 0; i < maps.length; i++) {
     const diffCoord = (maps[i].elements[0].x !== maps[j].elements[0].x) ||
                       (maps[i].elements[1].x !== maps[j].elements[1].x) ||
                       (maps[i].difficultyScore !== maps[j].difficultyScore) ||
-                      (maps[i].spawnX !== maps[j].spawnX);
+                      (maps[i].spawnX !== maps[j].spawnX) ||
+                      (maps[i].gateX !== maps[j].gateX) ||
+                      (maps[i].gateY !== maps[j].gateY);
     assert(diffCoord, `Maps ${i} and ${j} are duplicates! Random generation failed.`);
   }
 }

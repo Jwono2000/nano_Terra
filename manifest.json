@@ -1,0 +1,18 @@
+{
+  "name": "테라포머스: 나노 엑소더스 (Terraformers: Nano Exodus)",
+  "short_name": "NanoTerra",
+  "description": "SF 실시간 Lemmings 스타일 전략 퍼즐 게임",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#060913",
+  "theme_color": "#060913",
+  "icons": [
+    {
+      "src": "assets/nanobot_hero.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

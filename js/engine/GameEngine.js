@@ -396,12 +396,72 @@ class GameEngine {
       SFX.toggle();
     });
 
-    bindBtn('btn-start-mission', () => {
-      if (document.documentElement.requestFullscreen && !document.fullscreenElement && window.innerWidth < 900) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    const isFullscreenActive = () => {
+      return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    };
+
+    const updateFullscreenBtnState = () => {
+      const active = isFullscreenActive();
+      const fsBtn = document.getElementById('btn-fullscreen');
+      if (fsBtn) {
+        fsBtn.innerHTML = active ? '🗗 창모드' : '⛶ 전체화면';
+        if (active) fsBtn.classList.add('active');
+        else fsBtn.classList.remove('active');
+      }
+      const floatBtn = document.getElementById('btn-floating-fs');
+      if (floatBtn) {
+        floatBtn.innerHTML = active ? '🗗' : '⛶';
+        floatBtn.title = active ? '창모드로 복귀' : '전체화면으로 확장';
+      }
+    };
+
+    const requestFullscreenMode = () => {
+      const docEl = document.documentElement;
+      const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+      if (rfs) {
+        rfs.call(docEl).catch(() => {});
       }
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(() => {});
+      }
+    };
+
+    const exitFullscreenMode = () => {
+      const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      if (efs) {
+        efs.call(document).catch(() => {});
+      }
+    };
+
+    const toggleFullscreenMode = () => {
+      if (isFullscreenActive()) {
+        exitFullscreenMode();
+      } else {
+        requestFullscreenMode();
+      }
+    };
+
+    bindBtn('btn-fullscreen', () => {
+      toggleFullscreenMode();
+    });
+
+    bindBtn('btn-floating-fs', () => {
+      toggleFullscreenMode();
+    });
+
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+      document.addEventListener(evt, updateFullscreenBtnState);
+    });
+
+    bindBtn('btn-start-fullscreen', () => {
+      requestFullscreenMode();
+      this.startMissionWithCountdown();
+    });
+
+    bindBtn('btn-start-mission', () => {
+      // Auto-request fullscreen on mobile devices or small touch screens
+      if (!isFullscreenActive() && ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 1100)) {
+        requestFullscreenMode();
       }
       this.startMissionWithCountdown();
     });

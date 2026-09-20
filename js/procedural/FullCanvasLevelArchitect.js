@@ -61,31 +61,47 @@
   const DIFF_SPECS = {
     easy: {
       key: 'easy', name: 'EASY',
-      scoreRange: [30, 42],
+      minScore: 25,
+      scoreRange: [25, 45],
+      timeMultiplier: 1.80,
       units: 15, needPercent: 50, timeLimit: 240, spawnRate: 34,
       actionRange: [2, 3],
-      slack: { requiredMin: 2, requiredMax: 4, otherMin: 1, otherMax: 3 }
+      slack: { requiredMin: 2, requiredMax: 4, otherMin: 1, otherMax: 3 },
+      hasDecoy: false,
+      minUniqueSkills: 1
     },
     normal: {
       key: 'normal', name: 'NORMAL',
-      scoreRange: [60, 75],
+      minScore: 50,
+      scoreRange: [50, 78],
+      timeMultiplier: 1.45,
       units: 18, needPercent: 65, timeLimit: 180, spawnRate: 26,
       actionRange: [3, 4],
-      slack: { requiredMin: 1, requiredMax: 2, otherMin: 0, otherMax: 1 }
+      slack: { requiredMin: 1, requiredMax: 2, otherMin: 0, otherMax: 1 },
+      hasDecoy: false,
+      minUniqueSkills: 2
     },
     hard: {
       key: 'hard', name: 'HARD',
-      scoreRange: [92, 110],
+      minScore: 85,
+      scoreRange: [85, 140],
+      timeMultiplier: 1.20,
       units: 20, needPercent: 75, timeLimit: 150, spawnRate: 22,
       actionRange: [4, 5],
-      slack: { requiredMin: 0, requiredMax: 1, otherMin: 0, otherMax: 0 }
+      slack: { requiredMin: 0, requiredMax: 1, otherMin: 0, otherMax: 0 },
+      hasDecoy: true,
+      minUniqueSkills: 3
     },
     nightmare: {
       key: 'nightmare', name: 'NIGHTMARE',
-      scoreRange: [126, 142],
+      minScore: 110,
+      scoreRange: [110, 180],
+      timeMultiplier: 1.05,
       units: 25, needPercent: 85, timeLimit: 120, spawnRate: 16,
       actionRange: [5, 6],
-      slack: { requiredMin: 0, requiredMax: 0, otherMin: 0, otherMax: 0 }
+      slack: { requiredMin: 0, requiredMax: 0, otherMin: 0, otherMax: 0 },
+      hasDecoy: true,
+      minUniqueSkills: 4
     }
   };
 
@@ -179,7 +195,15 @@
      * ==============================================================*/
     static designScenario(archetype, diff, R) {
       const numActions = R.irange(diff.actionRange[0], diff.actionRange[1]);
-      const pool = ARCHETYPE_POOLS[archetype] || ARCHETYPE_POOLS.cascade;
+      let pool = (ARCHETYPE_POOLS[archetype] || ARCHETYPE_POOLS.cascade).map(p => ({ ...p }));
+
+      // Hard/Nightmare: 치명적 낙하 연계를 위해 FLOAT 액션을 풀에 추가
+      if ((diff.key === 'hard' || diff.key === 'nightmare') && ['cascade', 'zigzag', 'split', 'chamber'].includes(archetype)) {
+        if (!pool.some(p => p.act === 'FLOAT')) {
+          pool.push({ act: 'FLOAT', w: 2.2 });
+        }
+      }
+
       const solution = [];
       const used = new Set();
 
@@ -199,6 +223,11 @@
           candidates = candidates.filter(c => c.act !== 'BLOCK');
         }
 
+        // FLOAT는 첫 위치 금지 (스폰 직후는 안전 발판)
+        if (i === 0) {
+          candidates = candidates.filter(c => c.act !== 'FLOAT');
+        }
+
         // CHAMBER 첫 액션은 반드시 DRILL (밀폐 구역 바닥 천공 탈출)
         if (archetype === 'chamber' && i === 0) {
           candidates = candidates.filter(c => c.act === 'DRILL');
@@ -211,10 +240,10 @@
           if (candidates.length === 0) candidates = [{ act: 'BUILD', w: 1 }];
         }
 
-        // Hard/Nightmare: 미사용 스킬 우대
+        // Hard/Nightmare: 미사용 스킬 우대 (다양성 확보)
         if (diff.key === 'hard' || diff.key === 'nightmare') {
           candidates = candidates.map(c => ({
-            ...c, w: used.has(c.act) ? c.w * 0.4 : c.w * 1.6
+            ...c, w: used.has(c.act) ? c.w * 0.35 : c.w * 2.0
           }));
         }
 
@@ -225,12 +254,16 @@
         used.add(pick.act);
       }
 
-      // 2종 이상 스킬 조합 보장
-      if (new Set(solution).size < 2 && pool.length > 1) {
-        const altPool = pool.filter(p => p.act !== solution[0] && p.act !== 'BLOCK');
-        if (altPool.length > 0) {
-          solution[solution.length - 1] = R.pick(altPool).act;
+      // 최소 고유 스킬 수 보장
+      const minUnique = diff.minUniqueSkills || 2;
+      let fixAttempts = 0;
+      while (new Set(solution).size < minUnique && fixAttempts < 6) {
+        const unused = pool.filter(p => !new Set(solution).has(p.act) && p.act !== 'BLOCK');
+        if (unused.length > 0) {
+          const targetIdx = solution.length - 1 - (fixAttempts % Math.max(1, solution.length - 1));
+          solution[targetIdx] = R.pick(unused).act;
         }
+        fixAttempts++;
       }
 
       return solution;
@@ -473,6 +506,19 @@
           break;
         }
 
+        /* ------- FLOAT: 치명적 낙차 (145~175px > 96px) 역추진 안전 착지 ------- */
+        case 'FLOAT': {
+          const dropH = R.irange(145, 175); // 145~175px 치명적 낙차 (> 96px, Float 필수)
+          nextY = clamp(prevSlab.y + dropH, 160, H - 55);
+          if (dir > 0) {
+            nextX = clamp(prevSlab.x + prevSlab.w - R.irange(30, 60), 20, W - nextW - 20);
+          } else {
+            nextX = clamp(prevSlab.x - nextW + R.irange(30, 60), 20, W - nextW - 20);
+          }
+          actionDetails = { act: 'FLOAT', count: 1 };
+          break;
+        }
+
         default: {
           nextY = prevSlab.y;
           nextX = dir > 0 ? prevSlab.x + prevSlab.w + 30 : prevSlab.x - 30 - nextW;
@@ -589,9 +635,9 @@
     }
 
     /* ================================================================
-     * 6단계: 스킬 수량 산정 (계단 수량 정확 반영, 포털 항상 0)
+     * 6단계: 스킬 수량 산정 (엄격한 예산 비율 & 미끼 스킬 지급)
      * ==============================================================*/
-    static calculateSkills(actionUsage, diff, R) {
+    static calculateSkills(actionUsage, diff, R, solution = []) {
       const skills = {
         climb: 0, float: 0, bash: 0, mine: 0,
         drill: 0, bomb: 0, build: 0, block: 0, portal: 0
@@ -605,28 +651,66 @@
         reqCount[k] = (reqCount[k] || 0) + cnt;
       }
 
-      const slack = diff.slack;
-      const primarySkills = ['bash', 'mine', 'drill', 'bomb', 'build', 'block'];
-
-      for (const k of primarySkills) {
-        const req = reqCount[k] || 0;
-        if (req > 0) {
-          skills[k] = req + R.irange(slack.requiredMin, slack.requiredMax);
-        } else {
-          skills[k] = R.irange(slack.otherMin, slack.otherMax);
-        }
+      // FLOAT 스킬 요구량: 치명적 낙하 시 낙하 군단 전원(또는 대다수)이 안전 착지해야 함
+      if (reqCount['float'] > 0) {
+        const fallers = Math.max(1, diff.units - (reqCount['block'] || 0));
+        reqCount['float'] = fallers;
       }
 
-      // CLIMB과 FLOAT: 나이트메어/하드는 정확히 0, 이지/노멀만 보너스 제공
-      if (diff.key === 'easy') {
-        skills.climb = R.irange(1, 2);
-        skills.float = R.irange(1, 2);
+      const primarySkills = ['bash', 'mine', 'drill', 'bomb', 'build', 'block', 'float'];
+
+      if (diff.key === 'nightmare') {
+        // 100% 극도 타이트 예산 (여분 스킬 0개)
+        for (const k of primarySkills) {
+          skills[k] = reqCount[k] || 0;
+        }
+        // 미끼 스킬 1개 지급 (정답에 없는 스킬)
+        const solSet = new Set(solution.map(s => s.toLowerCase()));
+        const decoyPool = ['climb', 'bomb', 'mine'].filter(s => !solSet.has(s));
+        if (decoyPool.length > 0) {
+          skills[R.pick(decoyPool)] = 1;
+        }
+      } else if (diff.key === 'hard') {
+        // 100~120% 타이트 예산 (전체 여분 스킬 0~1개)
+        const hasSpare = R.chance(0.5);
+        const reqKeys = Object.keys(reqCount);
+        const spareKey = (hasSpare && reqKeys.length > 0) ? R.pick(reqKeys) : null;
+
+        for (const k of primarySkills) {
+          const req = reqCount[k] || 0;
+          if (req > 0) {
+            skills[k] = req + (spareKey === k ? 1 : 0);
+          } else {
+            skills[k] = 0;
+          }
+        }
+        // 미끼 스킬 1~2개 지급 (climb, bomb)
+        const solSet = new Set(solution.map(s => s.toLowerCase()));
+        if (!solSet.has('climb')) skills.climb = 1;
+        if (!solSet.has('bomb')) skills.bomb = 1;
       } else if (diff.key === 'normal') {
-        skills.climb = R.irange(0, 1);
-        skills.float = R.irange(0, 1);
+        // 140~170% 예산
+        for (const k of primarySkills) {
+          const req = reqCount[k] || 0;
+          if (req > 0) {
+            skills[k] = req + R.irange(1, 2);
+          } else {
+            skills[k] = 0;
+          }
+        }
+        if (!reqCount['climb'] && R.chance(0.4)) skills.climb = 1;
       } else {
-        skills.climb = 0;
-        skills.float = 0;
+        // easy: 180~250% 예산
+        for (const k of primarySkills) {
+          const req = reqCount[k] || 0;
+          if (req > 0) {
+            skills[k] = req + R.irange(2, 4);
+          } else {
+            skills[k] = R.irange(1, 2);
+          }
+        }
+        skills.climb = R.irange(1, 2);
+        if (!reqCount['float']) skills.float = R.irange(1, 2);
       }
 
       // 포털은 항상 0 (사용자 직접 판단)
@@ -865,6 +949,7 @@
             spawnTimer = 0;
             spawned++;
             units.push({
+              idx: spawned,
               x: map.spawnX,
               y: map.spawnY,
               dir: 1,
@@ -924,8 +1009,8 @@
             stepIdx++;
             solverCooldown = 30;
           }
-          // 5) BUILD: 단차/갭에 3D 계단 증축 (다단계 계단 연속 연결 지원)
-          else if (curr.act === 'BUILD' && (!isSolid(aheadX, scout.y + 4) || isSolid(aheadX, scout.y - 10))) {
+          // 5) BUILD: 단차/갭에 3D 계단 증축 (다단계 계단 연속 연결 지원, 탈출구 인접 갭에서만 발동)
+          else if (curr.act === 'BUILD' && Math.abs(scout.x - map.gateX) < 250 && (!isSolid(aheadX, scout.y + 4) || isSolid(aheadX, scout.y - 10))) {
             buildStep(scout.x, scout.y, scout.dir);
             scout.x += scout.dir * 48;
             scout.y -= 24;
@@ -954,6 +1039,10 @@
             stepIdx++;
             solverCooldown = 30;
           }
+          // 7) FLOAT: 낙하 중 자동 발동되는 패시브 스킬이므로 시퀀스 통과
+          else if (curr.act === 'FLOAT') {
+            stepIdx++;
+          }
         }
 
         // 유닛 물리 갱신
@@ -968,25 +1057,31 @@
 
           // 화면 이탈 검사
           if (u.y >= 425 || u.x < 5 || u.x > W - 5) {
+            if (map._debug) console.log('DEBUG DIE OOB: x=' + u.x + ', y=' + u.y + ', state=' + u.state);
             u.alive = false;
             dead++;
             continue;
           }
 
           if (u.state === 'FALL') {
-            u.vy = Math.min(3.2, u.vy + 0.15);
+            if (u.fallDist >= 70 && !u.floating && (skills.float > 0 || skills.float === undefined)) {
+              u.floating = true;
+              if (skills.float > 0) skills.float--;
+            }
+            u.vy = u.floating ? Math.min(1.2, u.vy + 0.05) : Math.min(3.2, u.vy + 0.15);
             u.y += u.vy;
             u.fallDist += u.vy;
 
             if (isSolid(u.x, u.y + 1)) {
               while (isSolid(u.x, u.y) && u.y > 0) u.y--;
-              if (u.fallDist > 96) {
+              if (u.fallDist > 96 && !u.floating) {
                 u.alive = false; // 치사 낙하 즉사
                 dead++;
               } else {
                 u.state = 'WALK';
                 u.vy = 0;
                 u.fallDist = 0;
+                u.floating = false;
               }
             }
           } else if (u.state === 'WALK') {
@@ -1044,6 +1139,91 @@
     }
 
     /* ================================================================
+     * 수학적 난이도 산출 공식
+     * DifficultyScore = (N_actions * 8) + (N_unique_skills * 7) + (N_steel * 5)
+     *                 + (N_decoy * 8) + (N_danger_drop * 10) + (N_combo * 12)
+     *                 + max(0, 20 - N_spare_skills * 4)
+     * ==============================================================*/
+    static calculateDifficultyScore(candidate) {
+      const solution = candidate.solutionDna || [];
+      const N_actions = solution.length;
+      const N_unique_skills = new Set(solution).size;
+      const N_steel = (candidate.elements || []).filter(e => e.type === 'steelBarrier').length;
+
+      const solSet = new Set(solution.map(s => s.toLowerCase()));
+      const allSkills = ['climb', 'float', 'bash', 'mine', 'drill', 'bomb', 'build', 'block', 'portal'];
+      let N_decoy = 0;
+      for (const sk of allSkills) {
+        if ((candidate.skills[sk] || 0) > 0 && !solSet.has(sk)) {
+          N_decoy++;
+        }
+      }
+
+      const N_danger_drop = solution.includes('FLOAT') ? 1 : 0;
+
+      let N_combo = 0;
+      for (let i = 1; i < solution.length; i++) {
+        if (solution[i] !== solution[i - 1]) N_combo++;
+      }
+
+      let totalReq = 0;
+      let totalGivenInSol = 0;
+      for (const sk of solSet) {
+        const given = candidate.skills[sk] || 0;
+        let req = 0;
+        if (sk === 'float') {
+          req = Math.max(1, candidate.totalUnits - 1);
+        } else if (sk === 'build') {
+          req = (candidate._layoutData && candidate._layoutData.actionUsage)
+            ? candidate._layoutData.actionUsage.filter(u => u.act.toLowerCase() === 'build').reduce((a, b) => a + (b.count || 1), 0)
+            : solution.filter(s => s.toLowerCase() === 'build').length;
+        } else {
+          req = solution.filter(s => s.toLowerCase() === sk).length;
+        }
+        totalReq += req;
+        totalGivenInSol += given;
+      }
+      const N_spare_skills = Math.max(0, totalGivenInSol - totalReq);
+
+      const score = (N_actions * 8) +
+        (N_unique_skills * 7) +
+        (N_steel * 5) +
+        (N_decoy * 8) +
+        (N_danger_drop * 10) +
+        (N_combo * 12) +
+        Math.max(0, 20 - N_spare_skills * 4);
+
+      return {
+        score,
+        N_actions,
+        N_unique_skills,
+        N_steel,
+        N_decoy,
+        N_danger_drop,
+        N_combo,
+        N_spare_skills
+      };
+    }
+
+    /* ================================================================
+     * 정답 기반 동적 제한시간 산출 공식
+     * TimeLimit = (BaseTime(35s) + sum(ActionTime)) * DifficultyMultiplier
+     * ==============================================================*/
+    static calculateDynamicTimeLimit(solutionDna, diffKey) {
+      const baseTime = 35;
+      const actionTimes = {
+        BASH: 18, DRILL: 15, FLOAT: 12, BLOCK: 10,
+        BUILD: 22, MINE: 16, BOMB: 12, CLIMB: 14, WALK: 8
+      };
+      const multipliers = {
+        easy: 1.80, normal: 1.45, hard: 1.20, nightmare: 1.05
+      };
+      const sumActionTime = (solutionDna || []).reduce((acc, a) => acc + (actionTimes[a] || 15), 0);
+      const mult = multipliers[diffKey] || 1.20;
+      return Math.round((baseTime + sumActionTime) * mult);
+    }
+
+    /* ================================================================
      * 폴백 맵 (모든 재시도 소진 시 100% 보장 맵 — 동적 무작위 생성)
      * ==============================================================*/
     static buildFallback(options = {}) {
@@ -1093,37 +1273,34 @@
 
       const titleWord = R.pick(SECTOR_NAMES);
       const title = `[${diff.name}] ${titleWord} (TACTICAL)`.replace(/\s+/g, ' ').trim();
-      const desc = `[CASCADE] 100% 검증 전술 구역입니다. (난이도: ${diff.name}, 정답: BASH → DRILL → BUILD)`;
+      const solutionDna = ['BASH', 'DRILL', 'BUILD'];
+      const actionUsage = [{ act: 'BASH', count: 1 }, { act: 'DRILL', count: 1 }, { act: 'BUILD', count: 2 }];
 
-      const skills = {
-        climb: 0, float: 0,
-        bash: 2 + (diff.key === 'easy' ? 2 : 0),
-        mine: 1 + (diff.key === 'easy' ? 1 : 0),
-        drill: 2 + (diff.key === 'easy' ? 1 : 0),
-        bomb: 0,
-        build: 3 + (diff.key === 'easy' ? 2 : 0),
-        block: 1,
-        portal: 0
-      };
+      const skills = this.calculateSkills(actionUsage, diff, R, solutionDna);
+      const timeLimit = this.calculateDynamicTimeLimit(solutionDna, diff.key);
 
-      return {
+      const candidate = {
         id: options.id || 'CUSTOM',
         title,
-        desc,
+        desc: `[CASCADE] 100% 검증 전술 구역입니다. (난이도: ${diff.name}, 정답: ${solutionDna.join(' → ')})`,
         bgImg: theme,
         terrainTheme: palette,
         totalUnits: diff.units,
         needPercent: diff.needPercent,
         spawnRate: diff.spawnRate,
-        timeLimit: diff.timeLimit,
+        timeLimit,
         skills,
         spawnX, spawnY,
         gateX, gateY,
         elements,
-        solutionDna: ['BASH', 'DRILL', 'BUILD'],
-        difficultyScore: diff.scoreRange[0] + 10,
-        difficultyFactors: { skillDemand: 20, comboDepth: 16, hazard: 14, steel: 12, precision: 12 },
+        solutionDna,
+        difficultyScore: 0,
+        difficultyFactors: {},
         layoutType: 'cascade',
+        _layoutData: {
+          slabs: [{ x: s1X, y: s1Y, w: s1W }, { x: s2X, y: s2Y, w: s2W }, { x: s3X, y: s3Y, w: s3W }],
+          actionUsage
+        },
         _meta: {
           seed,
           archetype: 'cascade',
@@ -1134,6 +1311,21 @@
           rescuedRatio: '5/5'
         }
       };
+
+      const scoreObj = this.calculateDifficultyScore(candidate);
+      candidate.difficultyScore = scoreObj.score;
+      candidate.difficultyFactors = {
+        actionsScore: scoreObj.N_actions * 8,
+        uniqueSkillsScore: scoreObj.N_unique_skills * 7,
+        steelScore: scoreObj.N_steel * 5,
+        decoyScore: scoreObj.N_decoy * 8,
+        dangerDropScore: scoreObj.N_danger_drop * 10,
+        comboScore: scoreObj.N_combo * 12,
+        scarcityScore: Math.max(0, 20 - scoreObj.N_spare_skills * 4)
+      };
+      delete candidate._layoutData;
+
+      return candidate;
     }
 
     /* ================================================================
@@ -1155,7 +1347,7 @@
         const { palette, theme, stoneTypes } = this.resolvePaletteAndTheme(options, R);
         const archetype = this.pickArchetype(options.layout, R);
 
-        // 1. 시나리오 설계
+        // 1. 시나리오 설계 (역방향 퍼즐 DNA)
         const solution = this.designScenario(archetype, diff, R);
 
         // 2. 레이아웃 조립
@@ -1170,26 +1362,26 @@
         // 4. 안전 장식 배치 (경로 클리어런스 절대 침범 금지)
         this.addAmbientDecor(layoutResult.elements, layoutResult.slabs, layoutResult.spawn, layoutResult.gate, R, palette, stoneTypes);
 
-        // 5. 스킬 수량 산정 (계단 수량 정확 반영 + 포털 항상 0)
-        const skills = this.calculateSkills(layoutResult.actionUsage, diff, R);
+        // 5. 스킬 수량 산정 (계단 수량 정확 반영, 타이트한 예산 & 미끼 스킬 지급)
+        const skills = this.calculateSkills(layoutResult.actionUsage, diff, R, layoutResult.solution);
 
-        // 6. 난이도 점수 & 메타
-        const score = clamp(R.irange(diff.scoreRange[0], diff.scoreRange[1]), 10, 150);
+        // 6. 동적 제한시간 산출
+        const timeLimit = this.calculateDynamicTimeLimit(layoutResult.solution, diff.key);
+
         const titleWord = R.pick(SECTOR_NAMES);
         const stageNo = options.stageNo ? `S${options.stageNo}` : '';
         const title = `[${diff.name}] ${titleWord} ${stageNo} (${diff.name})`.replace(/\s+/g, ' ').trim();
-        const desc = `[${archetype.toUpperCase()}] 100% 클리어 검증 구역. (난이도: ${diff.name}, 점수: ${score}pt, 솔루션: ${layoutResult.solution.join(' → ')})`;
 
         const candidate = {
           id: options.id || 'CUSTOM',
           title,
-          desc,
+          desc: '',
           bgImg: theme,
           terrainTheme: palette,
           totalUnits: diff.units,
           needPercent: diff.needPercent,
           spawnRate: diff.spawnRate,
-          timeLimit: diff.timeLimit,
+          timeLimit,
           skills,
           spawnX: Math.round(layoutResult.spawn.x),
           spawnY: Math.round(layoutResult.spawn.y),
@@ -1205,14 +1397,8 @@
             profile: e.profile
           })),
           solutionDna: layoutResult.solution.slice(),
-          difficultyScore: score,
-          difficultyFactors: {
-            skillDemand: Math.round(score * 0.28),
-            comboDepth: Math.round(score * 0.22),
-            hazard: Math.round(score * 0.20),
-            steel: Math.round(score * 0.15),
-            precision: Math.round(score * 0.15)
-          },
+          difficultyScore: 0,
+          difficultyFactors: {},
           layoutType: archetype,
           _meta: {
             seed,
@@ -1228,13 +1414,34 @@
           actionUsage: layoutResult.actionUsage
         };
 
+        // 수학적 난이도 점수 실측 산출
+        const scoreObj = this.calculateDifficultyScore(candidate);
+        candidate.difficultyScore = scoreObj.score;
+        candidate.difficultyFactors = {
+          actionsScore: scoreObj.N_actions * 8,
+          uniqueSkillsScore: scoreObj.N_unique_skills * 7,
+          steelScore: scoreObj.N_steel * 5,
+          decoyScore: scoreObj.N_decoy * 8,
+          dangerDropScore: scoreObj.N_danger_drop * 10,
+          comboScore: scoreObj.N_combo * 12,
+          scarcityScore: Math.max(0, 20 - scoreObj.N_spare_skills * 4)
+        };
+        candidate.desc = `[${archetype.toUpperCase()}] 100% 클리어 검증 구역. (난이도: ${diff.name}, 점수: ${candidate.difficultyScore}pt, 솔루션: ${layoutResult.solution.join(' → ')})`;
+
+        // 난이도별 최소 점수 미달 시 재생성 (Reject & Retry)
+        if (candidate.difficultyScore < diff.minScore) {
+          if (!fallbackCandidate) fallbackCandidate = candidate;
+          delete candidate._layoutData;
+          continue;
+        }
+
         // 7. 2차 군단 가상 물리 실측 검증 (Headless Horde Simulator)
         const simResult = this.simulateHordeClearance(candidate);
         delete candidate._layoutData;
 
         if (!simResult.success) {
           if (!fallbackCandidate) fallbackCandidate = candidate;
-          continue; // 시뮬레이션 구출률 80% 미달 시 즉시 재생성
+          continue; // 시뮬레이션 구출률 미달 시 즉시 재생성
         }
 
         candidate._meta.simVerified = true;

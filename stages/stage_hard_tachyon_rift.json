@@ -1,0 +1,49 @@
+{
+  "id": 15,
+  "difficulty": "hard",
+  "title": "[HARD] TACHYON RIFT #709",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "desc": "15구역: 역방향 퍼즐 설계 기반 160px 치명적 낙차 및 강철 격벽 우회 구역. BASH → DRILL → FLOAT → BLOCK → BUILD 5단 연계로 웜홀을 개척하십시오.",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 25,
+  "timeLimit": 134,
+  "skills": {
+    "climb": 1,
+    "float": 9,
+    "bash": 1,
+    "mine": 0,
+    "drill": 1,
+    "bomb": 1,
+    "build": 1,
+    "block": 1,
+    "portal": 0
+  },
+  "spawnX": 75,
+  "spawnY": 45,
+  "gateX": 705,
+  "gateY": 266,
+  "elements": [
+    { "type": "steelBarrier", "x": 20, "y": 15, "w": 15, "h": 75 },
+    { "type": "platform", "x": 30, "y": 80, "w": 225, "h": 22, "palette": "purple" },
+    { "type": "rockWall", "x": 135, "y": 15, "w": 35, "h": 68, "palette": "purple" },
+    { "type": "steelBarrier", "x": 240, "y": 10, "w": 20, "h": 85 },
+    { "type": "steelBarrier", "x": 380, "y": 20, "w": 20, "h": 85 },
+    { "type": "platform", "x": 180, "y": 140, "w": 115, "h": 20, "palette": "purple" },
+    { "type": "steelBarrier", "x": 175, "y": 85, "w": 15, "h": 65 },
+    { "type": "quantumCrystal", "x": 360, "y": 190, "w": 90, "h": 20, "palette": "purple", "profile": [14, 22, 16] },
+    { "type": "quantumCrystal", "x": 245, "y": 300, "w": 235, "h": 24, "palette": "purple", "profile": [20, 28, 40, 30, 18] },
+    { "type": "steelBarrier", "x": 240, "y": 235, "w": 15, "h": 75 },
+    { "type": "platform", "x": 512, "y": 276, "w": 235, "h": 22, "palette": "purple" },
+    { "type": "steelBarrier", "x": 745, "y": 205, "w": 15, "h": 80 }
+  ],
+  "solutionDna": [
+    "BASH",
+    "DRILL",
+    "FLOAT",
+    "BLOCK",
+    "BUILD"
+  ],
+  "difficultyScore": 183
+}

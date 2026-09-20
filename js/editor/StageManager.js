@@ -369,6 +369,167 @@ const BUILTIN_10_STAGES = [
       { "type": "craggyRock", "x": 300, "y": 330, "w": 280, "h": 26, "palette": "cyan", "profile": [16, 26, 36, 22] },
       { "type": "platform", "x": 520, "y": 360, "w": 250, "h": 28, "palette": "purple" }
     ]
+  },
+  {
+    "id": 11,
+    "title": "[NORMAL] NEW CREATED SECTOR",
+    "bgImg": "assets/bg_level_1.jpg",
+    "terrainTheme": "cyan",
+    "desc": "11구역: 크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+    "totalUnits": 15,
+    "needPercent": 70,
+    "spawnRate": 25,
+    "timeLimit": 240,
+    "skills": {
+      "climb": 1, "float": 0, "bash": 1, "mine": 0, "drill": 1, "bomb": 2, "build": 1, "block": 0, "portal": 0
+    },
+    "spawnX": 130,
+    "spawnY": 160,
+    "gateX": 600,
+    "gateY": 200,
+    "elements": [
+      { "type": "craggyRock", "x": 100, "y": 200, "w": 220, "h": 60, "palette": "cyan", "profile": [48, 60, 70, 48, 73] },
+      { "type": "steelBarrier", "x": 320, "y": 90, "w": 30, "h": 100, "palette": "cyan" },
+      { "type": "craggyRock", "x": 320, "y": 200, "w": 150, "h": 70, "palette": "cyan", "profile": [63, 84, 89] },
+      { "type": "volcanicBasalt", "x": 470, "y": 240, "w": 170, "h": 90, "palette": "cyan", "profile": [98, 108, 70, 90] },
+      { "type": "quantumCrystal", "x": 80, "y": 130, "w": 20, "h": 120, "palette": "cyan", "profile": [142, 114, 96] }
+    ],
+    "solutionDna": ["CUSTOM"],
+    "difficultyScore": 50
+  },
+  {
+    "id": 12,
+    "title": "[NORMAL] SECTOR 12",
+    "bgImg": "assets/bg_level_2.jpg",
+    "terrainTheme": "red",
+    "desc": "12구역: 지휘관 전술 커스텀 구역입니다.",
+    "totalUnits": 15,
+    "needPercent": 70,
+    "spawnRate": 25,
+    "timeLimit": 240,
+    "skills": {
+      "climb": 2, "float": 2, "bash": 2, "mine": 2, "drill": 2, "bomb": 1, "build": 3, "block": 2, "portal": 1
+    },
+    "spawnX": 80,
+    "spawnY": 50,
+    "gateX": 720,
+    "gateY": 275,
+    "elements": [
+      { "type": "platform", "x": 40, "y": 100, "w": 140, "h": 20, "palette": "red" },
+      { "type": "volcanicBasalt", "x": 60, "y": 200, "w": 500, "h": 24, "palette": "red", "profile": [18, 28, 38, 28, 18] },
+      { "type": "volcanicBasalt", "x": 220, "y": 300, "w": 540, "h": 28, "palette": "red", "profile": [20, 32, 42, 30, 22] }
+    ],
+    "solutionDna": ["CUSTOM"],
+    "difficultyScore": 50
+  },
+  {
+    "id": 13,
+    "difficulty": "normal",
+    "title": "[NORMAL] VALKYRIE SECTOR #204",
+    "bgImg": "assets/bg_level_2.jpg",
+    "terrainTheme": "red",
+    "desc": "13구역: 마그마 균열 지대입니다. 강철벽 앞 바닥을 드릴로 천공하여 하층으로 진입하십시오.",
+    "totalUnits": 15,
+    "needPercent": 70,
+    "spawnRate": 22,
+    "timeLimit": 210,
+    "skills": {
+      "climb": 4, "float": 4, "bash": 4, "drill": 4, "bomb": 2, "build": 6, "block": 3, "portal": 1
+    },
+    "spawnX": 80,
+    "spawnY": 50,
+    "gateX": 720,
+    "gateY": 275,
+    "elements": [
+      { "type": "platform", "x": 40, "y": 100, "w": 140, "h": 20, "palette": "red" },
+      { "type": "platform", "x": 195, "y": 100, "w": 150, "h": 20, "palette": "red" },
+      { "type": "steelBarrier", "x": 330, "y": 30, "w": 20, "h": 90 },
+      { "type": "volcanicBasalt", "x": 60, "y": 200, "w": 500, "h": 24, "palette": "red", "profile": [18, 28, 38, 28, 18] },
+      { "type": "rockWall", "x": 260, "y": 130, "w": 60, "h": 70, "palette": "red" },
+      { "type": "steelBarrier", "x": 430, "y": 125, "w": 20, "h": 95 },
+      { "type": "volcanicBasalt", "x": 220, "y": 300, "w": 540, "h": 28, "palette": "red", "profile": [20, 32, 42, 30, 22] }
+    ],
+    "solutionDna": ["BASH", "DRILL", "BLOCK"],
+    "difficultyScore": 68
+  },
+  {
+    "id": 14,
+    "difficulty": "hard",
+    "title": "[HARD] HYPERION SECTOR #308",
+    "bgImg": "assets/bg_level_3.jpg",
+    "terrainTheme": "purple",
+    "desc": "14구역: 170px 고도 낙하 및 이중 암벽 지대입니다. 역추진과 연속 레이저로 관통하십시오.",
+    "totalUnits": 18,
+    "needPercent": 80,
+    "spawnRate": 25,
+    "timeLimit": 180,
+    "skills": {
+      "climb": 3, "float": 4, "bash": 4, "drill": 3, "bomb": 2, "build": 4, "block": 2, "portal": 1
+    },
+    "spawnX": 80,
+    "spawnY": 50,
+    "gateX": 720,
+    "gateY": 260,
+    "elements": [
+      { "type": "platform", "x": 40, "y": 90, "w": 120, "h": 20, "palette": "purple" },
+      { "type": "platform", "x": 175, "y": 90, "w": 160, "h": 20, "palette": "purple" },
+      { "type": "steelBarrier", "x": 320, "y": 20, "w": 20, "h": 90 },
+      { "type": "quantumCrystal", "x": 60, "y": 260, "w": 540, "h": 24, "palette": "purple", "profile": [16, 26, 38, 30, 18] },
+      { "type": "rockWall", "x": 260, "y": 190, "w": 60, "h": 70, "palette": "purple" },
+      { "type": "steelBarrier", "x": 440, "y": 185, "w": 20, "h": 95 },
+      { "type": "quantumCrystal", "x": 240, "y": 340, "w": 520, "h": 28, "palette": "purple", "profile": [20, 30, 42, 28, 20] }
+    ],
+    "solutionDna": ["FLOAT", "BASH", "DRILL", "BUILD"],
+    "difficultyScore": 124
+  },
+  {
+    "id": 15,
+    "difficulty": "hard",
+    "title": "[HARD] TACHYON RIFT #709",
+    "bgImg": "assets/bg_level_3.jpg",
+    "terrainTheme": "purple",
+    "desc": "15구역: 역방향 퍼즐 설계 기반 160px 치명적 낙차 및 강철 격벽 우회 구역. BASH → DRILL → FLOAT → BLOCK → BUILD 5단 연계로 웜홀을 개척하십시오.",
+    "totalUnits": 10,
+    "needPercent": 80,
+    "spawnRate": 25,
+    "timeLimit": 134,
+    "skills": {
+      "climb": 1,
+      "float": 9,
+      "bash": 1,
+      "mine": 0,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
+      "portal": 0
+    },
+    "spawnX": 75,
+    "spawnY": 45,
+    "gateX": 705,
+    "gateY": 266,
+    "solutionDna": [
+      "BASH",
+      "DRILL",
+      "FLOAT",
+      "BLOCK",
+      "BUILD"
+    ],
+    "difficultyScore": 183,
+    "elements": [
+      { "type": "steelBarrier", "x": 20, "y": 15, "w": 15, "h": 75 },
+      { "type": "platform", "x": 30, "y": 80, "w": 225, "h": 22, "palette": "purple" },
+      { "type": "rockWall", "x": 135, "y": 15, "w": 35, "h": 68, "palette": "purple" },
+      { "type": "steelBarrier", "x": 240, "y": 10, "w": 20, "h": 85 },
+      { "type": "steelBarrier", "x": 380, "y": 20, "w": 20, "h": 85 },
+      { "type": "platform", "x": 180, "y": 140, "w": 115, "h": 20, "palette": "purple" },
+      { "type": "steelBarrier", "x": 175, "y": 85, "w": 15, "h": 65 },
+      { "type": "quantumCrystal", "x": 360, "y": 190, "w": 90, "h": 20, "palette": "purple", "profile": [14, 22, 16] },
+      { "type": "quantumCrystal", "x": 245, "y": 300, "w": 235, "h": 24, "palette": "purple", "profile": [20, 28, 40, 30, 18] },
+      { "type": "steelBarrier", "x": 240, "y": 235, "w": 15, "h": 75 },
+      { "type": "platform", "x": 512, "y": 276, "w": 235, "h": 22, "palette": "purple" },
+      { "type": "steelBarrier", "x": 745, "y": 205, "w": 15, "h": 80 }
+    ]
   }
 ];
 

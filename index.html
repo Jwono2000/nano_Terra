@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
   <!-- Modular Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 
 <body>
@@ -84,6 +84,9 @@
 
       <!-- Main Canvas Viewport -->
       <div id="canvas-wrapper">
+        <!-- Ambient Backdrop for Ultra-Wide 20:9 Screens (Eliminates Black Sidebars) -->
+        <div id="ambient-backdrop"></div>
+
         <canvas id="game-canvas" width="800" height="450"></canvas>
 
         <!-- Floating Fullscreen Quick Button (Mobile-friendly) -->

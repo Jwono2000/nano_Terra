@@ -142,6 +142,8 @@ class GameEngine {
     if (hudBottom) hudBottom.style.display = 'flex';
 
     this.bgImg.src = this.activeCustomData.bgImg || 'assets/bg_level_1.jpg';
+    const ambientEl = document.getElementById('ambient-backdrop');
+    if (ambientEl) ambientEl.style.backgroundImage = `url("${this.bgImg.src}")`;
     if (this.wallTextureImg.complete) {
       this.terrain.setPattern(this.wallTextureImg);
     }
@@ -195,6 +197,8 @@ class GameEngine {
     const lvl = LEVELS[this.currentLevelIdx];
     
     this.bgImg.src = lvl.bgImg || 'assets/bg_level_1.jpg';
+    const ambientEl = document.getElementById('ambient-backdrop');
+    if (ambientEl) ambientEl.style.backgroundImage = `url("${this.bgImg.src}")`;
     if (this.wallTextureImg.complete) {
       this.terrain.setPattern(this.wallTextureImg);
     }

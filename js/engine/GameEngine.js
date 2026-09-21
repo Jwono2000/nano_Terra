@@ -27,6 +27,12 @@ class GameEngine {
     this.particles = new ParticleSystem();
 
     this.bgImg = new Image();
+    this.bgImg.onload = () => {
+      const ambientEl = document.getElementById('ambient-backdrop');
+      if (ambientEl && this.bgImg.src) {
+        ambientEl.style.backgroundImage = `url("${this.bgImg.src}")`;
+      }
+    };
     this.hatchImg = new Image();
     this.hatchImg.src = 'assets/dropship_hatch.png';
     
@@ -419,14 +425,33 @@ class GameEngine {
       }
     };
 
-    const requestFullscreenMode = () => {
+    const requestFullscreenMode = async () => {
       const docEl = document.documentElement;
-      const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+      const rfs = docEl.requestFullscreen || 
+                  docEl.webkitRequestFullscreen || 
+                  docEl.mozRequestFullScreen || 
+                  docEl.msRequestFullscreen;
       if (rfs) {
-        rfs.call(docEl).catch(() => {});
+        try {
+          if (docEl.requestFullscreen) {
+            await docEl.requestFullscreen({ navigationUI: 'hide' });
+          } else {
+            await rfs.call(docEl);
+          }
+        } catch (fsErr) {
+          try {
+            if (rfs) await rfs.call(docEl);
+          } catch (fsErr2) {}
+        }
       }
       if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(() => {});
+        try {
+          await screen.orientation.lock('landscape');
+        } catch (oErr) {
+          try {
+            await screen.orientation.lock('landscape-primary');
+          } catch (oErr2) {}
+        }
       }
     };
 
@@ -437,35 +462,52 @@ class GameEngine {
       }
     };
 
-    const toggleFullscreenMode = () => {
+    const toggleFullscreenMode = async () => {
       if (isFullscreenActive()) {
         exitFullscreenMode();
       } else {
-        requestFullscreenMode();
+        await requestFullscreenMode();
       }
     };
 
-    bindBtn('btn-fullscreen', () => {
-      toggleFullscreenMode();
-    });
+    const bindFullscreenBtn = (id, fn) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', async (e) => {
+        SFX.init();
+        SFX.playClick();
+        await fn(e);
+      });
+    };
 
-    bindBtn('btn-floating-fs', () => {
-      toggleFullscreenMode();
-    });
+    bindFullscreenBtn('btn-fullscreen', () => toggleFullscreenMode());
+    bindFullscreenBtn('btn-floating-fs', () => toggleFullscreenMode());
+    bindFullscreenBtn('btn-rotate-fullscreen', () => requestFullscreenMode());
+
+    const rotateOverlay = document.getElementById('rotate-overlay');
+    if (rotateOverlay) {
+      rotateOverlay.addEventListener('click', async () => {
+        await requestFullscreenMode();
+      });
+    }
 
     ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
       document.addEventListener(evt, updateFullscreenBtnState);
     });
 
-    bindBtn('btn-start-fullscreen', () => {
-      requestFullscreenMode();
+    bindFullscreenBtn('btn-start-fullscreen', async () => {
+      await requestFullscreenMode();
       this.startMissionWithCountdown();
     });
 
-    bindBtn('btn-start-mission', () => {
+    bindFullscreenBtn('btn-start-mission', async () => {
       // Auto-request fullscreen on mobile devices or small touch screens
-      if (!isFullscreenActive() && ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 1100)) {
-        requestFullscreenMode();
+      const isMobile = ('ontouchstart' in window) || 
+                       (navigator.maxTouchPoints > 0) || 
+                       /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || 
+                       (window.innerWidth < 1100);
+      if (isMobile && !isFullscreenActive()) {
+        await requestFullscreenMode();
       }
       this.startMissionWithCountdown();
     });
@@ -645,6 +687,28 @@ class GameEngine {
         this.applySkill(targetUnit);
       }
     });
+
+    const canvasWrap = document.getElementById('canvas-wrapper');
+    if (canvasWrap) {
+      canvasWrap.addEventListener('pointerdown', (e) => {
+        if (e.target === this.canvas) return;
+        if (this.gameState !== GAME_STATE.PLAYING) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        if (clientX === undefined || clientY === undefined) return;
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        const clampedX = Math.max(0, Math.min(this.canvas.width, (clientX - rect.left) * scaleX));
+        const clampedY = Math.max(0, Math.min(this.canvas.height, (clientY - rect.top) * scaleY));
+        const coords = { x: clampedX, y: clampedY };
+        const targetUnit = updateHover(coords);
+        if (targetUnit) {
+          SFX.init();
+          this.applySkill(targetUnit);
+        }
+      });
+    }
 
     this.canvas.addEventListener('pointerup', (e) => {
       if (this.gameState === GAME_STATE.EDITOR && this.editor) {
@@ -1062,13 +1126,21 @@ class GameEngine {
   render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    if (this.bgImg.complete && this.bgImg.naturalWidth > 0) {
-      this.ctx.drawImage(this.bgImg, 0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.fillStyle = 'rgba(5, 8, 20, 0.22)';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    } else {
-      this.ctx.fillStyle = '#060913';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    // Trick A (World Background Seamless Expansion):
+    // #ambient-backdrop renders the high-res world background edge-to-edge behind the canvas.
+    // When ambient-backdrop is present, canvas stays transparent so the single sharp background
+    // spans continuously from left bezel to right bezel.
+    const ambientEl = document.getElementById('ambient-backdrop');
+    const hasAmbient = ambientEl && ambientEl.style.backgroundImage && ambientEl.style.backgroundImage !== 'none';
+    if (!hasAmbient) {
+      if (this.bgImg.complete && this.bgImg.naturalWidth > 0) {
+        this.ctx.drawImage(this.bgImg, 0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'rgba(5, 8, 20, 0.22)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      } else {
+        this.ctx.fillStyle = '#060913';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
     }
 
     this.ctx.drawImage(this.terrain.canvas, 0, 0);

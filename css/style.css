@@ -78,20 +78,27 @@ html, body {
   touch-action: none;
 }
 
-/* Ambient Backdrop for Ultra-Wide / 20:9 Screens (Eliminates Letterbox Black Bars) */
+/* Ambient Backdrop for Ultra-Wide / 20:9 Screens (Trick A: World Background Seamless Expansion) */
 #ambient-backdrop {
   position: absolute;
-  top: -15%;
-  left: -15%;
-  width: 130%;
-  height: 130%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(24px) brightness(0.6) saturate(1.5);
-  transform: scale(1.08);
-  opacity: 0.98;
+  filter: none;
+  transform: none;
+  opacity: 1;
   z-index: 1;
+  pointer-events: none;
+}
+
+#ambient-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 18, 0.22);
   pointer-events: none;
 }
 
@@ -311,17 +318,17 @@ canvas {
   position: relative;
   width: 100%;
   flex-shrink: 0;
-  height: clamp(38px, 11vh, 52px);
+  height: clamp(40px, 11vh, 52px);
   background: linear-gradient(0deg, rgba(6, 11, 22, 0.98) 0%, rgba(6, 11, 22, 0.92) 100%);
   border-top: 1px solid var(--panel-border);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: clamp(2px, 0.5vw, 4px);
-  padding: 1px clamp(2px, 0.5vw, 6px) 3px clamp(2px, 0.5vw, 6px);
+  padding: 2px clamp(2px, 0.5vw, 6px);
   z-index: 30;
   pointer-events: auto;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .skill-card {
@@ -340,6 +347,7 @@ canvas {
   transition: all 0.12s ease;
   flex-shrink: 0;
   touch-action: manipulation;
+  box-sizing: border-box;
 }
 
 .skill-card:active {
@@ -1069,9 +1077,11 @@ canvas {
     padding: 1px 3px;
   }
   #hud-bottom {
-    height: clamp(32px, 10vh, 42px);
+    height: clamp(34px, 10vh, 44px);
     padding: 1px 2px;
     gap: 2px;
+    align-items: center;
+    overflow: visible;
   }
   .skill-card {
     height: clamp(28px, 9vh, 36px);
@@ -1124,7 +1134,8 @@ canvas {
     height: 100%;
     aspect-ratio: 16 / 9;
     object-fit: contain;
-    box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
+    box-shadow: none;
+    background: transparent;
   }
 
   /* Overlay Top HUD (Floating Glassmorphism Header) */
@@ -1149,21 +1160,22 @@ canvas {
     left: 0;
     right: 0;
     width: 100%;
-    height: clamp(52px, 13.5vh, 62px);
+    height: clamp(56px, 14.5vh, 68px);
     background: linear-gradient(0deg, rgba(4, 8, 18, 0.96) 0%, rgba(6, 12, 26, 0.82) 75%, transparent 100%);
     border-top: none;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    padding: 2px 8px 6px 8px;
+    padding: 4px 8px 6px 8px;
     gap: clamp(4px, 0.9vw, 8px);
     z-index: 30;
     pointer-events: auto;
+    overflow: visible;
   }
 
   /* Significantly Enlarged Skill Cards for Mobile Thumb Touch */
   .skill-card {
-    height: clamp(48px, 12.5vh, 56px);
+    height: clamp(46px, 12vh, 54px);
     width: clamp(44px, 9.8vw, 68px);
     border-radius: 7px;
     border: 1.5px solid rgba(0, 243, 255, 0.45);
@@ -1171,6 +1183,7 @@ canvas {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     padding: 2px 1px 3px 1px;
     justify-content: space-between;
+    box-sizing: border-box;
   }
 
   .skill-card.selected {
@@ -1268,6 +1281,8 @@ canvas {
   height: 100%;
   aspect-ratio: 16 / 9;
   object-fit: contain;
+  box-shadow: none;
+  background: transparent;
 }
 
 :fullscreen #hud-top,
@@ -1292,27 +1307,29 @@ canvas {
   left: 0;
   right: 0;
   width: 100%;
-  height: clamp(52px, 13.5vh, 62px);
+  height: clamp(56px, 14.5vh, 68px);
   background: linear-gradient(0deg, rgba(4, 8, 18, 0.96) 0%, rgba(6, 12, 26, 0.82) 75%, transparent 100%);
   border-top: none;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: 2px 8px 6px 8px;
+  padding: 4px 8px 6px 8px;
   gap: clamp(4px, 0.9vw, 8px);
   z-index: 30;
   pointer-events: auto;
+  overflow: visible;
 }
 
 :fullscreen .skill-card,
 :-webkit-full-screen .skill-card {
-  height: clamp(48px, 12.5vh, 56px);
+  height: clamp(46px, 12vh, 54px);
   width: clamp(44px, 9.8vw, 68px);
   border-radius: 7px;
   border: 1.5px solid rgba(0, 243, 255, 0.45);
   background: rgba(10, 18, 34, 0.92);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   padding: 2px 1px 3px 1px;
+  box-sizing: border-box;
 }
 
 :fullscreen .skill-card.selected,

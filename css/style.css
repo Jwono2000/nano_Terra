@@ -73,7 +73,7 @@ html, body {
   flex: 1 1 0%;
   min-height: 0;
   overflow: hidden;
-  background: #080d1a;
+  background: transparent;
   cursor: crosshair;
   touch-action: none;
 }
@@ -81,26 +81,18 @@ html, body {
 /* Ambient Backdrop for Ultra-Wide / 20:9 Screens (Eliminates Letterbox Black Bars) */
 #ambient-backdrop {
   position: absolute;
-  inset: -20px;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   background-size: cover;
   background-position: center;
-  filter: blur(28px) brightness(0.45) saturate(1.4);
+  background-repeat: no-repeat;
+  filter: blur(24px) brightness(0.6) saturate(1.5);
   transform: scale(1.08);
-  opacity: 0.9;
+  opacity: 0.98;
   z-index: 1;
   pointer-events: none;
-  display: none;
-}
-
-@media (max-height: 540px) and (orientation: landscape) {
-  #ambient-backdrop {
-    display: block;
-  }
-}
-
-:fullscreen #ambient-backdrop,
-:-webkit-full-screen #ambient-backdrop {
-  display: block;
 }
 
 canvas {
@@ -323,10 +315,10 @@ canvas {
   background: linear-gradient(0deg, rgba(6, 11, 22, 0.98) 0%, rgba(6, 11, 22, 0.92) 100%);
   border-top: 1px solid var(--panel-border);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   gap: clamp(2px, 0.5vw, 4px);
-  padding: 1px clamp(2px, 0.5vw, 6px);
+  padding: 1px clamp(2px, 0.5vw, 6px) 3px clamp(2px, 0.5vw, 6px);
   z-index: 30;
   pointer-events: auto;
   overflow: hidden;
@@ -357,8 +349,7 @@ canvas {
 .skill-card.selected {
   border-color: var(--neon-cyan);
   background: linear-gradient(180deg, rgba(0, 243, 255, 0.28) 0%, rgba(0, 136, 255, 0.4) 100%);
-  box-shadow: 0 0 12px rgba(0, 243, 255, 0.6), inset 0 0 6px rgba(0, 243, 255, 0.4);
-  transform: translateY(-2px);
+  box-shadow: 0 0 14px rgba(0, 243, 255, 0.7), inset 0 0 6px rgba(0, 243, 255, 0.4);
 }
 
 .skill-card.empty {
@@ -1121,7 +1112,7 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #050813;
+    background: transparent;
     z-index: 10;
   }
 
@@ -1161,7 +1152,10 @@ canvas {
     height: clamp(52px, 13.5vh, 62px);
     background: linear-gradient(0deg, rgba(4, 8, 18, 0.96) 0%, rgba(6, 12, 26, 0.82) 75%, transparent 100%);
     border-top: none;
-    padding: 2px 8px 4px 8px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 2px 8px 6px 8px;
     gap: clamp(4px, 0.9vw, 8px);
     z-index: 30;
     pointer-events: auto;
@@ -1182,8 +1176,7 @@ canvas {
   .skill-card.selected {
     border-color: var(--neon-cyan);
     background: linear-gradient(180deg, rgba(0, 243, 255, 0.35) 0%, rgba(0, 136, 255, 0.55) 100%);
-    box-shadow: 0 0 16px rgba(0, 243, 255, 0.8), inset 0 0 8px rgba(0, 243, 255, 0.5);
-    transform: translateY(-4px);
+    box-shadow: 0 0 16px rgba(0, 243, 255, 0.85), inset 0 0 8px rgba(0, 243, 255, 0.5);
   }
 
   .skill-icon {
@@ -1262,7 +1255,7 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #050813;
+  background: transparent;
   z-index: 10;
 }
 
@@ -1302,7 +1295,10 @@ canvas {
   height: clamp(52px, 13.5vh, 62px);
   background: linear-gradient(0deg, rgba(4, 8, 18, 0.96) 0%, rgba(6, 12, 26, 0.82) 75%, transparent 100%);
   border-top: none;
-  padding: 2px 8px 4px 8px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 2px 8px 6px 8px;
   gap: clamp(4px, 0.9vw, 8px);
   z-index: 30;
   pointer-events: auto;
@@ -1317,6 +1313,13 @@ canvas {
   background: rgba(10, 18, 34, 0.92);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   padding: 2px 1px 3px 1px;
+}
+
+:fullscreen .skill-card.selected,
+:-webkit-full-screen .skill-card.selected {
+  border-color: var(--neon-cyan);
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.35) 0%, rgba(0, 136, 255, 0.55) 100%);
+  box-shadow: 0 0 16px rgba(0, 243, 255, 0.85), inset 0 0 8px rgba(0, 243, 255, 0.5);
 }
 
 :fullscreen .skill-icon,

@@ -549,13 +549,37 @@ class GameEngine {
 
   updateSkillUI() {
     const keys = ['climb', 'float', 'bash', 'mine', 'drill', 'bomb', 'build', 'block', 'portal'];
+    let firstAvailable = null;
     keys.forEach(k => {
       const count = this.skillCounts[k] || 0;
       setSafeText(`count-${k}`, count);
       const card = document.getElementById(`card-${k}`);
       if (card) {
-        if (count <= 0) card.classList.add('empty');
-        else card.classList.remove('empty');
+        if (count <= 0) {
+          card.classList.add('empty');
+        } else {
+          card.classList.remove('empty');
+          if (!firstAvailable) firstAvailable = k;
+        }
+      }
+    });
+
+    // If currently selected skill is empty or invalid, switch to first available skill
+    if (!this.selectedSkill || !this.skillCounts[this.selectedSkill] || this.skillCounts[this.selectedSkill] <= 0) {
+      if (firstAvailable) {
+        this.selectedSkill = firstAvailable;
+      }
+    }
+
+    // Synchronize 'selected' class across all skill cards
+    keys.forEach(k => {
+      const card = document.getElementById(`card-${k}`);
+      if (card) {
+        if (k === this.selectedSkill && this.skillCounts[k] > 0) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
       }
     });
   }

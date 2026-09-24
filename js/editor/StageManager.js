@@ -1806,10 +1806,34 @@ class StageManager {
     }
 
     try {
-      const res = await fetch('/api/stages');
-      if (!res.ok) throw new Error('API error: ' + res.status);
-      this._apiAvailable = true;
-      const json = await res.json();
+      let json = null;
+      // 1. Try local backend API if available
+      try {
+        const res = await fetch('/api/stages');
+        if (res.ok) {
+          json = await res.json();
+          this._apiAvailable = true;
+        }
+      } catch (apiErr) {
+        // Fallback for static hosting like GitHub Pages
+      }
+
+      // 2. Fallback to static stages/manifest.json (GitHub Pages, mobile web, offline)
+      if (!json) {
+        try {
+          const resManifest = await fetch('stages/manifest.json?t=' + Date.now());
+          if (resManifest.ok) {
+            json = await resManifest.json();
+          }
+        } catch (manifestErr) {
+          // Ignored
+        }
+      }
+
+      if (!json || !json.stages) {
+        throw new Error('No stages found');
+      }
+
       this.unassignedStages = (json.stages || []).filter(s => !s.error);
 
       if (countEl) {

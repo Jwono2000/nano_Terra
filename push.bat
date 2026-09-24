@@ -1,6 +1,6 @@
 @echo off
 setlocal
-cd /d "D:\AI-Games\nano_Terra"
+cd /d "%~dp0"
 set "PATH=%LOCALAPPDATA%\Programs\Git\bin;%LOCALAPPDATA%\Programs\Git\cmd;%ProgramFiles%\Git\bin;%ProgramFiles%\Git\cmd;%PATH%"
 
 echo ========================================================

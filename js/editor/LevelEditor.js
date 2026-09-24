@@ -145,6 +145,11 @@ class LevelEditor {
       if (btn) btn.onclick = () => this.setSelectedPalette(palKey);
     });
 
+    const btnSelDel = document.getElementById('btn-selected-delete');
+    if (btnSelDel) {
+      btnSelDel.onclick = () => this.deleteSelectedElement();
+    }
+
     // AI Procedural Generator Modal Buttons
     const btnGenCancel = document.getElementById('btn-gen-cancel');
     if (btnGenCancel) {
@@ -431,7 +436,25 @@ class LevelEditor {
     }
   }
 
+  deleteSelectedElement() {
+    if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+      this.levelData.elements.splice(this.selectedElementIndex, 1);
+      this.selectedElementIndex = -1;
+      this.selectedSpecial = null;
+      this.saveHistory();
+      this.syncTerrain();
+      this.updateStatus();
+      SFX.playExplosion();
+    }
+  }
+
   setTool(tool) {
+    if (tool === 'delete') {
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        this.deleteSelectedElement();
+        return;
+      }
+    }
     this.selectedTool = tool;
     document.querySelectorAll('.btn-tool[data-tool]').forEach(b => {
       b.classList.toggle('active', b.dataset.tool === tool);
@@ -442,7 +465,7 @@ class LevelEditor {
     this.isResizingWidth = false;
     this.isResizingThickness = false;
     this.isDrawing = false;
-    if (tool !== 'select') {
+    if (tool !== 'select' && tool !== 'delete') {
       this.selectedElementIndex = -1;
       this.selectedSpecial = null;
     }
@@ -593,6 +616,14 @@ class LevelEditor {
 
   // Canvas interaction handlers
   handlePointerDown(x, y) {
+    // Defensively reset any stuck drag state before starting new interaction
+    this.isMovingSpawn = false;
+    this.isMovingGate = false;
+    this.isMovingElement = false;
+    this.isResizingWidth = false;
+    this.isResizingThickness = false;
+    this.isDrawing = false;
+
     const sx = this.snapCoord(x);
     const sy = this.snapCoord(y);
 
@@ -831,14 +862,40 @@ class LevelEditor {
 
     if (this.isDrawing) {
       this.isDrawing = false;
-      const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
-      const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
       const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
       const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
-      const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
-      const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
-      const w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, Math.round(rawW));
-      const h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, Math.round(rawH));
+
+      let x0, y0, w, h;
+
+      if (rawW < 12 && rawH < 12) {
+        // Single click placement! Provide generous default dimensions
+        if (this.selectedTool === 'steelBarrier') {
+          w = 20;
+          h = 80;
+        } else if (this.selectedTool === 'rockWall') {
+          w = 40;
+          h = 100;
+        } else if (this.selectedTool === 'craggyRock' || this.selectedTool === 'volcanicBasalt' || this.selectedTool === 'quantumCrystal') {
+          w = 120;
+          h = 40;
+        } else {
+          // platform
+          w = 140;
+          h = 20;
+        }
+        x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+        y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+        x0 = Math.max(0, Math.min(800 - w, x0));
+        y0 = Math.max(0, Math.min(450 - h, y0));
+      } else {
+        // Drag placement
+        x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
+        y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
+        const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
+        const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
+        w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, Math.round(rawW));
+        h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, Math.round(rawH));
+      }
 
       const newEl = {
         type: this.selectedTool,
@@ -881,10 +938,11 @@ class LevelEditor {
     }
   }
 
-  findElementAt(x, y) {
+  findElementAt(x, y, pad = 5) {
     for (let i = this.levelData.elements.length - 1; i >= 0; i--) {
       const el = this.levelData.elements[i];
-      if (x >= el.x && x <= el.x + el.w && y >= el.y && y <= el.y + el.h) {
+      const p = Math.max(pad, (el.h < 18 || el.w < 18) ? 7 : pad);
+      if (x >= el.x - p && x <= el.x + el.w + p && y >= el.y - p && y <= el.y + el.h + p) {
         return i;
       }
     }
@@ -936,7 +994,11 @@ class LevelEditor {
       const ry = el.y + el.h / 2;
       ctx.fillStyle = '#00f3ff';
       ctx.beginPath();
-      ctx.roundRect(rx - 4, ry - 14, 8, 28, 4);
+      if (ctx.roundRect) {
+        ctx.roundRect(rx - 4, ry - 14, 8, 28, 4);
+      } else {
+        ctx.rect(rx - 4, ry - 14, 8, 28);
+      }
       ctx.fill();
       ctx.fillStyle = '#000';
       ctx.font = 'bold 10px sans-serif';
@@ -949,7 +1011,11 @@ class LevelEditor {
       const hy = el.y + el.h;
       ctx.fillStyle = '#ffb700';
       ctx.beginPath();
-      ctx.roundRect(hx - 28, hy - 6, 56, 12, 4);
+      if (ctx.roundRect) {
+        ctx.roundRect(hx - 28, hy - 6, 56, 12, 4);
+      } else {
+        ctx.rect(hx - 28, hy - 6, 56, 12);
+      }
       ctx.fill();
       ctx.fillStyle = '#000';
       ctx.font = 'bold 9px sans-serif';
@@ -961,6 +1027,7 @@ class LevelEditor {
       const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
       const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
       const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
+      const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
       const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
       const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
       const w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, rawW);

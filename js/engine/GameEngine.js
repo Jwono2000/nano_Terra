@@ -530,6 +530,21 @@ class GameEngine {
       this.startMissionWithCountdown();
     });
 
+    bindBtn('btn-end-save-map', () => {
+      const modalEnd = document.getElementById('modal-end');
+      if (modalEnd) modalEnd.style.display = 'none';
+      const curLvl = this.isCustomPlay ? this.activeCustomData : LEVELS[this.currentLevelIdx];
+      if (curLvl && this.stageMgr) {
+        this.stageMgr.openSaveSlotModal(curLvl, 'add_new');
+      }
+    });
+
+    bindBtn('btn-end-return-editor', () => {
+      const modalEnd = document.getElementById('modal-end');
+      if (modalEnd) modalEnd.style.display = 'none';
+      this.enterEditor();
+    });
+
     window.addEventListener('keydown', (e) => {
       const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
       const idx = keys.indexOf(e.key);
@@ -539,13 +554,22 @@ class GameEngine {
         const p = document.getElementById('btn-pause');
         if (p) p.dispatchEvent(new Event('pointerdown'));
       } else if (e.key === 'r' || e.key === 'R') {
-        this.restartLevelDirectly();
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        if (this.gameState === GAME_STATE.EDITOR && this.editor) {
+          this.editor.executeGenerate(true);
+        } else if (this.gameState === GAME_STATE.PLAYING) {
+          this.restartLevelDirectly();
+        }
       } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
         if (this.gameState === GAME_STATE.EDITOR && this.editor) {
           this.editor.undo();
         }
       } else if (this.gameState === GAME_STATE.EDITOR && this.editor) {
-        if (e.key === 'ArrowUp' || e.key === ']') {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+          e.preventDefault();
+          this.editor.deleteSelectedElement();
+        } else if (e.key === 'ArrowUp' || e.key === ']') {
           e.preventDefault();
           this.editor.adjustSelectedThickness(e.shiftKey ? 5 : 2);
         } else if (e.key === 'ArrowDown' || e.key === '[') {
@@ -716,6 +740,16 @@ class GameEngine {
         this.editor.handlePointerUp(coords.x, coords.y);
       }
     });
+
+    // Window-level pointerup and pointercancel fallback so dragging/resizing never gets stuck outside canvas
+    const handleGlobalPointerUp = (e) => {
+      if (this.gameState === GAME_STATE.EDITOR && this.editor) {
+        const coords = getCanvasCoords(e);
+        this.editor.handlePointerUp(coords.x, coords.y);
+      }
+    };
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('pointercancel', handleGlobalPointerUp);
   }
 
   applySkill(unit) {
@@ -1107,6 +1141,15 @@ class GameEngine {
       if (desc) desc.innerText = `구출률 부족 (${rescuedPct}% / 목표 ${currentLvl.needPercent}%). 전략을 재정비하십시오!`;
       if (nextBtn) nextBtn.style.display = 'none';
     }
+
+    const saveBtn = document.getElementById('btn-end-save-map');
+    const returnEditorBtn = document.getElementById('btn-end-return-editor');
+    if (saveBtn) {
+      saveBtn.style.display = this.isCustomPlay ? 'inline-block' : 'none';
+    }
+    if (returnEditorBtn) {
+      returnEditorBtn.style.display = this.isCustomPlay ? 'inline-block' : 'none';
+    }
   }
 
   updateHUD() {
@@ -1146,7 +1189,11 @@ class GameEngine {
     this.ctx.drawImage(this.terrain.canvas, 0, 0);
 
     if (this.gameState === GAME_STATE.EDITOR && this.editor) {
-      this.editor.render(this.ctx);
+      try {
+        this.editor.render(this.ctx);
+      } catch (err) {
+        console.error('[Editor render error]', err);
+      }
       return;
     }
 
@@ -1341,7 +1388,11 @@ class GameEngine {
       }
     }
 
-    this.render();
+    try {
+      this.render();
+    } catch (e) {
+      console.error('[gameLoop render error]', e);
+    }
     requestAnimationFrame((t) => this.gameLoop(t));
   }
 }

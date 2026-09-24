@@ -541,15 +541,19 @@ class StageManager {
   constructor(game) {
     this.game = game;
     this.customStages = [];
+    this.unassignedStages = []; // stages/ folder files (loaded via API)
     this.campaignOverrides = {};
     this.currentTab = 'tab-campaign';
     this.pendingSaveData = null;
+    this._apiAvailable = null; // null=unknown, true/false after check
 
     this.loadCustomStagesFromStorage();
     this.loadCampaignOverridesFromStorage();
     this.initTabs();
     this.initJsonButtons();
     this.initSaveSlotModalEvents();
+    this.initUnassignedTabEvents();
+    this.checkApiAvailability();
   }
 
   static async loadCampaignLevels() {
@@ -656,6 +660,7 @@ class StageManager {
     try {
       localStorage.setItem('terra_campaign_overrides', JSON.stringify(this.campaignOverrides));
       StageManager.rebuildActiveLevels();
+      this.saveCampaignJsonToApi();
     } catch(e) {
       console.warn("Failed to save campaign overrides", e);
     }
@@ -681,6 +686,41 @@ class StageManager {
         this.game.loadLevel(slotIdx, false);
       }
     }
+    return clone;
+  }
+
+  // --- Insert at slot with shift (밀어내기) ---
+  insertAtCampaignSlot(targetSlot, stageData) {
+    const clone = JSON.parse(JSON.stringify(stageData));
+    clone.isOverridden = true;
+    if (typeof clone.spawnX !== 'number' || isNaN(clone.spawnX)) clone.spawnX = 90;
+    if (typeof clone.spawnY !== 'number' || isNaN(clone.spawnY)) clone.spawnY = 60;
+    if (typeof clone.gateX !== 'number' || isNaN(clone.gateX)) clone.gateX = 710;
+    if (typeof clone.gateY !== 'number' || isNaN(clone.gateY)) clone.gateY = 254;
+
+    // Build new sequential levels array by splicing clone into LEVELS
+    const newLevels = [];
+    for (let i = 0; i < LEVELS.length; i++) {
+      if (i === targetSlot) {
+        newLevels.push(clone);
+      }
+      newLevels.push(LEVELS[i]);
+    }
+    if (targetSlot >= LEVELS.length) {
+      newLevels.push(clone);
+    }
+
+    // Reassign sequential 1-based IDs and set as campaignOverrides
+    this.campaignOverrides = {};
+    newLevels.forEach((lvl, idx) => {
+      const c = JSON.parse(JSON.stringify(lvl));
+      c.id = idx + 1;
+      c.isOverridden = true;
+      this.campaignOverrides[idx] = c;
+    });
+
+    this.saveCampaignOverridesToStorage();
+    this.renderStageList();
     return clone;
   }
 
@@ -810,27 +850,35 @@ class StageManager {
     const nextSlotNum = LEVELS.length + 1;
     const subTitle = document.getElementById('modal-save-subtitle');
     if (subTitle) {
-      subTitle.innerText = `${nextSlotNum}구역 이후로 계속 신규 슬롯을 추가하거나, 기존 구역 슬롯에 덮어쓸 수 있습니다.`;
+      subTitle.innerText = `현재 슬롯 다음 번호(${nextSlotNum}구역)로 캠페인에 등록하거나, 미지정탭(stages/ 폴더 파일)에 보관할 수 있습니다.`;
     }
 
     const btnAddMode = document.getElementById('btn-save-mode-add');
     if (btnAddMode) {
-      btnAddMode.innerText = `➕ 새 슬롯 추가 (${nextSlotNum}구역)`;
+      btnAddMode.innerText = `➕ 다음 슬롯 (${nextSlotNum}구역)`;
     }
 
     select.innerHTML = '';
 
-    // 1. Add New Slot Option (Always at top)
+    // 1. Add New Slot Option (Always at top - Requirement 4 & 5)
     const addNewOpt = document.createElement('option');
     addNewOpt.value = 'add_new';
-    addNewOpt.innerText = `➕ [새 슬롯 추가] ${nextSlotNum}구역 슬롯 신규 등록 (11구역+)`;
+    addNewOpt.innerText = `➕ [다음 슬롯: ${nextSlotNum}구역] 캠페인 신규 슬롯 등록 (추천)`;
     addNewOpt.style.fontWeight = 'bold';
     addNewOpt.style.color = '#00ff88';
     select.appendChild(addNewOpt);
 
-    // 2. Existing Campaign Slots
+    // 2. Unassigned Tab / stages folder file (Requirement 5, 9, 10)
+    const unassignedOpt = document.createElement('option');
+    unassignedOpt.value = 'unassigned';
+    unassignedOpt.innerText = `📂 [미지정탭 보관] stages/ 폴더에 파일로 저장 (날짜/시간 네이밍)`;
+    unassignedOpt.style.fontWeight = 'bold';
+    unassignedOpt.style.color = '#bb77ff';
+    select.appendChild(unassignedOpt);
+
+    // 3. Existing Campaign Slots (1~N)
     const campGroup = document.createElement('optgroup');
-    campGroup.label = `--- 기존 캠페인 구역 슬롯 (1~${LEVELS.length}구역) ---`;
+    campGroup.label = `--- 기존 캠페인 구역 슬롯 교체 (1~${LEVELS.length}구역) ---`;
     const source = (DEFAULT_CAMPAIGN_LEVELS && DEFAULT_CAMPAIGN_LEVELS.length >= 10) 
       ? DEFAULT_CAMPAIGN_LEVELS 
       : BUILTIN_10_STAGES;
@@ -840,26 +888,17 @@ class StageManager {
       opt.value = idx.toString();
       const isMod = !!this.campaignOverrides[idx];
       const isAdded = idx >= sourceLen;
-      const tag = isAdded ? '★(추가된 구역)' : (isMod ? '★(수정됨)' : '(기본)');
-      opt.innerText = `[${idx + 1}구역] ${lvl.title} ${tag}`;
+      const tag = isAdded ? '★(추가됨)' : (isMod ? '★(수정됨)' : '(기본)');
+      opt.innerText = `[${idx + 1}구역 교체] ${lvl.title} ${tag}`;
       campGroup.appendChild(opt);
     });
     select.appendChild(campGroup);
 
-    // 3. Custom Slot
-    const custGroup = document.createElement('optgroup');
-    custGroup.label = '--- 독립 커스텀 보관함 ---';
-    const customOpt = document.createElement('option');
-    customOpt.value = 'custom';
-    customOpt.innerText = `[📁 커스텀 슬롯] 새 커스텀 맵으로 독립 보관`;
-    custGroup.appendChild(customOpt);
-    select.appendChild(custGroup);
-
-    // Determine default selection
-    if (defaultSlot === 'add_new') {
+    // Determine default selection (Requirement 4: default to nextSlotNum)
+    if (defaultSlot === 'unassigned') {
+      select.value = 'unassigned';
+    } else if (defaultSlot === 'add_new') {
       select.value = 'add_new';
-    } else if (defaultSlot === 'custom') {
-      select.value = 'custom';
     } else if (defaultSlot !== null && defaultSlot !== undefined && !isNaN(defaultSlot) && defaultSlot >= 0 && defaultSlot < LEVELS.length) {
       select.value = defaultSlot.toString();
     } else {
@@ -868,14 +907,14 @@ class StageManager {
 
     if (titleInput) {
       let curTitle = this.pendingSaveData.title || '';
-      if (!curTitle || curTitle === 'NEW CREATED SECTOR' || curTitle === 'CUSTOM SECTOR') {
+      if (!curTitle || curTitle === 'NEW CREATED SECTOR' || curTitle === 'CUSTOM SECTOR' || curTitle.includes('SECTOR')) {
         if (select.value === 'add_new') {
           curTitle = `${nextSlotNum}구역 SECTOR`;
-        } else if (select.value !== 'custom') {
+        } else if (select.value === 'unassigned') {
+          curTitle = this.pendingSaveData.title || 'UNASSIGNED SECTOR';
+        } else {
           const idx = parseInt(select.value, 10);
           curTitle = LEVELS[idx] ? LEVELS[idx].title : `${idx + 1}구역 SECTOR`;
-        } else {
-          curTitle = 'CUSTOM SECTOR';
         }
       }
       titleInput.value = curTitle;
@@ -891,8 +930,9 @@ class StageManager {
     const select = document.getElementById('save-target-slot-select');
     const infoBox = document.getElementById('save-slot-info-box');
     const btnAdd = document.getElementById('btn-save-mode-add');
+    const btnUnassigned = document.getElementById('btn-save-mode-unassigned');
     const btnSelect = document.getElementById('btn-save-mode-select');
-    const btnCustom = document.getElementById('btn-save-mode-custom');
+    const btnConfirm = document.getElementById('btn-save-slot-confirm');
     if (!select) return;
 
     const val = select.value;
@@ -907,8 +947,8 @@ class StageManager {
       btn.style.fontWeight = 'normal';
     };
     resetBtn(btnAdd);
+    resetBtn(btnUnassigned);
     resetBtn(btnSelect);
-    resetBtn(btnCustom);
 
     if (val === 'add_new') {
       if (btnAdd) {
@@ -921,21 +961,23 @@ class StageManager {
         infoBox.style.background = 'rgba(0, 255, 136, 0.1)';
         infoBox.style.borderColor = 'rgba(0, 255, 136, 0.3)';
         infoBox.style.color = '#00ff88';
-        infoBox.innerHTML = `✨ <strong>[${nextSlotNum}구역 신규 슬롯]</strong>으로 자동 생성됩니다. 캠페인이 총 ${nextSlotNum}개 구역으로 확장되며, 순차적으로 플레이할 수 있습니다.`;
+        infoBox.innerHTML = `✨ <strong>[${nextSlotNum}구역 신규 슬롯]</strong>으로 자동 등록됩니다. 캠페인이 총 ${nextSlotNum}개 구역으로 확장되며, 슬롯 순서대로 플레이할 수 있습니다.`;
       }
-    } else if (val === 'custom') {
-      if (btnCustom) {
-        btnCustom.style.background = 'rgba(0, 243, 255, 0.15)';
-        btnCustom.style.borderColor = 'var(--neon-cyan)';
-        btnCustom.style.color = 'var(--neon-cyan)';
-        btnCustom.style.fontWeight = 'bold';
+      if (btnConfirm) btnConfirm.innerHTML = `💾 ${nextSlotNum}구역에 등록`;
+    } else if (val === 'unassigned') {
+      if (btnUnassigned) {
+        btnUnassigned.style.background = 'rgba(187, 119, 255, 0.18)';
+        btnUnassigned.style.borderColor = '#bb77ff';
+        btnUnassigned.style.color = '#bb77ff';
+        btnUnassigned.style.fontWeight = 'bold';
       }
       if (infoBox) {
-        infoBox.style.background = 'rgba(0, 243, 255, 0.1)';
-        infoBox.style.borderColor = 'rgba(0, 243, 255, 0.3)';
-        infoBox.style.color = 'var(--neon-cyan)';
-        infoBox.innerHTML = `📁 <strong>[커스텀 슬롯 보관함]</strong>에 독립 저장됩니다. 스테이지 라이브러리에서 언제든 원하는 캠페인 구역으로 등록할 수 있습니다.`;
+        infoBox.style.background = 'rgba(187, 119, 255, 0.1)';
+        infoBox.style.borderColor = 'rgba(187, 119, 255, 0.3)';
+        infoBox.style.color = '#bb77ff';
+        infoBox.innerHTML = `📂 <strong>[미지정탭 보관]</strong> stages/ 폴더에 날짜/시간 네이밍(stage_YYYYMMDD_HHmmss.json) 파일로 저장됩니다. 맵목록의 '미지정' 탭에서 언제든 테스트하거나 원하는 캠페인 슬롯 번호로 배정할 수 있습니다.`;
       }
+      if (btnConfirm) btnConfirm.innerHTML = `💾 미지정탭 파일 저장`;
     } else {
       if (btnSelect) {
         btnSelect.style.background = 'rgba(255, 183, 0, 0.15)';
@@ -950,8 +992,9 @@ class StageManager {
         infoBox.style.background = 'rgba(255, 183, 0, 0.1)';
         infoBox.style.borderColor = 'rgba(255, 183, 0, 0.3)';
         infoBox.style.color = 'var(--neon-gold)';
-        infoBox.innerHTML = `⚠️ <strong>[${idx + 1}구역 슬롯]</strong>의 기존 맵(${targetTitle})을 덮어씁니다. 라이브러리에서 언제든 기본값으로 복원할 수 있습니다.`;
+        infoBox.innerHTML = `⚠️ <strong>[${idx + 1}구역 슬롯]</strong>의 기존 맵(${targetTitle})을 덮어씁니다. (원래 맵 순서를 보존하며 중간에 끼워넣으려면 '미지정탭'에서 슬롯 배정 시 밀어내기를 사용하세요)`;
       }
+      if (btnConfirm) btnConfirm.innerHTML = `💾 ${idx + 1}구역 덮어쓰기`;
     }
   }
 
@@ -990,11 +1033,25 @@ class StageManager {
       };
     }
 
+    const btnUnassignedMode = document.getElementById('btn-save-mode-unassigned');
+    if (btnUnassignedMode) {
+      btnUnassignedMode.onclick = () => {
+        if (select) {
+          select.value = 'unassigned';
+          if (titleInput && (!titleInput.value || titleInput.value.includes('구역'))) {
+            titleInput.value = this.pendingSaveData ? (this.pendingSaveData.title || 'UNASSIGNED SECTOR') : 'UNASSIGNED SECTOR';
+          }
+          this.updateSaveSlotUI();
+          SFX.playClick();
+        }
+      };
+    }
+
     const btnSelectMode = document.getElementById('btn-save-mode-select');
     if (btnSelectMode) {
       btnSelectMode.onclick = () => {
         if (select) {
-          if (select.value === 'add_new' || select.value === 'custom') {
+          if (select.value === 'add_new' || select.value === 'unassigned') {
             const defaultIdx = (this.game && !this.game.isCustomPlay && this.game.currentLevelIdx < LEVELS.length)
               ? this.game.currentLevelIdx
               : 0;
@@ -1010,20 +1067,6 @@ class StageManager {
       };
     }
 
-    const btnCustomMode = document.getElementById('btn-save-mode-custom');
-    if (btnCustomMode) {
-      btnCustomMode.onclick = () => {
-        if (select) {
-          select.value = 'custom';
-          if (titleInput && (!titleInput.value || titleInput.value.includes('구역'))) {
-            titleInput.value = 'CUSTOM SECTOR';
-          }
-          this.updateSaveSlotUI();
-          SFX.playClick();
-        }
-      };
-    }
-
     if (select && titleInput) {
       select.onchange = () => {
         const val = select.value;
@@ -1032,7 +1075,11 @@ class StageManager {
           if (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR' || titleInput.value.includes('구역')) {
             titleInput.value = `${nextSlotNum}구역 SECTOR`;
           }
-        } else if (val !== 'custom') {
+        } else if (val === 'unassigned') {
+          if (!titleInput.value || titleInput.value.includes('구역')) {
+            titleInput.value = this.pendingSaveData ? (this.pendingSaveData.title || 'UNASSIGNED SECTOR') : 'UNASSIGNED SECTOR';
+          }
+        } else {
           const idx = parseInt(val, 10);
           if (LEVELS[idx] && (!titleInput.value || titleInput.value === 'CUSTOM SECTOR' || titleInput.value === 'NEW CREATED SECTOR' || titleInput.value.includes('구역'))) {
             titleInput.value = LEVELS[idx].title;
@@ -1052,60 +1099,87 @@ class StageManager {
     const targetVal = select ? select.value : 'add_new';
     let newTitle = titleInput && titleInput.value.trim() ? titleInput.value.trim() : (this.pendingSaveData.title || 'CUSTOM SECTOR');
 
-    let slotIdx = -1;
-    let isAddNew = false;
-
-    if (targetVal === 'add_new') {
-      slotIdx = LEVELS.length;
-      isAddNew = true;
-      if (newTitle === 'CUSTOM SECTOR' || newTitle === 'NEW CREATED SECTOR') {
-        newTitle = `${slotIdx + 1}구역 SECTOR`;
-      }
-    } else if (targetVal === 'custom') {
-      slotIdx = -1;
-    } else {
-      slotIdx = parseInt(targetVal, 10);
-    }
-
     this.pendingSaveData.title = newTitle;
-
-    // Deep clone data before any modal closing
     const finalSavedData = JSON.parse(JSON.stringify(this.pendingSaveData));
 
-    let savedResult = null;
     let savedLabel = '';
     let downloadFileName = '';
 
-    if (targetVal === 'custom') {
-      savedResult = this.saveCustomLevel(finalSavedData);
-      savedLabel = `[📁 커스텀 슬롯] '${newTitle}' 저장 완료!`;
-      const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
-      downloadFileName = `custom_${cleanTitle}.json`;
+    if (targetVal === 'unassigned') {
+      savedLabel = `[📂 미지정탭] '${newTitle}' stages/ 폴더 저장 완료!`;
+      // Save via API to stages/ folder with datetime naming
+      this.saveStageToApi(finalSavedData)
+        .then((res) => {
+          console.log('[StageManager] Saved to stages/ folder:', res.filename);
+          this.loadUnassignedStagesFromApi();
+          if (this.game && this.game.particles) {
+            this.game.particles.spawnFloatingText(400, 180, `💾 stages/${res.filename} 저장 완료!`, "#bb77ff");
+          }
+        })
+        .catch((err) => {
+          console.warn('[StageManager] API save failed, saving to local custom pool:', err);
+          this.saveCustomLevel(finalSavedData);
+          if (this.game && this.game.particles) {
+            this.game.particles.spawnFloatingText(400, 180, `💾 로컬 커스텀 보관함에 저장되었습니다.`, "#00ff88");
+          }
+        });
+
+      if (downloadCheck && downloadCheck.checked) {
+        const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
+        downloadFileName = `stage_${cleanTitle}.json`;
+        try {
+          const jsonStr = JSON.stringify(finalSavedData, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = downloadFileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch(e) {}
+      }
     } else {
+      let slotIdx = -1;
+      let isAddNew = false;
+
+      if (targetVal === 'add_new') {
+        slotIdx = LEVELS.length;
+        isAddNew = true;
+        if (newTitle === 'CUSTOM SECTOR' || newTitle === 'NEW CREATED SECTOR') {
+          newTitle = `${slotIdx + 1}구역 SECTOR`;
+        }
+      } else {
+        slotIdx = parseInt(targetVal, 10);
+      }
+
       finalSavedData.id = slotIdx + 1;
-      savedResult = this.saveToCampaignSlot(slotIdx, finalSavedData);
+      finalSavedData.title = newTitle;
+      this.saveToCampaignSlot(slotIdx, finalSavedData);
       savedLabel = isAddNew
         ? `[➕ ${slotIdx + 1}구역 신규 슬롯] '${newTitle}' 추가 완료!`
         : `[${slotIdx + 1}구역 슬롯] '${newTitle}' 캠페인 적용 완료!`;
+
       const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
       downloadFileName = `stage_${slotIdx + 1}_${cleanTitle}.json`;
-    }
 
-    // Download JSON if checked
-    if (downloadCheck && downloadCheck.checked) {
-      try {
-        const jsonStr = JSON.stringify(finalSavedData, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = downloadFileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch(e) {
-        console.warn("Direct download skipped:", e);
+      // Download JSON if checked OR auto-save to stages/ folder via API
+      if (downloadCheck && downloadCheck.checked) {
+        this.saveStageToApi(finalSavedData, downloadFileName).catch(() => {
+          try {
+            const jsonStr = JSON.stringify(finalSavedData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = downloadFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } catch(e) {}
+        });
       }
     }
 
@@ -1242,6 +1316,8 @@ class StageManager {
 
     if (tabId === 'tab-json') {
       this.updateJsonView();
+    } else if (tabId === 'tab-unassigned') {
+      this.loadUnassignedStagesFromApi();
     } else {
       this.renderStageList();
     }
@@ -1369,7 +1445,7 @@ class StageManager {
   }
 
   bindListEvents() {
-    document.querySelectorAll('#campaign-stage-list button, #custom-stage-list button').forEach(btn => {
+    document.querySelectorAll('#campaign-stage-list button, #custom-stage-list button, #unassigned-stage-list button').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
         const act = btn.dataset.act;
@@ -1436,6 +1512,32 @@ class StageManager {
           if (confirm(`'${name}'을(를) 삭제하시겠습니까?`)) {
             this.deleteCustomStage(idx);
             SFX.playExplosion();
+          }
+        // --- Unassigned tab actions ---
+        } else if (act === 'play-unassigned') {
+          const stage = this.unassignedStages[idx];
+          if (stage && stage.data) {
+            this.closeModal();
+            this.game.loadLevelFromData(stage.data, true);
+          }
+        } else if (act === 'edit-unassigned') {
+          const stage = this.unassignedStages[idx];
+          if (stage && stage.data) {
+            this.closeModal();
+            this.game.enterEditor(stage.data);
+          }
+        } else if (act === 'assign-unassigned-slot') {
+          const selectEl = document.getElementById(`unassigned-slot-select-${idx}`);
+          const targetVal = selectEl ? selectEl.value : 'add_new';
+          const stage = this.unassignedStages[idx];
+          if (stage && stage.data) {
+            this.assignUnassignedToSlot(idx, targetVal);
+          }
+        } else if (act === 'del-unassigned') {
+          const stage = this.unassignedStages[idx];
+          const name = stage ? (stage.title || stage.filename) : '파일';
+          if (confirm(`미지정 맵 파일 '${name}'을(를) stages/ 폴더에서 삭제하시겠습니까?`)) {
+            this.deleteUnassignedStageFile(idx);
           }
         }
       };
@@ -1668,5 +1770,235 @@ class StageManager {
     }
 
     throw new Error("올바른 맵 데이터 형식이 아닙니다 (elements 또는 campaign 배열 누락).");
+  }
+
+  // ========== Stages/ Folder API Integration ==========
+
+  async checkApiAvailability() {
+    try {
+      const res = await fetch('/api/stages', { method: 'GET' });
+      this._apiAvailable = res.ok;
+      if (this._apiAvailable) {
+        console.log('[StageManager] stages/ API available');
+      }
+    } catch(e) {
+      this._apiAvailable = false;
+    }
+  }
+
+  initUnassignedTabEvents() {
+    const btnRefresh = document.getElementById('btn-unassigned-refresh');
+    if (btnRefresh) {
+      btnRefresh.onclick = () => {
+        this.loadUnassignedStagesFromApi();
+        SFX.playClick();
+      };
+    }
+  }
+
+  async loadUnassignedStagesFromApi() {
+    const listEl = document.getElementById('unassigned-stage-list');
+    const countEl = document.getElementById('unassigned-stage-count-text');
+    const tabBtn = document.getElementById('tab-btn-unassigned');
+
+    if (listEl) {
+      listEl.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:12px;">stages/ 폴더 목록 불러오는 중...</div>';
+    }
+
+    try {
+      const res = await fetch('/api/stages');
+      if (!res.ok) throw new Error('API error: ' + res.status);
+      this._apiAvailable = true;
+      const json = await res.json();
+      this.unassignedStages = (json.stages || []).filter(s => !s.error);
+
+      if (countEl) {
+        countEl.innerText = `stages/ 폴더: ${this.unassignedStages.length}개 미지정 맵 파일`;
+      }
+      if (tabBtn) {
+        tabBtn.innerText = `📂 미지정 (${this.unassignedStages.length})`;
+      }
+
+      this.renderUnassignedList();
+    } catch(e) {
+      this._apiAvailable = false;
+      console.warn('[StageManager] Failed to load unassigned stages:', e);
+      if (listEl) {
+        listEl.innerHTML = `
+          <div style="font-size:12px; color:var(--text-dim); padding:24px 10px; text-align:center; line-height: 1.6;">
+            <span style="color: #ffb700; font-weight:bold;">⚠️ stages/ 폴더 목록을 불러올 수 없습니다.</span><br>
+            <span style="color: var(--neon-cyan);">http://localhost:8080</span> 로컬 서버(start_server.bat)가 실행 중인지 확인하세요.<br>
+            <span style="font-size:10px; color:rgba(255,255,255,0.4);">(file:// 직접 열기 모드에서는 보안상 로컬 폴더 탐색이 차단됩니다)</span>
+          </div>
+        `;
+      }
+    }
+  }
+
+  renderUnassignedList() {
+    const listEl = document.getElementById('unassigned-stage-list');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+
+    if (this.unassignedStages.length === 0) {
+      listEl.innerHTML = `
+        <div style="font-size:12px; color:var(--text-dim); padding:24px 10px; text-align:center; line-height: 1.6;">
+          stages/ 폴더에 미지정 맵 파일이 없습니다.<br>
+          <span style="color:var(--neon-cyan);">[🛠️ EDITOR]</span>에서 맵을 제작 후 <span style="color:#00ff88; font-weight:bold;">[💾 맵 저장]</span>하면<br>
+          이 탭에 자동으로 파일이 나타납니다. 또는 탐색기에서 JSON 파일을 stages/ 폴더에 직접 넣어도 됩니다.
+        </div>
+      `;
+      this.bindListEvents();
+      return;
+    }
+
+    const nextSlotNum = LEVELS.length + 1;
+
+    this.unassignedStages.forEach((stage, idx) => {
+      const item = document.createElement('div');
+      item.className = 'stage-item-card';
+
+      const data = stage.data || {};
+      const totalU = data.totalUnits || 15;
+      const quota = data.needPercent || 70;
+      const elemCount = (data.elements || []).length;
+      const title = stage.title || stage.filename;
+      const scoreBadge = data.difficultyScore ? ` <span style="color:var(--neon-gold); font-size:10px;">(${data.difficultyScore}pt)</span>` : '';
+      const dnaBadge = data.solutionDna ? ` | <span style="color:var(--neon-cyan); font-size:10px;">DNA: ${data.solutionDna.join('→')}</span>` : '';
+
+      // Slot assignment dropdown
+      let slotOptions = `<option value="add_new">➕ [끝에 추가] ${nextSlotNum}구역</option>`;
+      for (let s = 0; s < LEVELS.length; s++) {
+        slotOptions += `<option value="${s}">${s + 1}구역 (삽입 / 밀어내기)</option>`;
+      }
+
+      item.innerHTML = `
+        <div class="stage-item-info">
+          <div class="stage-item-title">${title}${scoreBadge}
+            <span style="background: rgba(138,43,226,0.25); color:#bb77ff; border:1px solid #bb77ff; border-radius:4px; padding:1px 5px; font-size:9px;">📂 미지정</span>
+          </div>
+          <div class="stage-item-desc">${totalU}기 유닛 | 목표 ${quota}% | 지형 ${elemCount}개${dnaBadge}</div>
+          <div class="stage-item-desc" style="font-size:9px; color:rgba(255,255,255,0.35);">${stage.filename} | ${stage.createdAt}</div>
+        </div>
+        <div class="stage-item-actions" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-tool btn-tool-play" data-act="play-unassigned" data-idx="${idx}">▶️ 플레이</button>
+          <button class="btn-tool" data-act="edit-unassigned" data-idx="${idx}">✏️ 수정</button>
+          <div style="display: flex; align-items: center; gap: 2px; background: rgba(138,43,226,0.12); padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(138,43,226,0.4);">
+            <select class="prop-select" id="unassigned-slot-select-${idx}" style="padding: 2px 4px; font-size: 10px; height: 22px; width: auto; color: #bb77ff; background: #0b1424; border: 1px solid rgba(138,43,226,0.4); border-radius: 3px;">
+              ${slotOptions}
+            </select>
+            <button class="btn-tool" style="border-color: #00ff88; color: #00ff88; padding: 2px 6px; font-size: 10px; height: 22px;" data-act="assign-unassigned-slot" data-idx="${idx}" title="선택한 캠페인 구역 번호로 슬롯 배정 (중복 시 밀어내기)">📥 슬롯배정</button>
+          </div>
+          <button class="btn-tool btn-tool-danger" data-act="del-unassigned" data-idx="${idx}" title="파일 삭제">🗑️</button>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+
+    this.bindListEvents();
+  }
+
+  // Assign unassigned stage to campaign slot (with shift support)
+  assignUnassignedToSlot(stageIdx, targetVal) {
+    const stage = this.unassignedStages[stageIdx];
+    if (!stage || !stage.data) return;
+
+    const stageData = stage.data;
+    let targetSlot, isNew;
+
+    if (targetVal === 'add_new') {
+      targetSlot = LEVELS.length;
+      isNew = true;
+    } else {
+      targetSlot = parseInt(targetVal, 10);
+      isNew = targetSlot >= LEVELS.length;
+    }
+
+    // Check if slot is occupied (for shift)
+    if (!isNew && targetSlot < LEVELS.length) {
+      const existingLvl = LEVELS[targetSlot];
+      const existingName = existingLvl ? existingLvl.title : `${targetSlot + 1}구역`;
+
+      const msg = `⚠️ [${targetSlot + 1}구역]에 이미 '${existingName}' 맵이 배정되어 있습니다.\n\n` +
+        `'${stageData.title || stage.title}' 맵을 [${targetSlot + 1}구역]에 삽입하고,\n` +
+        `기존 ${targetSlot + 1}구역 이후의 모든 맵을 한 칸씩 뒤로 밀어내시겠습니까?\n\n` +
+        `(기존 순서와 모든 스테이지 데이터는 그대로 유지됩니다)`;
+
+      if (!confirm(msg)) return;
+
+      this.insertAtCampaignSlot(targetSlot, stageData);
+    } else {
+      this.saveToCampaignSlot(targetSlot, stageData);
+    }
+
+    SFX.playTeleport();
+    if (this.game && this.game.particles) {
+      this.game.particles.spawnFloatingText(400, 180, `✅ [캠페인 ${targetSlot + 1}구역]에 '${stageData.title || stage.title}' 배정 완료!`, "#00ff88");
+    }
+
+    // Refresh unassigned list and campaign list
+    this.renderStageList();
+    this.loadUnassignedStagesFromApi();
+  }
+
+  // Save stage data to stages/ folder via API
+  async saveStageToApi(stageData, suggestedFilename) {
+    const payload = JSON.parse(JSON.stringify(stageData));
+    if (suggestedFilename) {
+      payload._saveFilename = suggestedFilename;
+    }
+    const res = await fetch('/api/stages/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload, null, 2)
+    });
+    if (!res.ok) throw new Error('Save API failed: ' + res.status);
+    this._apiAvailable = true;
+    const result = await res.json();
+    console.log('[StageManager] Saved to stages/ folder:', result.filename);
+    return result;
+  }
+
+  // Delete unassigned stage file via API
+  async deleteUnassignedStageFile(stageIdx) {
+    const stage = this.unassignedStages[stageIdx];
+    if (!stage) return;
+
+    try {
+      const res = await fetch(`/api/stages/${encodeURIComponent(stage.filename)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        SFX.playExplosion();
+        this.loadUnassignedStagesFromApi();
+        if (this.game && this.game.particles) {
+          this.game.particles.spawnFloatingText(400, 180, `🗑️ '${stage.title}' 파일 삭제 완료`, "#ff6b6b");
+        }
+      } else {
+        alert('파일 삭제에 실패했습니다.');
+      }
+    } catch(e) {
+      alert('파일 삭제 중 오류가 발생했습니다.');
+    }
+  }
+
+  // Auto-save campaign.json to stages/ folder via API
+  async saveCampaignJsonToApi() {
+    if (!this._apiAvailable) return;
+    const campaignSet = LEVELS.map(lvl => {
+      const clone = JSON.parse(JSON.stringify(lvl));
+      delete clone.isOverridden;
+      return clone;
+    });
+    try {
+      await fetch('/api/campaign/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaignSet, null, 2)
+      });
+      console.log('[StageManager] campaign.json auto-saved to stages/ folder');
+    } catch(e) {
+      console.warn('[StageManager] campaign.json auto-save failed:', e);
+    }
   }
 }

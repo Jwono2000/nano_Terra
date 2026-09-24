@@ -1,0 +1,164 @@
+﻿{
+  "id": 16,
+  "title": "[HARD] QUANTUM (HARD)",
+  "desc": "[ZIGZAG] 100% 클리어 검증 구역. (난이도: HARD, 점수: 173pt, 솔루션: BUILD → DRILL → BASH → FLOAT)",
+  "bgImg": "assets/bg_level_8.jpg",
+  "terrainTheme": "purple",
+  "totalUnits": 15,
+  "needPercent": 75,
+  "spawnRate": 30,
+  "timeLimit": 122,
+  "skills": {
+    "climb": 2,
+    "float": 2,
+    "bash": 1,
+    "mine": 1,
+    "drill": 0,
+    "bomb": 1,
+    "build": 5,
+    "block": 2,
+    "portal": 0
+  },
+  "spawnX": 120,
+  "spawnY": 110,
+  "gateX": 440,
+  "gateY": 300,
+  "elements": [
+    {
+      "type": "quantumCrystal",
+      "x": 60,
+      "y": 150,
+      "w": 220,
+      "h": 30,
+      "palette": "purple",
+      "profile": [
+        29,
+        22,
+        15,
+        20,
+        17,
+        18
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 60,
+      "y": 80,
+      "w": 20,
+      "h": 70
+    },
+    {
+      "type": "steelBarrier",
+      "x": 260,
+      "y": 100,
+      "w": 20,
+      "h": 70
+    },
+    {
+      "type": "platform",
+      "x": 420,
+      "y": 110,
+      "w": 130,
+      "h": 20,
+      "palette": "purple",
+      "profile": [
+        16,
+        29,
+        33,
+        29,
+        31
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 260,
+      "y": 220,
+      "w": 190,
+      "h": 20,
+      "palette": "purple",
+      "profile": [
+        13,
+        19,
+        17,
+        15
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 400,
+      "y": 70,
+      "w": 20,
+      "h": 100
+    },
+    {
+      "type": "rockWall",
+      "x": 350,
+      "y": 110,
+      "w": 50,
+      "h": 60,
+      "palette": "purple"
+    },
+    {
+      "type": "platform",
+      "x": 530,
+      "y": 220,
+      "w": 130,
+      "h": 20,
+      "palette": "purple",
+      "profile": [
+        31,
+        27,
+        25,
+        20
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 370,
+      "y": 350,
+      "w": 290,
+      "h": 30,
+      "palette": "purple",
+      "profile": [
+        51,
+        27,
+        27,
+        36,
+        51,
+        24
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 640,
+      "y": 280,
+      "w": 20,
+      "h": 70
+    }
+  ],
+  "solutionDna": [
+    "BUILD",
+    "DRILL",
+    "BASH",
+    "FLOAT"
+  ],
+  "difficultyScore": 173,
+  "difficultyFactors": {
+    "actionsScore": 32,
+    "uniqueSkillsScore": 28,
+    "steelScore": 35,
+    "decoyScore": 16,
+    "dangerDropScore": 10,
+    "comboScore": 36,
+    "scarcityScore": 16
+  },
+  "layoutType": "zigzag",
+  "_meta": {
+    "seed": 1193937555,
+    "archetype": "zigzag",
+    "difficulty": "HARD",
+    "elementCount": 16,
+    "attempt": 5,
+    "simVerified": true,
+    "rescuedRatio": "4/5"
+  }}

@@ -897,6 +897,13 @@
         return grid[y * W + x] === 2;
       }
 
+      function isNaturalSolid(x, y) {
+        x = Math.floor(x); y = Math.floor(y);
+        if (x < 0 || x >= W || y < 0 || y >= H) return false;
+        const val = grid[y * W + x];
+        return val === 1 || val === 2;
+      }
+
       function carveRect(cx, cy, cw, ch) {
         const x0 = Math.max(0, Math.floor(cx));
         const y0 = Math.max(0, Math.floor(cy));
@@ -917,8 +924,9 @@
           for (let dx = 0; dx < 4; dx++) {
             const x = px + dir * dx;
             if (x >= 0 && x < W) {
-              for (let y = py; y <= by + 4; y++) {
-                if (y >= 0 && y < H) grid[y * W + x] = 1;
+              for (let dy = 0; dy < 4; dy++) {
+                const y = py + dy;
+                if (y >= 0 && y < H) grid[y * W + x] = 3; // 3 = Player-Built Step (4px thickness)
               }
             }
           }
@@ -1116,7 +1124,9 @@
             }
 
             if (!stepped) {
-              if (isSolid(nextX, u.y - 4) || isSolid(nextX, u.y - 12)) {
+              const head1 = isNaturalSolid(nextX, u.y - 4);
+              const head2 = isNaturalSolid(nextX, u.y - 12);
+              if (head1 || head2) {
                 u.dir = -u.dir;
               } else {
                 u.x = nextX;

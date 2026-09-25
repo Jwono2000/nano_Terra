@@ -177,6 +177,34 @@ class TerrainEngine {
     return this.grid[y * this.width + x] !== 0;
   }
 
+  isNaturalSolid(x, y) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
+    const val = this.grid[y * this.width + x];
+    return val === 1 || val === 2;
+  }
+
+  isStructure(x, y) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
+    return this.grid[y * this.width + x] === 3;
+  }
+
+  getStructureAt(x, y) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+    if (!this.constructedStructures) return null;
+    for (let i = this.constructedStructures.length - 1; i >= 0; i--) {
+      const s = this.constructedStructures[i];
+      if (x >= s.x && x < s.x + s.w && y >= s.y && y <= s.y + s.h) {
+        return s;
+      }
+    }
+    return null;
+  }
+
   isSteel(x, y) {
     x = Math.floor(x);
     y = Math.floor(y);
@@ -957,7 +985,7 @@ class TerrainEngine {
     const startX = dir > 0 ? x - 2 : x - w + 2;
     const startY = y - h;
 
-    const struct = { x: startX, y: startY, w, h, type: 'step' };
+    const struct = { x: startX, y: startY, w, h, type: 'step', dir: dir };
     this.constructedStructures.push(struct);
     this.renderSingleStructure(struct);
 

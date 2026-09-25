@@ -222,24 +222,47 @@ class NanoUnit {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
     }
 
-    let isWallAhead = false;
+    // 전방 지형 및 구조물 스캔 (발 높이 및 머리/가슴 높이)
+    let isSolidAhead = false;
+    let isHardWallAhead = false;
+
+    // 1) 발 높이 검사
     if (terrain.isSolid(nextX, this.y)) {
-      isWallAhead = true;
-    } else {
-      for (let cy = -20; cy <= -4; cy += 4) {
-        if (terrain.isSolid(nextX + this.dir * 2, this.y + cy)) {
-          isWallAhead = true;
-          break;
+      isSolidAhead = true;
+      if (terrain.isNaturalSolid ? terrain.isNaturalSolid(nextX, this.y) : !terrain.isStructure(nextX, this.y)) {
+        isHardWallAhead = true;
+      }
+    }
+
+    // 2) 몸통 및 머리 높이 검사 (cy = -20 ~ -4)
+    for (let cy = -20; cy <= -4; cy += 4) {
+      const checkX = nextX + this.dir * 2;
+      const checkY = this.y + cy;
+      if (terrain.isSolid(checkX, checkY)) {
+        isSolidAhead = true;
+        if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : !terrain.isStructure(checkX, checkY)) {
+          isHardWallAhead = true;
         }
       }
     }
 
-    if (isWallAhead) {
+    if (isSolidAhead) {
       let climbHeight = 0;
       let canClimb = false;
 
       // Small slope stepping (only if not equipped with laser)
-      if (!this.hasPlasmaCutter) {
+      // 계단(step)인 경우, 계단이 오르는 방향(dir 일치)일 때만 등반 허용
+      let allowClimb = !this.hasPlasmaCutter;
+      if (allowClimb && terrain.getStructureAt) {
+        const structFoot = terrain.getStructureAt(nextX, this.y) ||
+                           terrain.getStructureAt(nextX, this.y - 2) ||
+                           terrain.getStructureAt(nextX, this.y - 4);
+        if (structFoot && structFoot.type === 'step' && structFoot.dir && structFoot.dir !== this.dir) {
+          allowClimb = false; // 반대 방향 계단은 밟고 오르지 않고 통과
+        }
+      }
+
+      if (allowClimb) {
         for (let h = 1; h <= 8; h++) {
           if (!terrain.isSolid(nextX, this.y - h) && !terrain.isSolid(nextX, this.y - h - 10)) {
             climbHeight = h;
@@ -253,33 +276,40 @@ class NanoUnit {
         this.x = nextX;
         this.y -= climbHeight;
       } else {
-        if (this.hasPlasmaCutter) {
-          if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
-            this.dir = -this.dir;
-            this.vx = this.dir * 1.25;
+        // canClimb이 불가능한 경우:
+        // 자연 암벽이나 강철이 없고 오직 계단 구조물(3)뿐이라면:
+        // 머리/몸통 높이에 계단 밑면이 있거나 반대 방향 계단이므로 벽으로 튕기지 않고 통과!
+        if (!isHardWallAhead) {
+          this.x = nextX;
+        } else {
+          if (this.hasPlasmaCutter) {
+            if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
+              this.dir = -this.dir;
+              this.vx = this.dir * 1.25;
+              this.hasPlasmaCutter = false;
+              return;
+            }
+
+            this.state = STATE.PLASMA_CUTTING;
             this.hasPlasmaCutter = false;
+            this.cutSteps = 0;
+            this.cutStartY = Math.round(this.y);
+            SFX.playLaser();
+            particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 16, 2.5);
             return;
           }
 
-          this.state = STATE.PLASMA_CUTTING;
-          this.hasPlasmaCutter = false;
-          this.cutSteps = 0;
-          this.cutStartY = Math.round(this.y);
-          SFX.playLaser();
-          particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 16, 2.5);
-          return;
-        }
-
-        if (this.hasMagnetizer) {
-          this.state = STATE.CLIMBING;
-          this.climbStep = 0;
-          this.climbStartY = this.y;
-          while (!terrain.isSolid(this.x + this.dir * 1.5, this.y) && !terrain.isSolid(this.x + this.dir * 1.5, this.y - 10)) {
-            this.x += this.dir * 1;
+          if (this.hasMagnetizer) {
+            this.state = STATE.CLIMBING;
+            this.climbStep = 0;
+            this.climbStartY = this.y;
+            while (!terrain.isSolid(this.x + this.dir * 1.5, this.y) && !terrain.isSolid(this.x + this.dir * 1.5, this.y - 10)) {
+              this.x += this.dir * 1;
+            }
+          } else {
+            this.dir = -this.dir;
+            this.vx = this.dir * 1.25;
           }
-        } else {
-          this.dir = -this.dir;
-          this.vx = this.dir * 1.25;
         }
       }
     } else {

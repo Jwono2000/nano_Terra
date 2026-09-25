@@ -222,47 +222,50 @@ class NanoUnit {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
     }
 
-    // 전방 지형 및 구조물 스캔 (발 높이 및 머리/가슴 높이)
-    let isSolidAhead = false;
-    let isHardWallAhead = false;
-
-    // 1) 발 높이 검사
-    if (terrain.isSolid(nextX, this.y)) {
-      isSolidAhead = true;
-      if (terrain.isNaturalSolid ? terrain.isNaturalSolid(nextX, this.y) : !terrain.isStructure(nextX, this.y)) {
-        isHardWallAhead = true;
-      }
-    }
-
-    // 2) 몸통 및 머리 높이 검사 (cy = -20 ~ -4)
+    // --- 전방 충돌 및 통과 판정 ---
+    // 1) 머리/가슴 높이(cy = -20 ~ -4): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
+    //    계단(3)은 머리/가슴 높이에서 절대 벽으로 감지하지 않음 (계단 밑 및 역방향 완전 통과 보장)
+    let isHighWallAhead = false;
     for (let cy = -20; cy <= -4; cy += 4) {
       const checkX = nextX + this.dir * 2;
       const checkY = this.y + cy;
-      if (terrain.isSolid(checkX, checkY)) {
-        isSolidAhead = true;
-        if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : !terrain.isStructure(checkX, checkY)) {
-          isHardWallAhead = true;
+      if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : (terrain.isSolid(checkX, checkY) && !terrain.isStructure(checkX, checkY))) {
+        isHighWallAhead = true;
+        break;
+      }
+    }
+
+    // 2) 발 높이 검사 (this.y - 2 ~ this.y): 오르막 단차(계단 입구 또는 자연 경사) 감지
+    let isFootBlocked = false;
+    if (terrain.isSolid(nextX, this.y - 2) || terrain.isSolid(nextX, this.y)) {
+      const isFootNatural = terrain.isNaturalSolid ? (terrain.isNaturalSolid(nextX, this.y - 2) || terrain.isNaturalSolid(nextX, this.y)) : false;
+      if (isFootNatural) {
+        isFootBlocked = true;
+      } else {
+        // 계단 구조물인 경우: 계단이 오르는 방향(dir 일치)일 때만 발 디딤 블록으로 인정
+        let isClimbableStair = true;
+        if (terrain.getStructureAt) {
+          const structFoot = terrain.getStructureAt(nextX, this.y) || 
+                             terrain.getStructureAt(nextX, this.y - 2) || 
+                             terrain.getStructureAt(nextX, this.y - 4);
+          if (structFoot && structFoot.type === 'step' && structFoot.dir && structFoot.dir !== this.dir) {
+            isClimbableStair = false; // 역방향 계단은 발도 막지 않고 그대로 통과
+          }
+        }
+        if (isClimbableStair) {
+          isFootBlocked = true;
         }
       }
     }
 
-    if (isSolidAhead) {
+    const isWallAhead = isHighWallAhead || isFootBlocked;
+
+    if (isWallAhead) {
       let climbHeight = 0;
       let canClimb = false;
 
-      // Small slope stepping (only if not equipped with laser)
-      // 계단(step)인 경우, 계단이 오르는 방향(dir 일치)일 때만 등반 허용
-      let allowClimb = !this.hasPlasmaCutter;
-      if (allowClimb && terrain.getStructureAt) {
-        const structFoot = terrain.getStructureAt(nextX, this.y) ||
-                           terrain.getStructureAt(nextX, this.y - 2) ||
-                           terrain.getStructureAt(nextX, this.y - 4);
-        if (structFoot && structFoot.type === 'step' && structFoot.dir && structFoot.dir !== this.dir) {
-          allowClimb = false; // 반대 방향 계단은 밟고 오르지 않고 통과
-        }
-      }
-
-      if (allowClimb) {
+      // 발 높이의 단차(1~8px) 오르기 검사 (키 높은 벽이 아닐 때만)
+      if (!this.hasPlasmaCutter && !isHighWallAhead) {
         for (let h = 1; h <= 8; h++) {
           if (!terrain.isSolid(nextX, this.y - h) && !terrain.isSolid(nextX, this.y - h - 10)) {
             climbHeight = h;
@@ -273,15 +276,15 @@ class NanoUnit {
       }
 
       if (canClimb) {
+        // 계단 위 또는 경사면 위로 정상 등반
         this.x = nextX;
         this.y -= climbHeight;
       } else {
-        // canClimb이 불가능한 경우:
-        // 자연 암벽이나 강철이 없고 오직 계단 구조물(3)뿐이라면:
-        // 머리/몸통 높이에 계단 밑면이 있거나 반대 방향 계단이므로 벽으로 튕기지 않고 통과!
-        if (!isHardWallAhead) {
+        // 등반 불가: 키 높은 진짜 벽(1, 2)이 아니라면 계단 밑/역방향 통과!
+        if (!isHighWallAhead) {
           this.x = nextX;
         } else {
+          // 진짜 암벽 또는 강철 장벽에 부딪힌 경우
           if (this.hasPlasmaCutter) {
             if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
               this.dir = -this.dir;
@@ -313,6 +316,7 @@ class NanoUnit {
         }
       }
     } else {
+      // 벽이 없으므로 수평 전진 (계단 밑 공간도 여기로 자유 통과)
       this.x = nextX;
     }
   }

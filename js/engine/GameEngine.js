@@ -867,6 +867,7 @@ class GameEngine {
         unit.state = STATE.BUILDING_3D_PRINT;
         unit.stepCount = 0;
         unit.timer = 0;
+        unit.buildFinishTimer = 0;
         applied = true;
         skillColor = "#00f3ff";
         break;

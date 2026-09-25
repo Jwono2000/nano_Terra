@@ -219,6 +219,21 @@ const SFX = {
   },
 
   playBuild() { this.playTone(550, 'square', 0.08, 0.08); },
+  playBuildStep(stepCount = 1) {
+    const pitch = 480 + Math.min(stepCount, 12) * 22;
+    this.playTone(pitch, 'triangle', 0.09, 0.12);
+  },
+  playBuildWarning() {
+    this.playTone(1150, 'sine', 0.12, 0.18);
+  },
+  playBuildFinish() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      this.playTone(660, 'sine', 0.15, 0.12);
+      setTimeout(() => this.playTone(880, 'triangle', 0.22, 0.16), 80);
+      setTimeout(() => this.playTone(1320, 'sine', 0.35, 0.14), 160);
+    } catch (e) { }
+  },
   playShield() { this.playTone(440, 'sine', 0.25, 0.18); },
   
   playTeleport() {

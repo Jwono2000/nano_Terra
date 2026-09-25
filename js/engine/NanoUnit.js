@@ -39,6 +39,7 @@ class NanoUnit {
     this.climbStep = 0;
     this.climbStartY = 0;
     this.bombTimer = 0;
+    this.buildFinishTimer = 0;
     this.animFrame = Math.floor(Math.random() * 60);
   }
 
@@ -600,17 +601,53 @@ class NanoUnit {
       return;
     }
 
+    // 1) 레밍즈 스타일 계단 완공 포즈 (약 0.45초간 정상에 서서 만세/환호 모션)
+    if (this.buildFinishTimer > 0) {
+      this.buildFinishTimer -= speedScale;
+      if (Math.random() < 0.25 && particles) {
+        particles.spawnBurst(this.x + (Math.random() - 0.5) * 8, this.y - 20, '#00ff88', 2, 1.2);
+        particles.spawnBurst(this.x + (Math.random() - 0.5) * 6, this.y - 15, '#00f3ff', 2, 1.0);
+      }
+      if (this.buildFinishTimer <= 0) {
+        this.state = STATE.WALKING;
+        this.stepCount = 0;
+        this.buildFinishTimer = 0;
+      }
+      return;
+    }
+
+    // 2) 한 계단 한 계단 정성스럽게 짓는 템포 (14프레임 = 약 0.23초당 1계단, 총 12단 약 2.8초)
     this.timer += speedScale;
-    // Build 1 step (4px x 2px) every 6 frames = brisk building pace
-    if (this.timer >= 6) {
+
+    // 빌드 진행 중 나노 프로젝션 스파크 연출
+    if (this.timer < 14 && particles && Math.random() < 0.25) {
+      const sparkX = this.x + this.dir * (2 + Math.random() * 6);
+      const sparkY = this.y - 1 - Math.random() * 3;
+      const sparkColor = (this.stepCount >= this.maxSteps - 3) ? '#ffb700' : '#00f3ff';
+      particles.spawnBurst(sparkX, sparkY, sparkColor, 1, 0.7);
+    }
+
+    if (this.timer >= 14) {
       this.timer = 0;
-      SFX.playBuild();
       
       terrain.buildStep(this.x, this.y, this.dir, particles);
       
       this.x += this.dir * 4;
       this.y -= 2;
       this.stepCount++;
+
+      // 마지막 3계단 알림 (레밍즈 경고 칭! 칭! 칭!)
+      if (this.stepCount >= this.maxSteps - 2) {
+        if (typeof SFX !== 'undefined' && SFX && SFX.playBuildWarning) {
+          SFX.playBuildWarning();
+        }
+      } else {
+        if (typeof SFX !== 'undefined' && SFX && SFX.playBuildStep) {
+          SFX.playBuildStep(this.stepCount);
+        } else if (typeof SFX !== 'undefined' && SFX && SFX.playBuild) {
+          SFX.playBuild();
+        }
+      }
 
       const headX = this.x + this.dir * 4;
       const headY = this.y - 12;
@@ -623,11 +660,15 @@ class NanoUnit {
         return;
       }
 
+      // 최대 12단 완성 시: 바로 걷지 않고 꼭대기 계단에 서서 완성 축하 모션(26프레임) 돌입!
       if (this.stepCount >= this.maxSteps) {
-        this.state = STATE.WALKING;
-        this.stepCount = 0;
+        this.buildFinishTimer = 26;
+        if (typeof SFX !== 'undefined' && SFX && SFX.playBuildFinish) {
+          SFX.playBuildFinish();
+        }
         if (particles) {
-          particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 12, 2);
+          particles.spawnBurst(this.x, this.y - 16, '#00ff88', 16, 2.5);
+          particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 12, 2.0);
         }
       }
     }
@@ -666,8 +707,17 @@ class NanoUnit {
       executingIcon = '⛏️';
       executingColor = '#f0a028';
     } else if (this.state === STATE.BUILDING_3D_PRINT) {
-      executingIcon = '🪜';
-      executingColor = '#00f3ff';
+      if (this.buildFinishTimer > 0) {
+        executingIcon = '✨';
+        executingColor = '#00ff88';
+      } else if (this.stepCount >= this.maxSteps - 3) {
+        const left = this.maxSteps - this.stepCount;
+        executingIcon = `🪜${left}`;
+        executingColor = '#ffb700'; // 마지막 3단 주황색 경고 카운트다운!
+      } else {
+        executingIcon = '🪜';
+        executingColor = '#00f3ff';
+      }
     } else if (this.state === STATE.BLOCKING_SHIELD) {
       executingIcon = '🛡️';
       executingColor = '#00ff88';
@@ -926,16 +976,45 @@ class NanoUnit {
         return;
 
       } else if (this.state === STATE.BUILDING_3D_PRINT) {
-        const buildCycle = Math.floor(this.animFrame * 0.2) % 4;
-        const buildFrames = [
-          { sx: 535, sy: 531, sw: 88, sh: 175 },
-          { sx: 661, sy: 531, sw: 88, sh: 178 },
-          { sx: 787, sy: 531, sw: 88, sh: 178 },
-          { sx: 912, sy: 531, sw: 88, sh: 178 }
-        ];
-        const f = buildFrames[buildCycle];
-        sx = f.sx; sy = f.sy; sw = f.sw; sh = f.sh;
-        destW = 20; destH = 28; destX = -10; destY = -28;
+        if (this.buildFinishTimer > 0) {
+          // --- 레밍즈 완성 모션 (Victory / Cheer Pose) ---
+          sx = 256; sy = 354; sw = 127; sh = 131;
+          destW = 22; destH = 26; destX = -11; destY = -27;
+
+          // 위아래 가벼운 환호 바운스
+          const bounce = Math.sin(this.buildFinishTimer * 0.4) * 2;
+          destY += bounce;
+
+          ctx.drawImage(actionSheetImg, sx, sy, sw, sh, destX, destY, destW, destH);
+
+          // 양손 끝 반짝이는 에너지 스파크
+          ctx.save();
+          ctx.fillStyle = '#00ff88';
+          ctx.beginPath();
+          ctx.arc(-8, destY + 4, 2.2, 0, Math.PI * 2);
+          ctx.arc(8, destY + 4, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(-8, destY + 4, 1.2, 0, Math.PI * 2);
+          ctx.arc(8, destY + 4, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // 계단 프로젝션 건설 모션
+          const buildCycle = Math.floor(this.animFrame * 0.15) % 4;
+          const buildFrames = [
+            { sx: 535, sy: 531, sw: 88, sh: 175 },
+            { sx: 661, sy: 531, sw: 88, sh: 178 },
+            { sx: 787, sy: 531, sw: 88, sh: 178 },
+            { sx: 912, sy: 531, sw: 88, sh: 178 }
+          ];
+          const f = buildFrames[buildCycle];
+          sx = f.sx; sy = f.sy; sw = f.sw; sh = f.sh;
+          destW = 20; destH = 28; destX = -10; destY = -28;
+          ctx.drawImage(actionSheetImg, sx, sy, sw, sh, destX, destY, destW, destH);
+        }
 
       } else if (this.state === STATE.FLOATING || (this.state === STATE.FALLING && this.hasAntiGrav)) {
         sx = 165; sy = 147; sw = 81; sh = 137;

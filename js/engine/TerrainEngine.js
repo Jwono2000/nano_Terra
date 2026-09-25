@@ -1057,10 +1057,29 @@ class TerrainEngine {
       this.ctx.fillStyle = '#ffffff';
       this.ctx.fillRect(x + 2, y, w - 4, 1);
     } else {
-      this.ctx.fillStyle = '#00f3ff';
+      // --- 계단 각 단의 또렷한 경계선 및 나노 하이테크 단차 렌더링 ---
+      // 1. 베이스 본체 (선명한 네온 시안)
+      this.ctx.fillStyle = '#00c8e6';
       this.ctx.fillRect(x, y, w, h);
+
+      // 2. 상단 발판 하이라이트 (빛을 받는 윗면 1px)
       this.ctx.fillStyle = '#ffffff';
-      this.ctx.fillRect(x + 1, y, w - 2, 1);
+      this.ctx.fillRect(x, y, w, 1);
+
+      // 3. 하단 경계선 (또렷한 딥 네이비 라인으로 겹쳤을 때 각 단의 구분을 명확히 함)
+      this.ctx.fillStyle = '#031424';
+      this.ctx.fillRect(x, y + h - 1, w, 1);
+
+      // 4. 측면 단차 테두리선 (양 끝단 세로선)
+      this.ctx.fillStyle = '#052238';
+      this.ctx.fillRect(x, y, 1, h);
+      this.ctx.fillRect(x + w - 1, y, 1, h);
+
+      // 5. 발판 내부 패턴 디테일 (미세 홈으로 나노 타일 느낌 연출)
+      this.ctx.fillStyle = 'rgba(0, 243, 255, 0.4)';
+      this.ctx.fillRect(x + 3, y + 1, w - 6, 1);
+      this.ctx.fillStyle = 'rgba(3, 20, 36, 0.4)';
+      this.ctx.fillRect(x + 3, y + 2, w - 6, 1);
     }
     this.ctx.restore();
   }

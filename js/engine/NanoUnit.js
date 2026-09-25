@@ -235,88 +235,74 @@ class NanoUnit {
       }
     }
 
-    // 2) 발 높이 검사 (this.y - 2 ~ this.y): 오르막 단차(계단 입구 또는 자연 경사) 감지
-    let isFootBlocked = false;
-    if (terrain.isSolid(nextX, this.y - 2) || terrain.isSolid(nextX, this.y)) {
-      const isFootNatural = terrain.isNaturalSolid ? (terrain.isNaturalSolid(nextX, this.y - 2) || terrain.isNaturalSolid(nextX, this.y)) : false;
-      if (isFootNatural) {
-        isFootBlocked = true;
-      } else {
-        // 계단 구조물인 경우: 계단이 오르는 방향(dir 일치)일 때만 발 디딤 블록으로 인정
-        let isClimbableStair = true;
-        if (terrain.getStructureAt) {
-          const structFoot = terrain.getStructureAt(nextX, this.y) || 
-                             terrain.getStructureAt(nextX, this.y - 2) || 
-                             terrain.getStructureAt(nextX, this.y - 4);
-          if (structFoot && structFoot.type === 'step' && structFoot.dir && structFoot.dir !== this.dir) {
-            isClimbableStair = false; // 역방향 계단은 발도 막지 않고 그대로 통과
+    // 2) 오르막 단차 등반(Climbing step) 우선 시도:
+    //    - 앞에 키 높은 벽(자연 암벽 1, 강철 2)이 없어야 함
+    //    - 레이저를 장착하고 있지 않아야 함
+    let climbed = false;
+    if (!isHighWallAhead && !this.hasPlasmaCutter) {
+      for (let h = 1; h <= 8; h++) {
+        const targetY = this.y - h;
+        // 디딜 곳(targetY + 1 또는 targetY)이 solid인지 검사
+        const hasGroundAtStep = terrain.isSolid(nextX, targetY + 1) || terrain.isSolid(nextX, targetY);
+        // 디딘 곳 바로 위(targetY)와 그 위 공간 검사 (자연 암벽/강철이 아니면 계단이 겹쳐 있어도 통과 허용)
+        const isSpaceAbove = !terrain.isSolid(nextX, targetY - 1) && 
+          (terrain.isNaturalSolid ? !terrain.isNaturalSolid(nextX, targetY - 10) : !terrain.isSolid(nextX, targetY - 10));
+
+        if (hasGroundAtStep && isSpaceAbove) {
+          // 디딜 바닥이 계단(3)인 경우:
+          // 오직 반대 방향 계단만 있고 내 방향 계단은 전혀 없는 경우(내리막 계단의 바닥 끝단)만 올라타지 않음!
+          // 겹쳐진/교차 계단에 내 방향 계단이 포함되어 있으면 당연히 정상 등반!
+          if (terrain.hasOnlyReverseStair && terrain.hasOnlyReverseStair(nextX, targetY, this.dir)) {
+            continue;
           }
-        }
-        if (isClimbableStair) {
-          isFootBlocked = true;
+          // 오르막 등반 성공!
+          this.x = nextX;
+          this.y = targetY;
+          climbed = true;
+          break;
         }
       }
     }
 
-    const isWallAhead = isHighWallAhead || isFootBlocked;
+    if (climbed) {
+      return;
+    }
 
-    if (isWallAhead) {
-      let climbHeight = 0;
-      let canClimb = false;
+    // 3) 등반하지 못한 경우: 진짜 자연 벽/강철벽 충돌 판정
+    const isBlockedByHardWall = isHighWallAhead || 
+      (terrain.isNaturalSolid ? (terrain.isNaturalSolid(nextX, this.y - 2) || terrain.isNaturalSolid(nextX, this.y)) : false);
 
-      // 발 높이의 단차(1~8px) 오르기 검사 (키 높은 벽이 아닐 때만)
-      if (!this.hasPlasmaCutter && !isHighWallAhead) {
-        for (let h = 1; h <= 8; h++) {
-          if (!terrain.isSolid(nextX, this.y - h) && !terrain.isSolid(nextX, this.y - h - 10)) {
-            climbHeight = h;
-            canClimb = true;
-            break;
-          }
+    if (isBlockedByHardWall) {
+      if (this.hasPlasmaCutter) {
+        if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
+          this.dir = -this.dir;
+          this.vx = this.dir * 1.25;
+          this.hasPlasmaCutter = false;
+          return;
         }
+
+        this.state = STATE.PLASMA_CUTTING;
+        this.hasPlasmaCutter = false;
+        this.cutSteps = 0;
+        this.cutStartY = Math.round(this.y);
+        SFX.playLaser();
+        particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 16, 2.5);
+        return;
       }
 
-      if (canClimb) {
-        // 계단 위 또는 경사면 위로 정상 등반
-        this.x = nextX;
-        this.y -= climbHeight;
-      } else {
-        // 등반 불가: 키 높은 진짜 벽(1, 2)이 아니라면 계단 밑/역방향 통과!
-        if (!isHighWallAhead) {
-          this.x = nextX;
-        } else {
-          // 진짜 암벽 또는 강철 장벽에 부딪힌 경우
-          if (this.hasPlasmaCutter) {
-            if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
-              this.dir = -this.dir;
-              this.vx = this.dir * 1.25;
-              this.hasPlasmaCutter = false;
-              return;
-            }
-
-            this.state = STATE.PLASMA_CUTTING;
-            this.hasPlasmaCutter = false;
-            this.cutSteps = 0;
-            this.cutStartY = Math.round(this.y);
-            SFX.playLaser();
-            particles.spawnBurst(this.x, this.y - 10, '#00f3ff', 16, 2.5);
-            return;
-          }
-
-          if (this.hasMagnetizer) {
-            this.state = STATE.CLIMBING;
-            this.climbStep = 0;
-            this.climbStartY = this.y;
-            while (!terrain.isSolid(this.x + this.dir * 1.5, this.y) && !terrain.isSolid(this.x + this.dir * 1.5, this.y - 10)) {
-              this.x += this.dir * 1;
-            }
-          } else {
-            this.dir = -this.dir;
-            this.vx = this.dir * 1.25;
-          }
+      if (this.hasMagnetizer) {
+        this.state = STATE.CLIMBING;
+        this.climbStep = 0;
+        this.climbStartY = this.y;
+        while (!terrain.isSolid(this.x + this.dir * 1.5, this.y) && !terrain.isSolid(this.x + this.dir * 1.5, this.y - 10)) {
+          this.x += this.dir * 1;
         }
+      } else {
+        this.dir = -this.dir;
+        this.vx = this.dir * 1.25;
       }
     } else {
-      // 벽이 없으므로 수평 전진 (계단 밑 공간도 여기로 자유 통과)
+      // 진짜 벽이 없으므로 수평 전진 (계단 밑 공간 및 역방향 계단 통과)
       this.x = nextX;
     }
   }

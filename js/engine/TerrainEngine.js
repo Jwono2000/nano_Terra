@@ -205,6 +205,39 @@ class TerrainEngine {
     return null;
   }
 
+  hasClimbableStair(x, y, dir, searchRange = 6) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+    if (!this.constructedStructures) return false;
+    for (let i = 0; i < this.constructedStructures.length; i++) {
+      const s = this.constructedStructures[i];
+      if (s.type === 'step' && s.dir === dir) {
+        if (x >= s.x - 2 && x < s.x + s.w + 2 && y >= s.y - searchRange && y <= s.y + s.h + searchRange) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  hasOnlyReverseStair(x, y, dir) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+    if (!this.constructedStructures) return false;
+    let foundAnyStair = false;
+    let foundMatchingStair = false;
+    for (let i = 0; i < this.constructedStructures.length; i++) {
+      const s = this.constructedStructures[i];
+      if (s.type === 'step' && x >= s.x - 2 && x < s.x + s.w + 2 && y >= s.y - 2 && y <= s.y + s.h + 2) {
+        foundAnyStair = true;
+        if (s.dir === dir) {
+          foundMatchingStair = true;
+        }
+      }
+    }
+    return foundAnyStair && !foundMatchingStair;
+  }
+
   isSteel(x, y) {
     x = Math.floor(x);
     y = Math.floor(y);

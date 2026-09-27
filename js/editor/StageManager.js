@@ -26,6 +26,9 @@ class StageDataEngine {
         case 'steelBarrier':
           terrain.drawSteelBarrier(el.x, el.y, el.w || 20, el.h || 80);
           break;
+        case 'movingPlatform':
+          // Dynamic kinetic entity — rendered separately by GameEngine / LevelEditor
+          break;
       }
     }
   }

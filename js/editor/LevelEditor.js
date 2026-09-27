@@ -11,7 +11,16 @@ class LevelEditor {
     this.snap = true;
     this.snapSize = 10;
     this.history = [];
-    this.maxHistory = 25;
+    this.maxHistory = 50;
+    this.redoStack = [];
+    this.lintResult = null;
+    this.showLint = true;
+    this.solverOverlay = null;
+    this.lastVerdict = null;
+    this.seedLock = false;
+    this.lastGenParams = null;
+    this._keyHandler = null;
+    this._genBusy = false;
     this.isDrawing = false;
     this.isMovingElement = false;
     this.isResizingWidth = false;
@@ -44,8 +53,13 @@ class LevelEditor {
     this.isResizingWidth = false;
     this.isResizingThickness = false;
     this.history = [JSON.stringify(this.levelData)];
+    this.redoStack = [];
+    this.solverOverlay = null;
+    this.lastVerdict = null;
     
     this.bindEvents();
+    this.bindKeyboard();
+    this.runLint();
     this.updateUI();
     this.syncTerrain();
   }
@@ -139,6 +153,31 @@ class LevelEditor {
     bindThickBtn('btn-thick-add1', 10);
     bindThickBtn('btn-thick-add5', 10);
 
+    // Moving Platform Range Adjustment Buttons
+    const bindRangeBtn = (id, delta) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.onclick = () => this.adjustSelectedRange(delta);
+    };
+    bindRangeBtn('btn-range-sub50', -50);
+    bindRangeBtn('btn-range-sub10', -10);
+    bindRangeBtn('btn-range-add10', 10);
+    bindRangeBtn('btn-range-add50', 50);
+
+    const btnToggleAxis = document.getElementById('btn-range-toggle-axis');
+    if (btnToggleAxis) {
+      btnToggleAxis.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'movingPlatform') {
+            el.axis = (el.axis === 'vertical') ? 'horizontal' : 'vertical';
+            this.saveHistory();
+            this.updateStatus();
+            this._toast(`발판 방향: ${el.axis === 'horizontal' ? '↔ 좌우' : '↕ 상하'}`);
+          }
+        }
+      };
+    }
+
     // Color Palette Selector Buttons
     ['cyan', 'red', 'brown', 'green', 'purple'].forEach(palKey => {
       const btn = document.getElementById(`btn-pal-${palKey}`);
@@ -194,6 +233,24 @@ class LevelEditor {
     if (btnPropsSave) {
       btnPropsSave.onclick = () => this.savePropsModal();
     }
+
+    // [NEW] 선택적 버튼들 — HTML 에 있으면 연결, 없으면 무시
+    const bindOpt = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = (e) => { if (e && e.stopPropagation) e.stopPropagation(); fn(); }; return b; };
+    bindOpt('btn-editor-redo', () => this.redo());
+    bindOpt('btn-editor-duplicate', () => this.duplicateSelected());
+    bindOpt('btn-editor-mirror', () => this.mirrorLevel());
+    bindOpt('btn-editor-lint', () => this.showLintReport());
+    bindOpt('btn-editor-verify', () => this.verifyWithSolver());
+    bindOpt('btn-editor-generate-verified', () => this.generateVerified(this._readGenParams()));
+    bindOpt('btn-editor-clear-overlay', () => this.clearSolverOverlay());
+    const btnSeedLock = bindOpt('btn-editor-seed-lock', () => {
+      this.seedLock = !this.seedLock;
+      const b = document.getElementById('btn-editor-seed-lock');
+      if (b) { b.classList.toggle('active', this.seedLock); b.innerText = this.seedLock ? '🔒 시드 고정' : '🔓 시드 자유'; }
+      this.updateStatus();
+    });
+    if (btnSeedLock) btnSeedLock.innerText = this.seedLock ? '🔒 시드 고정' : '🔓 시드 자유';
+    bindOpt('btn-lint-close', () => { const m = document.getElementById('modal-editor-lint'); if (m) m.style.display = 'none'; });
   }
 
   openGenerateModal() {
@@ -209,54 +266,159 @@ class LevelEditor {
     if (modal) modal.style.display = 'none';
   }
 
+  // [NEW] 생성 모달의 파라미터 읽기
+  _readGenParams() {
+    const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const getChecked = (id) => { const el = document.getElementById(id); return el ? el.checked : false; };
+    return {
+      difficulty: getVal('gen-difficulty') || 'normal',
+      layout: getVal('gen-layout') || 'random',
+      theme: getVal('gen-theme') || 'random',
+      palette: getVal('gen-palette') || 'random',
+      includeMovingPlatform: getChecked('gen-moving-platform')
+    };
+  }
+
+  _newSeed() {
+    const manual = document.getElementById('gen-seed');
+    if (manual && manual.value && /^-?\d+$/.test(String(manual.value).trim())) return parseInt(manual.value, 10);
+    if (this.seedLock && typeof this.levelData.seed === 'number') return this.levelData.seed;
+    return ((Math.random() * 1e9) | 0) ^ (Date.now() & 0x7fffffff);
+  }
+
+  _verifyEnabled() {
+    const cb = document.getElementById('gen-verify');
+    return !!(cb && cb.checked && typeof LevelSolver !== 'undefined' && LevelSolver.evaluate);
+  }
+
   executeGenerate(closeModal = false) {
     try {
-      const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
-      const difficulty = getVal('gen-difficulty') || 'normal';
-      const layout = getVal('gen-layout') || 'random';
-      const theme = getVal('gen-theme') || 'random';
-      const palette = getVal('gen-palette') || 'random';
-      const seed = ((Math.random() * 1e9) | 0) ^ (Date.now() & 0x7fffffff);
-
-      const generatedData = ProceduralMapEngine.generate({ difficulty, layout, theme, palette, seed });
-      this.levelData = generatedData;
-      this.selectedElementIndex = -1;
-      this.selectedSpecial = null;
-
-      if (this.game && this.game.bgImg) {
-        this.game.bgImg.src = this.levelData.bgImg;
+      const params = this._readGenParams();
+      if (this._verifyEnabled()) {
+        this.generateVerified(params, { closeModal });
+        return;
       }
-
-      this.saveHistory();
-      this.syncTerrain();
-      this.updateStatus();
-
-      const statusBox = document.getElementById('gen-modal-status');
-      if (statusBox) {
-        const dnaStr = (this.levelData.solutionDna || []).join(' → ') || 'CUSTOM';
-        const archStr = this.levelData.layoutType || 'random';
-        statusBox.style.display = 'block';
-        statusBox.innerHTML = `
-          <div style="color:#00ff88; font-weight:bold; font-size:12px; margin-bottom:4px;">
-            ✨ [${difficulty.toUpperCase()}] 새 맵 생성 완료! (${(this.levelData.elements || []).length}개 지형)
-          </div>
-          <div style="color:#a0e8ff; font-size:11px; line-height:1.4;">
-            • 레이아웃: <b style="color:#fff;">${archStr}</b> | 솔루션 DNA: <b style="color:#ffcc00;">${dnaStr}</b><br>
-            • 마음에 들 때까지 <b>'🎲 즉시 생성'</b>을 계속 눌러 새로운 맵을 뽑아볼 수 있습니다!
-          </div>
-        `;
+      const seed = this._newSeed();
+      let generatedData = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
+      if (params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
+        generatedData = MovingPlatformArchitect.injectMovingPlatforms(generatedData, { seed });
       }
-
-      if (typeof SFX !== 'undefined' && SFX.playTeleport) {
-        SFX.playTeleport();
-      }
+      generatedData.seed = seed;
+      generatedData.genParams = params;
+      this.lastGenParams = params;
+      this._applyGenerated(generatedData, null, params.difficulty);
     } catch (err) {
       console.error('[LevelEditor] executeGenerate error:', err);
     } finally {
-      if (closeModal) {
+      if (closeModal && !this._verifyEnabled()) {
         this.closeGenerateModal();
       }
     }
+  }
+
+  _applyGenerated(generatedData, verdict, difficulty, log) {
+    this.levelData = generatedData;
+    this.selectedElementIndex = -1;
+    this.selectedSpecial = null;
+    this.solverOverlay = null;
+    this.lastVerdict = verdict || null;
+
+    if (this.game && this.game.bgImg) {
+      this.game.bgImg.src = this.levelData.bgImg;
+    }
+
+    if (verdict) this._storeVerification(verdict);
+    this.saveHistory();
+    this.syncTerrain();
+    this.updateStatus();
+    if (verdict) this._overlayFromVerdict(verdict);
+
+    const statusBox = document.getElementById('gen-modal-status');
+    if (statusBox) {
+      const dnaStr = (this.levelData.solutionDna || []).join(' → ') || 'CUSTOM';
+      const archStr = this.levelData.layoutType || 'random';
+      const lint = this.lintResult;
+      const lintStr = lint ? `${lint.errors.length ? '⛔' : '✅'} 린트 ${lint.summary}` : '';
+      let verifyStr = '';
+      if (verdict) {
+        const sc = verdict.score ? `${verdict.score.total}pt → <b style="color:#fff;">${verdict.band.toUpperCase()}</b>` : '점수 없음';
+        verifyStr = verdict.accepted
+          ? `<br>• ✅ 솔버 검증 통과 (${verdict.adapter}) — 필수 스킬 ${verdict.solve.requiredSkills}개 · critical ${verdict.timing.criticalActions}개 · 대체해답 ${verdict.alternatives.count}개 · ${sc}`
+          : `<br>• ⚠ 검증 미통과: <b style="color:#ff8080;">${verdict.reasons.join(', ')}</b> (${verdict.adapter}) — 가장 나은 후보를 적용했습니다.`;
+        if (log && log.length) verifyStr += `<br>• 시도 ${log.length}회: ` + log.map(l => `${l.accepted ? '✅' : '✖'}${l.band ? l.band[0].toUpperCase() : '-'}`).join(' ');
+      }
+      statusBox.style.display = 'block';
+      statusBox.innerHTML = `
+        <div style="color:#00ff88; font-weight:bold; font-size:12px; margin-bottom:4px;">
+          ✨ [${(difficulty || 'normal').toUpperCase()}] 새 맵 생성 완료! (${(this.levelData.elements || []).length}개 지형) · 🎲 seed ${this.levelData.seed}
+        </div>
+        <div style="color:#a0e8ff; font-size:11px; line-height:1.4;">
+          • 레이아웃: <b style="color:#fff;">${archStr}</b> | 솔루션 DNA: <b style="color:#ffcc00;">${dnaStr}</b> | ${lintStr}${verifyStr}<br>
+          • 마음에 들 때까지 <b>'🎲 즉시 생성'</b>을 계속 눌러 새로운 맵을 뽑아볼 수 있습니다! (시드 고정 시 같은 맵 재현)
+        </div>
+      `;
+    }
+
+    if (typeof SFX !== 'undefined' && SFX.playTeleport) {
+      SFX.playTeleport();
+    }
+  }
+
+  generateVerified(params, opts = {}) {
+    if (this._genBusy) return;
+    if (typeof ProceduralMapEngine === 'undefined') return;
+    const canVerify = typeof LevelSolver !== 'undefined' && LevelSolver.evaluate;
+    const attempts = this.seedLock ? 1 : (opts.attempts || 8);
+    const targetBand = (params.difficulty && params.difficulty !== 'random') ? params.difficulty : null;
+    const statusBox = document.getElementById('gen-modal-status');
+    const log = [];
+    let best = null;
+    let n = 0;
+    this._genBusy = true;
+    this.lastGenParams = params;
+
+    const rank = (v) => !v ? 9999 : ((v.accepted ? 0 : 1000) + (v.solve && v.solve.solvable ? 0 : 500) + (v.zeroSkill && v.zeroSkill.shortcut ? 200 : 0) + (v.lint && !v.lint.ok ? 100 : 0) + v.reasons.length);
+    const finish = () => {
+      this._genBusy = false;
+      try { this._applyGenerated(best.data, best.verdict, params.difficulty, log); }
+      catch (err) { console.error('[LevelEditor] generateVerified apply error:', err); }
+      if (opts.closeModal) this.closeGenerateModal();
+    };
+    const step = () => {
+      n++;
+      try {
+        const seed = this._newSeed();
+        let data = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
+        if (params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
+          data = MovingPlatformArchitect.injectMovingPlatforms(data, { seed });
+        }
+        data.seed = seed;
+        data.genParams = params;
+        let verdict = null;
+        if (canVerify) {
+          verdict = LevelSolver.evaluate(data, {
+            bands: LevelEditor.DIFFICULTY_BANDS,
+            lint: (typeof LevelLint !== 'undefined') ? LevelLint : null,
+            targetBand,
+            solve: { maxMillis: opts.maxMillis || 700, maxNodes: opts.maxNodes || 3000 }
+          });
+        }
+        log.push({ n, seed, accepted: !!(verdict && verdict.accepted), reasons: verdict ? verdict.reasons : [], band: verdict ? verdict.band : null, score: verdict && verdict.score ? verdict.score.total : null });
+        if (!best || rank(verdict) < rank(best.verdict)) best = { data, verdict };
+        if (statusBox) {
+          statusBox.style.display = 'block';
+          statusBox.innerHTML = `<div style="color:#ffcc00; font-size:12px;">🔎 검증 생성 중… ${n}/${attempts}</div>
+            <div style="color:#a0e8ff; font-size:11px;">${log.map(l => `#${l.n} ${l.accepted ? '✅' : '✖'} ${l.band || ''} ${l.score != null ? l.score + 'pt' : ''} ${l.reasons.join(', ')}`).join('<br>')}</div>`;
+        }
+        if ((verdict && verdict.accepted) || n >= attempts || !canVerify) { finish(); return; }
+      } catch (err) {
+        console.error('[LevelEditor] generateVerified error:', err);
+        if (!best) { this._genBusy = false; return; }
+        finish(); return;
+      }
+      setTimeout(step, 0);
+    };
+    step();
   }
 
   openSolutionGuideModal() {
@@ -418,11 +580,9 @@ class LevelEditor {
     else if (titleUpper.includes('NIGHTMARE')) diff = 'nightmare';
     else if (titleUpper.includes('NORMAL')) diff = 'normal';
     else {
-      const score = this.levelData.difficultyScore || 50;
-      if (score < 45) diff = 'easy';
-      else if (score < 80) diff = 'normal';
-      else if (score < 130) diff = 'hard';
-      else diff = 'nightmare';
+      const v = this.levelData.verification;
+      const score = (v && typeof v.score === 'number') ? v.score : (this.levelData.difficultyScore || 50);
+      diff = LevelEditor.classifyDifficulty(score);
     }
 
     if (!titleUpper.includes(`(${diff.toUpperCase()})`) && !titleUpper.includes(`[${diff.toUpperCase()}]`)) {
@@ -434,6 +594,23 @@ class LevelEditor {
       const defaultSlot = isNewMap ? 'add_new' : this.game.currentLevelIdx;
       this.game.stageMgr.openSaveSlotModal(this.levelData, defaultSlot);
     }
+  }
+
+  // ============================================================================
+  // [NEW] 난이도 밴드 단일 소스 — saveCurrentMap 과 솔버 평가가 같은 표를 쓴다.
+  // ============================================================================
+  static get DIFFICULTY_BANDS() {
+    return [
+      { key: 'easy', max: 45 },
+      { key: 'normal', max: 80 },
+      { key: 'hard', max: 130 },
+      { key: 'nightmare', max: Infinity }
+    ];
+  }
+  static classifyDifficulty(score) {
+    const s = (typeof score === 'number' && !isNaN(score)) ? score : 50;
+    for (const b of LevelEditor.DIFFICULTY_BANDS) if (s < b.max) return b.key;
+    return 'nightmare';
   }
 
   deleteSelectedElement() {
@@ -513,6 +690,22 @@ class LevelEditor {
     SFX.playClick();
   }
 
+  adjustSelectedRange(delta) {
+    if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
+    const el = this.levelData.elements[this.selectedElementIndex];
+    if (el.type !== 'movingPlatform') return;
+
+    const oldR = el.range || 120;
+    const targetR = this.snap ? this.snapCoord(oldR + delta) : (oldR + delta);
+    const newR = Math.max(20, Math.min(650, targetR));
+    if (newR === oldR) return;
+
+    el.range = newR;
+    this.saveHistory();
+    this.updateStatus();
+    SFX.playClick();
+  }
+
   setSelectedPalette(palKey) {
     if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
     const el = this.levelData.elements[this.selectedElementIndex];
@@ -539,6 +732,7 @@ class LevelEditor {
   }
 
   updateStatus() {
+    this.runLint();
     const info = document.getElementById('editor-status-info');
     const selectedControls = document.getElementById('editor-selected-controls');
     const widthVal = document.getElementById('editor-selected-width-val');
@@ -561,8 +755,18 @@ class LevelEditor {
       const el = this.levelData.elements[this.selectedElementIndex];
       const palKey = el.palette || this.levelData.terrainTheme || 'cyan';
       const pal = TERRAIN_PALETTES[palKey] || TERRAIN_PALETTES.cyan;
+      const rangeGroup = document.getElementById('editor-selected-range-group');
+      const rangeVal = document.getElementById('editor-selected-range-val');
 
-      if (info) info.innerText = `선택: [${el.type.toUpperCase()}] ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 ${pal.name}`;
+      if (el.type === 'movingPlatform') {
+        const axisText = el.axis === 'vertical' ? '↕ 상하' : '↔ 좌우';
+        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [⚡ 무빙발판 (${axisText})]</span> ${el.w}×${el.h}px | 범위: ${el.range || 120}px | 속도: ${el.speed || 0.75} | <span style="color:#ffb700;">[단축키 [: 범위-, ]: 범위+, X: ↔/↕ 전환]</span>`;
+        if (rangeGroup) rangeGroup.style.display = 'flex';
+        if (rangeVal) rangeVal.innerText = `${el.range || 120}px`;
+      } else {
+        if (info) info.innerText = `선택: [${el.type.toUpperCase()}] ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 ${pal.name}`;
+        if (rangeGroup) rangeGroup.style.display = 'none';
+      }
       if (selectedControls) selectedControls.style.display = 'flex';
       if (widthVal) widthVal.innerText = `${el.w}px`;
       if (thickVal) thickVal.innerText = `${el.h}px`;
@@ -576,7 +780,12 @@ class LevelEditor {
       if (this.levelData.solutionDna && this.levelData.solutionDna.length > 0) {
         dnaInfo = ` | 🧬 DNA: [${this.levelData.solutionDna.join('→')}] (${this.levelData.difficultyScore || 0}pt)`;
       }
-      if (info) info.innerText = `도구: ${this.selectedTool.toUpperCase()} | 오브젝트: ${count}개 | 🚪 스폰:(${this.levelData.spawnX},${this.levelData.spawnY}) 🌀 웜홀:(${this.levelData.gateX},${this.levelData.gateY})${dnaInfo}`;
+      let extra = '';
+      if (typeof this.levelData.seed === 'number') extra += ` | 🎲 seed ${this.levelData.seed}${this.seedLock ? '🔒' : ''}`;
+      if (this.lintResult) extra += ` | ${this.lintResult.ok ? '🧪' : '⛔'} ${this.lintResult.summary}${this.showLint ? '' : ' (마커 숨김 H)'}`;
+      const v = this.levelData.verification;
+      if (v) extra += v.solvable ? ` | ✅ 검증 ${v.band ? v.band.toUpperCase() : ''} ${v.score != null ? v.score + 'pt' : ''} (${v.requiredSkills}스킬)` : ' | ❌ 솔버 미해결';
+      if (info) info.innerText = `도구: ${this.selectedTool.toUpperCase()} | 오브젝트: ${count}개 | 🚪 스폰:(${this.levelData.spawnX},${this.levelData.spawnY}) 🌀 웜홀:(${this.levelData.gateX},${this.levelData.gateY})${dnaInfo}${extra}`;
       if (selectedControls) selectedControls.style.display = 'none';
     }
   }
@@ -588,6 +797,7 @@ class LevelEditor {
   }
 
   exitEditor() {
+    this.unbindKeyboard();
     this.game.exitEditor();
   }
 
@@ -598,21 +808,291 @@ class LevelEditor {
       if (this.history.length > this.maxHistory) {
         this.history.shift();
       }
+      this.redoStack = [];
+      this.solverOverlay = null;
     }
   }
 
   undo() {
     if (this.history.length > 1) {
-      this.history.pop();
+      this.redoStack.push(this.history.pop());
       const prev = this.history[this.history.length - 1];
       this.levelData = JSON.parse(prev);
       this.selectedElementIndex = -1;
       this.selectedSpecial = null;
+      this.solverOverlay = null;
       this.syncTerrain();
       this.updateStatus();
-      SFX.playClick();
+      if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
     }
   }
+
+  redo() {
+    if (this.redoStack.length > 0) {
+      const next = this.redoStack.pop();
+      this.history.push(next);
+      if (this.history.length > this.maxHistory) this.history.shift();
+      this.levelData = JSON.parse(next);
+      this.selectedElementIndex = -1;
+      this.selectedSpecial = null;
+      this.solverOverlay = null;
+      this.syncTerrain();
+      this.updateStatus();
+      if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
+    }
+  }
+
+  // ============================================================================
+  // [NEW] 키보드 단축키
+  // ============================================================================
+  bindKeyboard() {
+    if (this._keyHandler || typeof window === 'undefined') return;
+    this._keyHandler = (e) => this.handleKeyDown(e);
+    window.addEventListener('keydown', this._keyHandler);
+  }
+  unbindKeyboard() {
+    if (this._keyHandler && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this._keyHandler);
+      this._keyHandler = null;
+    }
+  }
+  isEditorActive() {
+    if (typeof document === 'undefined') return false;
+    const overlay = document.getElementById('editor-overlay');
+    if (overlay && overlay.style && overlay.style.display === 'none') return false;
+    if (typeof GAME_STATE !== 'undefined' && GAME_STATE.EDITOR !== undefined && this.game &&
+        this.game.gameState !== undefined && this.game.gameState !== GAME_STATE.EDITOR) return false;
+    const modals = ['modal-editor-generate', 'modal-editor-props', 'modal-solution-guide', 'modal-stage-manager', 'modal-save-slot', 'modal-editor-lint'];
+    for (const id of modals) {
+      const m = document.getElementById(id);
+      if (m && m.style && m.style.display && m.style.display !== 'none') return false;
+    }
+    return true;
+  }
+  handleKeyDown(e) {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    if (!this.isEditorActive()) return;
+    const mod = e.ctrlKey || e.metaKey;
+    const key = e.key;
+    const stop = () => { e.preventDefault(); e.stopPropagation(); };
+
+    if (mod && (key === 'z' || key === 'Z')) { stop(); if (e.shiftKey) this.redo(); else this.undo(); return; }
+    if (mod && (key === 'y' || key === 'Y')) { stop(); this.redo(); return; }
+    if (mod && (key === 'd' || key === 'D')) { stop(); this.duplicateSelected(); return; }
+    if (mod && (key === 'm' || key === 'M')) { stop(); this.mirrorLevel(); return; }
+    if (mod) return;
+
+    switch (key) {
+      case 'Delete':
+      case 'Backspace': stop(); this.deleteSelectedElement(); return;
+      case 'Escape': stop(); this.selectedElementIndex = -1; this.selectedSpecial = null; this.setTool('select'); return;
+      case 'ArrowLeft': stop(); this.nudgeSelected(-1, 0, e.shiftKey); return;
+      case 'ArrowRight': stop(); this.nudgeSelected(1, 0, e.shiftKey); return;
+      case 'ArrowUp': stop(); this.nudgeSelected(0, -1, e.shiftKey); return;
+      case 'ArrowDown': stop(); this.nudgeSelected(0, 1, e.shiftKey); return;
+      case '1': stop(); this.setTool('select'); return;
+      case '2': stop(); this.setTool('platform'); return;
+      case '3': stop(); this.setTool('craggyRock'); return;
+      case '4': stop(); this.setTool('volcanicBasalt'); return;
+      case '5': stop(); this.setTool('quantumCrystal'); return;
+      case '6': stop(); this.setTool('rockWall'); return;
+      case '7': stop(); this.setTool('steelBarrier'); return;
+      case '8': stop(); this.setTool('spawn'); return;
+      case '9': stop(); this.setTool('gate'); return;
+      case '0': stop(); this.setTool('movingPlatform'); return;
+      case 'v':
+      case 'V': stop(); this.setTool('select'); return;
+      case 'x':
+      case 'X':
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'movingPlatform') {
+            stop();
+            el.axis = (el.axis === 'vertical') ? 'horizontal' : 'vertical';
+            this.saveHistory();
+            this.updateStatus();
+            this._toast(`발판 방향: ${el.axis === 'horizontal' ? '↔ 좌우 이동' : '↕ 상하 이동'}`);
+            return;
+          }
+        }
+        break;
+      case '[':
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          stop();
+          this.adjustSelectedRange(e.shiftKey ? -50 : -10);
+          return;
+        }
+        break;
+      case ']':
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          stop();
+          this.adjustSelectedRange(e.shiftKey ? 50 : 10);
+          return;
+        }
+        break;
+      case 'l':
+      case 'L': stop(); this.showLintReport(); return;
+      case 'h':
+      case 'H': stop(); this.showLint = !this.showLint; this.updateStatus(); return;
+      case 't':
+      case 'T': stop(); this.verifyWithSolver(); return;
+      case 'g':
+      case 'G': stop(); this.openGenerateModal(); return;
+    }
+  }
+
+  nudgeSelected(dx, dy, large = false) {
+    const step = (large ? 50 : 10);
+    if (this.selectedSpecial === 'spawn') {
+      this.levelData.spawnX = Math.max(30, Math.min(770, this.levelData.spawnX + dx * step));
+      this.levelData.spawnY = Math.max(30, Math.min(420, this.levelData.spawnY + dy * step));
+      this.saveHistory(); this.updateStatus(); return;
+    }
+    if (this.selectedSpecial === 'gate') {
+      this.levelData.gateX = Math.max(30, Math.min(770, this.levelData.gateX + dx * step));
+      this.levelData.gateY = Math.max(30, Math.min(420, this.levelData.gateY + dy * step));
+      this.saveHistory(); this.updateStatus(); return;
+    }
+    if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
+    const el = this.levelData.elements[this.selectedElementIndex];
+    el.x = Math.max(0, Math.min(800 - el.w, el.x + dx * step));
+    el.y = Math.max(0, Math.min(450 - el.h, el.y + dy * step));
+    this.saveHistory(); this.syncTerrain(); this.updateStatus();
+  }
+
+  duplicateSelected() {
+    if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
+    const src = this.levelData.elements[this.selectedElementIndex];
+    const copy = JSON.parse(JSON.stringify(src));
+    copy.x = Math.max(0, Math.min(800 - copy.w, copy.x + this.snapSize * 2));
+    copy.y = Math.max(0, Math.min(450 - copy.h, copy.y + this.snapSize * 2));
+    this.levelData.elements.push(copy);
+    this.selectedElementIndex = this.levelData.elements.length - 1;
+    this.selectedSpecial = null;
+    this.saveHistory(); this.syncTerrain(); this.updateStatus();
+    if (typeof SFX !== 'undefined' && SFX.playBuild) SFX.playBuild();
+  }
+
+  mirrorLevel() {
+    const W = 800;
+    (this.levelData.elements || []).forEach(el => {
+      el.x = W - el.x - el.w;
+      if (Array.isArray(el.profile)) el.profile = el.profile.slice().reverse();
+    });
+    this.levelData.spawnX = W - this.levelData.spawnX;
+    this.levelData.gateX = W - this.levelData.gateX;
+    delete this.levelData.verification;
+    this.saveHistory(); this.syncTerrain(); this.updateStatus();
+    this._toast('↔ 좌우 반전 완료 (재검증 필요)', '#00f3ff');
+  }
+
+  _toast(msg, color) {
+    if (this.game && this.game.particles && this.game.particles.spawnFloatingText) {
+      this.game.particles.spawnFloatingText(400, 180, msg, color || '#00ff88');
+    } else if (typeof console !== 'undefined') {
+      console.log('[LevelEditor]', msg);
+    }
+  }
+
+  runLint() {
+    if (typeof LevelLint === 'undefined' || !LevelLint.run) { this.lintResult = null; return null; }
+    try { this.lintResult = LevelLint.run(this.levelData); }
+    catch (err) { console.warn('[LevelEditor] lint error:', err); this.lintResult = null; }
+    return this.lintResult;
+  }
+
+  showLintReport() {
+    const r = this.runLint();
+    if (!r) { this._toast('LevelLint.js 가 로드되지 않았습니다', '#ff8080'); return; }
+    const modal = document.getElementById('modal-editor-lint');
+    const box = document.getElementById('lint-report');
+    const icon = (lv) => lv === 'error' ? '⛔' : (lv === 'warn' ? '⚠️' : 'ℹ️');
+    if (modal && box) {
+      box.innerHTML = `<div style="font-weight:bold; margin-bottom:6px;">${r.ok ? '✅' : '⛔'} ${r.summary}</div>` +
+        (r.issues.length ? r.issues.map(i =>
+          `<div class="lint-item lint-${i.level}" data-idx="${typeof i.elementIndex === 'number' ? i.elementIndex : ''}" style="cursor:${typeof i.elementIndex === 'number' ? 'pointer' : 'default'}; padding:3px 0;">${icon(i.level)} <b>${i.code}</b> ${i.msg}</div>`).join('')
+          : '<div>문제 없음 🎉</div>');
+      box.querySelectorAll('.lint-item[data-idx]').forEach(div => {
+        div.onclick = () => {
+          const idx = parseInt(div.dataset.idx, 10);
+          if (!isNaN(idx)) { this.selectedElementIndex = idx; this.selectedSpecial = null; this.setTool('select'); this.updateStatus(); }
+          modal.style.display = 'none';
+        };
+      });
+      modal.style.display = 'flex';
+    } else {
+      const lines = r.issues.slice(0, 14).map(i => `${icon(i.level)} ${i.code} ${i.msg}`);
+      if (r.issues.length > 14) lines.push(`… 외 ${r.issues.length - 14}건`);
+      if (typeof window !== 'undefined' && window.alert) window.alert(`🧪 레벨 린트 — ${r.summary}\n\n${lines.join('\n') || '문제 없음 🎉'}`);
+    }
+    if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
+  }
+
+  verifyWithSolver(opts = {}) {
+    if (typeof LevelSolver === 'undefined' || !LevelSolver.evaluate) { this._toast('LevelSolver.js 가 로드되지 않았습니다', '#ff8080'); return null; }
+    let verdict = null;
+    try {
+      verdict = LevelSolver.evaluate(this.levelData, Object.assign({
+        bands: LevelEditor.DIFFICULTY_BANDS,
+        lint: (typeof LevelLint !== 'undefined') ? LevelLint : null,
+        targetBand: null
+      }, opts));
+    } catch (err) {
+      console.error('[LevelEditor] solver error:', err);
+      this._toast('솔버 오류: ' + err.message, '#ff8080');
+      return null;
+    }
+    this.lastVerdict = verdict;
+    this._storeVerification(verdict);
+    this._overlayFromVerdict(verdict);
+    this.updateStatus();
+    const s = verdict.solve;
+    if (s && s.solvable) {
+      this._toast(`✅ 풀림: ${s.plan.map(a => a.skill.toUpperCase()).join('→')} · ${verdict.score.total}pt ${verdict.band.toUpperCase()} · critical ${verdict.timing.criticalActions} · 대체 ${verdict.alternatives.count} (${verdict.adapter})`, '#00ff88');
+    } else {
+      this._toast(`❌ 솔버가 해답을 못 찾음 (${s ? s.reason : '?'}) · ${verdict.reasons.join(', ')}`, '#ff8080');
+    }
+    return verdict;
+  }
+
+  _storeVerification(verdict) {
+    if (!verdict) return;
+    const s = verdict.solve || {};
+    this.levelData.verification = {
+      adapter: verdict.adapter,
+      solvable: !!s.solvable,
+      plan: s.plan || null,
+      score: verdict.score ? verdict.score.total : null,
+      scoreParts: verdict.score ? verdict.score.parts : null,
+      band: verdict.band,
+      requiredSkills: s.requiredSkills != null ? s.requiredSkills : null,
+      criticalActions: verdict.timing ? verdict.timing.criticalActions : null,
+      minWindow: verdict.timing ? verdict.timing.minWindow : null,
+      alternatives: verdict.alternatives ? verdict.alternatives.count : null,
+      zeroSkillShortcut: !!(verdict.zeroSkill && verdict.zeroSkill.shortcut),
+      lintOk: verdict.lint ? verdict.lint.ok : null,
+      reasons: verdict.reasons,
+      nodes: s.nodes,
+      checkedAt: new Date().toISOString()
+    };
+  }
+
+  _overlayFromVerdict(verdict) {
+    if (!verdict || typeof LevelSolver === 'undefined') { this.solverOverlay = null; return; }
+    try {
+      if (verdict.solve && verdict.solve.solvable) {
+        const rp = LevelSolver.replay(this.levelData, verdict.solve.plan, { record: true });
+        this.solverOverlay = { trail: rp.trail, actions: rp.actions, deaths: rp.deaths, plan: verdict.solve.plan, timing: verdict.timing, failed: !rp.success };
+      } else {
+        const z = verdict.zeroSkill || {};
+        this.solverOverlay = { trail: z.trail || [], actions: [], deaths: z.deaths || [], plan: [], timing: null, failed: true };
+      }
+    } catch (err) { console.warn('[LevelEditor] overlay error:', err); this.solverOverlay = null; }
+  }
+
+  setSolverOverlay(overlay) { this.solverOverlay = overlay || null; }
+  clearSolverOverlay() { this.solverOverlay = null; this.updateStatus(); }
 
   // Canvas interaction handlers
   handlePointerDown(x, y) {
@@ -869,7 +1349,10 @@ class LevelEditor {
 
       if (rawW < 12 && rawH < 12) {
         // Single click placement! Provide generous default dimensions
-        if (this.selectedTool === 'steelBarrier') {
+        if (this.selectedTool === 'movingPlatform') {
+          w = 100;
+          h = 18;
+        } else if (this.selectedTool === 'steelBarrier') {
           w = 20;
           h = 80;
         } else if (this.selectedTool === 'rockWall') {
@@ -926,6 +1409,11 @@ class LevelEditor {
           const crystalTip = (i % 3 === 1) ? 1.15 : 0.6;
           newEl.profile.push(Math.round(h * (crystalTip + Math.random() * 0.35)));
         }
+      } else if (newEl.type === 'movingPlatform') {
+        newEl.axis = 'horizontal';
+        newEl.range = 120;
+        newEl.speed = 1.0;
+        newEl.pauseTicks = 30;
       }
 
       this.levelData.elements.push(newEl);
@@ -972,6 +1460,18 @@ class LevelEditor {
       ctx.stroke();
     }
     ctx.restore();
+
+    ctx.save();
+    // 1.5 Dynamic Moving Platforms Rendering & Trajectory Guide in Editor
+    if (this.levelData && this.levelData.elements) {
+      this.levelData.elements.forEach((el, idx) => {
+        if (el.type === 'movingPlatform' && typeof MovingPlatform !== 'undefined') {
+          const isSelected = (this.selectedElementIndex === idx);
+          const previewPlat = new MovingPlatform(el);
+          previewPlat.render(ctx, true, isSelected);
+        }
+      });
+    }
 
     // 2. Selected element bounding box & resize handles
     if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
@@ -1040,6 +1540,60 @@ class LevelEditor {
       ctx.fillStyle = 'rgba(255, 183, 0, 0.2)';
       ctx.fillRect(x0, y0, w, h);
       ctx.setLineDash([]);
+    }
+
+    // [NEW] 3.5 린트 마커
+    if (this.showLint && this.lintResult && this.lintResult.issues.length) {
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = 'bold 10px sans-serif';
+      this.lintResult.issues.forEach(is => {
+        if (typeof is.x !== 'number' || typeof is.y !== 'number') return;
+        const color = is.level === 'error' ? '#ff3b3b' : (is.level === 'warn' ? '#ffb700' : 'rgba(0,243,255,0.8)');
+        if (typeof is.w === 'number' && typeof is.h === 'number') {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([3, 3]);
+          ctx.strokeRect(is.x, is.y, is.w, is.h);
+          ctx.setLineDash([]);
+        }
+        ctx.fillStyle = color;
+        ctx.fillText((is.level === 'error' ? '⛔ ' : (is.level === 'warn' ? '⚠ ' : 'ℹ ')) + is.code, is.x + 2, Math.max(10, is.y - 3));
+      });
+      ctx.restore();
+    }
+
+    // [NEW] 3.6 솔버 오버레이 (경로 / 스킬 지점 / 사망 지점)
+    if (this.solverOverlay) {
+      const ov = this.solverOverlay;
+      ctx.save();
+      if (ov.trail && ov.trail.length > 1) {
+        ctx.strokeStyle = ov.failed ? 'rgba(255, 80, 80, 0.85)' : 'rgba(0, 255, 136, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 3]);
+        ctx.beginPath();
+        ov.trail.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      (ov.actions || []).forEach((a, i) => {
+        const win = ov.timing && ov.timing.windows && ov.timing.windows[i] ? ov.timing.windows[i] : null;
+        ctx.fillStyle = win && win.critical ? '#ff5e5e' : '#ffcc00';
+        ctx.beginPath(); ctx.arc(a.x, a.y - 8, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#000'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(i + 1), a.x, a.y - 8);
+        ctx.fillStyle = win && win.critical ? '#ff5e5e' : '#ffcc00';
+        ctx.font = 'bold 10px Orbitron, sans-serif';
+        ctx.fillText(a.skill.toUpperCase() + (win ? ` (-${win.early}/+${win.late})` : ''), a.x, a.y - 24);
+      });
+      (ov.deaths || []).forEach(d => {
+        ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(d.x - 6, d.y - 6); ctx.lineTo(d.x + 6, d.y + 6); ctx.moveTo(d.x + 6, d.y - 6); ctx.lineTo(d.x - 6, d.y + 6); ctx.stroke();
+        ctx.fillStyle = '#ff3b3b'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(d.reason || 'dead', d.x, d.y + 8);
+      });
+      ctx.restore();
     }
 
     // 4. Spawn & Exit Gate markers (Unified High-Tech GatewayRenderer)

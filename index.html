@@ -24,6 +24,11 @@
 
   <!-- Modular Stylesheet -->
   <link rel="stylesheet" href="css/style.css?v=12">
+  <style>
+    .lint-item.lint-error { color: #ff7b7b; }
+    .lint-item.lint-warn  { color: #ffd166; }
+    .lint-item.lint-info  { color: #8fd3ff; }
+  </style>
 </head>
 
 <body>
@@ -111,6 +116,7 @@
               <button class="btn-tool" data-tool="quantumCrystal" id="tool-quantum" title="양자 크리스탈 유적">🔮 양자암</button>
               <button class="btn-tool" data-tool="rockWall" id="tool-wall" title="파괴 가능 수직 암벽">⛰️ 암벽</button>
               <button class="btn-tool" data-tool="steelBarrier" id="tool-steel" title="파괴 불가 강철 격벽">🚧 강철벽</button>
+              <button class="btn-tool" data-tool="movingPlatform" id="tool-moving" title="좌우/상하 움직이는 무적 스틸 발판 (단축키: 0)" style="border-color: #00f3ff; color: #00f3ff;">⚡ 무빙발판</button>
               <button class="btn-tool" data-tool="spawn" id="tool-spawn" title="스폰 해치 위치 지정">🚪 스폰</button>
               <button class="btn-tool" data-tool="gate" id="tool-gate" title="탈출 웜홀 위치 지정">🌀 웜홀</button>
               <button class="btn-tool btn-tool-danger" data-tool="delete" id="tool-delete" title="오브젝트 삭제">🗑️
@@ -120,6 +126,7 @@
             <div class="editor-group">
               <button class="btn-tool active" id="btn-editor-snap" title="10px 그리드 스냅 토글">🧲 스냅: ON</button>
               <button class="btn-tool" id="btn-editor-undo" title="실행 취소 (Ctrl+Z)">↩️ 되돌리기</button>
+              <button class="btn-tool" id="btn-editor-redo" title="다시 실행 (Ctrl+Y / Ctrl+Shift+Z)">↪️ 다시실행</button>
               <button class="btn-tool"
                 style="border-color: #00ff88; background: rgba(0, 255, 136, 0.18); color: #00ff88; font-weight: bold;"
                 id="btn-editor-save-map" title="현재 편집한 맵을 커스텀 보관함에 저장하고 JSON 파일로 다운로드">💾 맵 저장</button>
@@ -132,6 +139,10 @@
               <button class="btn-tool"
                 style="border-color: #00ff88; background: rgba(0, 255, 136, 0.15); color: #00ff88; font-weight: bold;"
                 id="btn-editor-reroll" title="현재 조건으로 즉시 새로운 맵 다시 생성 (단축키: R)">🎲 다시 생성</button>
+              <button class="btn-tool" id="btn-editor-verify" title="독립 솔버로 클리어 가능성 및 실측 난이도 검증 (단축키: T)" style="border-color: #00ff88; color: #00ff88; font-weight: bold;">🔬 검증</button>
+              <button class="btn-tool" id="btn-editor-lint" title="정적 레벨 린트 리포트 보기 (단축키: L)">🧪 린트</button>
+              <button class="btn-tool" id="btn-editor-clear-overlay" title="캔버스 솔버 오버레이 지우기">🧹 오버레이</button>
+              <button class="btn-tool" id="btn-editor-seed-lock" title="켜면 '즉시 생성' 시 같은 시드로 재생성">🔓 시드 자유</button>
               <button class="btn-tool" id="btn-editor-props" title="스테이지 정보 & 스킬 수량">⚙️ 설정</button>
               <button class="btn-tool" id="btn-editor-export" title="JSON 보기 및 복사">📋 JSON</button>
               <button class="btn-tool btn-tool-play" id="btn-editor-play" title="현재 맵 즉시 테스트 플레이">▶️ 테스트</button>
@@ -173,6 +184,23 @@
                   id="btn-thick-add20" title="두께 20px 증가">+20</button>
               </div>
 
+              <!-- Moving Platform Range Resizer (Only visible when movingPlatform is selected) -->
+              <div id="editor-selected-range-group" style="display: none; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: #00f3ff; font-weight: 700;">이동범위(R):</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;"
+                  id="btn-range-sub50" title="이동 범위 50px 감소 (단축키: Shift+[)">-50</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;"
+                  id="btn-range-sub10" title="이동 범위 10px 감소 (단축키: [)">-10</button>
+                <span id="editor-selected-range-val"
+                  style="font-size: 11px; color: #00f3ff; font-weight: 900; min-width: 44px; text-align: center;">120px</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;"
+                  id="btn-range-add10" title="이동 범위 10px 증가 (단축키: ])">+10</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;"
+                  id="btn-range-add50" title="이동 범위 50px 증가 (단축키: Shift+])">+50</button>
+                <button class="btn-tool" style="padding: 2px 6px; font-size: 10px; min-width: unset; color: #ffb700; border-color: #ffb700;"
+                  id="btn-range-toggle-axis" title="이동 방향 전환: 좌우(↔) / 상하(↕) (단축키: X)">↔/↕ 방향</button>
+              </div>
+
               <!-- Palette Selector -->
               <div style="display: flex; align-items: center; gap: 3px;">
                 <span style="font-size: 10px; color: #fff; font-weight: 700;">🎨 색상:</span>
@@ -197,6 +225,14 @@
               <button class="btn-tool btn-tool-danger"
                 style="padding: 2px 7px; font-size: 10px; min-width: unset; margin-left: 4px;"
                 id="btn-selected-delete" title="선택된 오브젝트 삭제 (단축키: Delete / Backspace)">🗑️ 삭제</button>
+
+              <!-- Duplicate & Mirror for Selected Element -->
+              <button class="btn-tool"
+                style="padding: 2px 7px; font-size: 10px; min-width: unset; margin-left: 2px;"
+                id="btn-editor-duplicate" title="선택된 오브젝트 복제 (단축키: Ctrl+D)">⧉ 복제</button>
+              <button class="btn-tool"
+                style="padding: 2px 7px; font-size: 10px; min-width: unset; margin-left: 2px;"
+                id="btn-editor-mirror" title="맵 좌우 반전 (단축키: Ctrl+M)">↔ 반전</button>
             </div>
           </div>
         </div>
@@ -550,6 +586,23 @@
             <option value="purple">양자 퍼플</option>
           </select>
         </div>
+
+        <!-- Verified Solver Generation & Seed Input -->
+        <div style="grid-column: 1 / -1; display:flex; flex-direction:column; gap:6px; margin-top:4px; padding:8px 10px; border-radius:6px; background:rgba(0,243,255,0.06); border:1px solid rgba(0,243,255,0.2);">
+          <label style="display:flex; gap:6px; align-items:center; font-size:11px; color:#a0e8ff; cursor:pointer;">
+            <input type="checkbox" id="gen-verify" checked style="cursor:pointer; width:15px; height:15px;">
+            <span>🔎 <b>AI 솔버 완벽 검증 생성</b> (린트 → 지름길/꼼수 차단 → 난이도 실측 검증)</span>
+          </label>
+          <label style="display:flex; gap:6px; align-items:center; font-size:11px; color:#00f3ff; cursor:pointer;">
+            <input type="checkbox" id="gen-moving-platform" style="cursor:pointer; width:15px; height:15px;">
+            <span>⚡ <b>움직이는 무적 발판 포함</b> (셔틀/엘리베이터 타이밍 요소 추가)</span>
+          </label>
+          <div style="display:flex; gap:8px; align-items:center; font-size:11px; color:#a0e8ff;">
+            <span>🎲 재현 시드(Seed):</span>
+            <input type="text" id="gen-seed" placeholder="비우면 완전 랜덤" class="prop-input" style="width:130px; font-size:11px; padding:3px 6px;">
+          </div>
+        </div>
+
         <div id="gen-modal-status" style="display: none; width: 100%; padding: 8px 12px; margin-top: 10px; border-radius: 6px; background: rgba(0, 243, 255, 0.1); border: 1px solid rgba(0, 243, 255, 0.3); font-size: 11px; text-align: left;"></div>
       </div>
 
@@ -558,6 +611,19 @@
         <button class="btn-tool btn-tool-play" id="btn-gen-execute" title="누를 때마다 완전히 새로운 맵 즉시 생성">🎲 즉시 생성</button>
         <button class="btn-tool" style="border-color: #00ff88; background: rgba(0, 255, 136, 0.18); color: #00ff88; font-weight: bold;" id="btn-gen-apply">✅ 확인/닫기</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Level Lint Modal Report -->
+  <div class="modal-overlay" id="modal-editor-lint" style="display: none;">
+    <div class="modal-card" style="max-width: 520px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div class="modal-title" style="color: #00f3ff; margin-bottom: 0;">🧪 레벨 린트 (정적 지오메트리 검증)</div>
+        <button id="btn-lint-close" class="btn-tool" style="padding: 3px 8px;">✕ 닫기</button>
+      </div>
+      <div class="modal-subtitle">물리 엔진 없이 지형 좌표, 스폰/웜홀 안정성, 낙사 위험, DNA 정합성을 즉시 진단합니다.</div>
+      <div id="lint-report" style="margin-top: 10px; font-size: 11px; line-height: 1.6; text-align: left; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.2);"></div>
+      <div style="margin-top: 8px; font-size: 10px; color: #7fb8cc; text-align: left;">• 항목을 클릭하면 해당 요소가 선택됩니다. 캔버스 마커 토글: H 단축키</div>
     </div>
   </div>
 
@@ -648,6 +714,7 @@
   <!-- Modular Scripts Execution Pipeline -->
   <script src="js/engine/SFX.js?v=8"></script>
   <script src="js/engine/TerrainEngine.js?v=10"></script>
+  <script src="js/engine/MovingPlatform.js?v=1"></script>
   <script src="js/engine/NanoUnit.js?v=10"></script>
   <script src="js/engine/GatewayRenderer.js?v=9"></script>
   <script src="js/procedural/MapCore.js?v=7"></script>
@@ -659,8 +726,11 @@
   <script src="js/procedural/AutoSolver.js?v=7"></script>
   <script src="js/procedural/FullCanvasLevelArchitect.js?v=9"></script>
   <script src="js/procedural/ProceduralMapEngine.js?v=8"></script>
+  <script src="js/procedural/MovingPlatformArchitect.js?v=1"></script>
+  <script src="js/editor/LevelLint.js?v=1"></script>
+  <script src="js/procedural/LevelSolver.js?v=1"></script>
   <script src="js/editor/StageManager.js?v=8"></script>
-  <script src="js/editor/LevelEditor.js?v=8"></script>
+  <script src="js/editor/LevelEditor.js?v=9"></script>
   <script src="js/engine/GameEngine.js?v=13"></script>
   <script src="js/main.js?v=12"></script>
 </body>

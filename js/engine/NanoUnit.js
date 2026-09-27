@@ -40,6 +40,9 @@ class NanoUnit {
     this.climbStartY = 0;
     this.bombTimer = 0;
     this.buildFinishTimer = 0;
+    this.ridingPlatform = null; // Active moving platform being ridden
+    this.lastDismountedPlatform = null; // Platform recently dismounted to prevent self-collision jitter
+    this.dismountCooldown = 0;
     this.animFrame = Math.floor(Math.random() * 60);
   }
 
@@ -61,13 +64,67 @@ class NanoUnit {
     }
   }
 
-  update(terrain, particles, exitGate, portalPair, otherUnits, speedScale = 1) {
+  update(terrain, particles, exitGate, portalPair, otherUnits, speedScale = 1, movingPlatforms = []) {
     if (this.state === STATE.DEAD) {
       this.stopSounds();
       return;
     }
     if (this.state === STATE.EXITING) return;
     this.animFrame += speedScale;
+
+    if (this.dismountCooldown > 0) {
+      this.dismountCooldown -= speedScale;
+      if (this.dismountCooldown <= 0) {
+        this.lastDismountedPlatform = null;
+      }
+    }
+
+    // Kinematic Moving Platform Carrier Update (전달 변위 적용 & 천장 압사 방지)
+    if (this.ridingPlatform) {
+      const p = this.ridingPlatform;
+      const withinY = Math.abs(this.y - p.y) <= 8;
+
+      // 발판 진행 방향 끝단 도달 시 즉시 이탈 판정:
+      // 역방향 이동 중 끝단에서 컨베이어처럼 뒤로 끌려가며 발생하는 떨림(Jitter/Stall/Bottleneck) 방지를 위해
+      // 발판이 진행 반대 방향으로 이동 중일 때는 끝단 여유 마진(Math.abs(p.dx) + 0.5px) 내에서 즉시 이탈 처리
+      const exitMarginRight = (p.dx < 0) ? (Math.abs(p.dx) + 0.5) : 0;
+      const exitMarginLeft = (p.dx > 0) ? (p.dx + 0.5) : 0;
+      const steppingOffRight = (this.dir > 0 && this.x >= p.x + p.w - exitMarginRight);
+      const steppingOffLeft = (this.dir < 0 && this.x <= p.x + exitMarginLeft);
+      const isDismounting = steppingOffRight || steppingOffLeft;
+
+      // 승차 진입단(Entrance) 보호: 진행 방향으로 막 승차한 유닛이 역방향 발판 변위에 의해 진입단 밖으로 조기 방출되지 않도록 4px 버퍼 허용
+      const minBoardingX = (this.dir > 0) ? (p.x - 4) : p.x;
+      const maxBoardingX = (this.dir < 0) ? (p.x + p.w + 4) : (p.x + p.w);
+      const withinX = !isDismounting && (this.x >= minBoardingX && this.x <= maxBoardingX);
+
+      if (withinX && withinY) {
+        // 역방향 이동 발판의 출구 끝단 3px 이내에서는 유닛을 뒤로 끌어당기지 않아 부드러운 이탈 보장
+        const counterMoving = (this.dir > 0 && p.dx < 0) || (this.dir < 0 && p.dx > 0);
+        const nearExit = (this.dir > 0) ? (this.x >= p.x + p.w - 3) : (this.x <= p.x + 3);
+        if (!(counterMoving && nearExit)) {
+          this.x += p.dx;
+        }
+        this.y = p.y;
+        this.fallDistance = 0;
+
+        // 천장 압사(Crush / Squish) 안전장치:
+        // 발판이 위로 상승할 때 머리 위가 단단한 천장에 짓눌리면 즉시 압사 처리
+        if (p.dy < 0) {
+          const isCeilingCrush = terrain.isSolid(this.x, this.y - 18) || terrain.isSolid(this.x, this.y - 14);
+          if (isCeilingCrush) {
+            this.die(particles, 'splat');
+            particles.spawnBurst(this.x, this.y - 10, '#ff2255', 22, 3);
+            return;
+          }
+        }
+      } else {
+        // 발판 밖으로 매끄럽고 즉각적인 이탈 (30프레임 동안 동일 발판 재흡착 방지)
+        this.lastDismountedPlatform = this.ridingPlatform;
+        this.dismountCooldown = 30;
+        this.ridingPlatform = null;
+      }
+    }
 
     // Mission Exit Gate Trigger
     const gateTargetX = (exitGate && typeof exitGate.x === 'number') ? exitGate.x : 710;
@@ -115,10 +172,10 @@ class NanoUnit {
     switch (this.state) {
       case STATE.FALLING:
       case STATE.FLOATING:
-        this.updateFalling(terrain, particles, speedScale);
+        this.updateFalling(terrain, particles, speedScale, movingPlatforms);
         break;
       case STATE.WALKING:
-        this.updateWalking(terrain, particles, otherUnits, speedScale);
+        this.updateWalking(terrain, particles, otherUnits, speedScale, movingPlatforms);
         break;
       case STATE.CLIMBING:
         this.updateClimbing(terrain, particles, speedScale);
@@ -141,7 +198,7 @@ class NanoUnit {
     }
   }
 
-  updateFalling(terrain, particles, speedScale) {
+  updateFalling(terrain, particles, speedScale, movingPlatforms = []) {
     const isFloater = this.hasAntiGrav || this.state === STATE.FLOATING;
     
     if (isFloater) {
@@ -154,6 +211,7 @@ class NanoUnit {
       this.vy = Math.min(3.2, (this.vy || 0) + 0.15 * speedScale);
     }
 
+    const prevFootY = this.y;
     this.y += this.vy * speedScale;
     this.fallDistance += this.vy * speedScale;
 
@@ -164,6 +222,30 @@ class NanoUnit {
       return;
     }
 
+    // 1. Moving Platform Landing Check (움직이는 발판 착지 판정)
+    if (movingPlatforms && movingPlatforms.length > 0) {
+      for (const p of movingPlatforms) {
+        if (p === this.lastDismountedPlatform && this.dismountCooldown > 0) continue;
+        if (this.x >= p.x && this.x <= p.x + p.w) {
+          if (prevFootY <= p.y + 4 && this.y >= p.y - 2) {
+            if (this.fallDistance > this.maxSafeFall && !isFloater) {
+              this.die(particles, 'splat');
+              particles.spawnBurst(this.x, p.y - 8, '#ff2255', 20, 3);
+            } else {
+              this.state = STATE.WALKING;
+              this.fallDistance = 0;
+              this.vy = 0;
+              this.y = p.y;
+              this.ridingPlatform = p;
+              this.hasAntiGrav = false;
+            }
+            return;
+          }
+        }
+      }
+    }
+
+    // 2. Static Terrain Landing Check (고정 지형 착지 판정)
     if (terrain.isSolid(this.x, this.y + 1)) {
       while (terrain.isSolid(this.x, this.y) && this.y > 0) {
         this.y--;
@@ -174,6 +256,9 @@ class NanoUnit {
         particles.spawnBurst(this.x, this.y - 8, '#ff2255', 20, 3);
       } else {
         this.state = STATE.WALKING;
+        this.ridingPlatform = null; // 고정 지형 위에 착지
+        this.lastDismountedPlatform = null;
+        this.dismountCooldown = 0;
         this.fallDistance = 0;
         this.vy = 0;
         this.hasAntiGrav = false;
@@ -181,7 +266,7 @@ class NanoUnit {
     }
   }
 
-  updateWalking(terrain, particles, otherUnits, speedScale) {
+  updateWalking(terrain, particles, otherUnits, speedScale, movingPlatforms = []) {
     // Abyss / Screen Edge Out-of-Bounds Check
     if (this.y >= 425 || this.x < -30 || this.x > 830) {
       this.die(particles, 'splat');
@@ -190,19 +275,146 @@ class NanoUnit {
     }
 
     let foundGround = false;
-    for (let dy = 1; dy <= 6; dy++) {
-      if (terrain.isSolid(this.x, this.y + dy)) {
-        this.y += (dy - 1);
-        foundGround = true;
-        break;
+
+    // 1. 움직이는 플랫폼 상단 승차 발판 검사 (유닛이 실제로 발판 상단 표면(오차 6px)에 서 있을 때만 탑승)
+    if (movingPlatforms && movingPlatforms.length > 0) {
+      for (const p of movingPlatforms) {
+        if (p === this.lastDismountedPlatform && this.dismountCooldown > 0) continue;
+        // 진행 방향 출구 끝단을 이미 넘은 발판은 재흡착 방지
+        if (this.dir > 0 && this.x >= p.x + p.w) continue;
+        if (this.dir < 0 && this.x <= p.x) continue;
+
+        if (p.checkFooting(this.x, this.y, 6)) {
+          foundGround = true;
+          this.ridingPlatform = p;
+          this.y = p.y;
+          break;
+        }
+      }
+    }
+
+    // 2. 고정 지형 발 밑 검사
+    if (!foundGround) {
+      for (let dy = -3; dy <= 6; dy++) {
+        if (terrain.isSolid(this.x, this.y + dy)) {
+          this.y += Math.max(0, dy - 1);
+          foundGround = true;
+          this.ridingPlatform = null; // 고정 지형 위
+          this.lastDismountedPlatform = null;
+          this.dismountCooldown = 0;
+          break;
+        }
+      }
+    }
+
+    // 3. 고정 지형 직접 착지 실패 시, 전방 1~4px 인접 지형 검사 (발판-지형 사이 미세 틈새 매끄러운 승하차)
+    if (!foundGround) {
+      for (let fwd = 1; fwd <= 4; fwd++) {
+        const fwdX = this.x + this.dir * fwd;
+        for (let dy = -3; dy <= 6; dy++) {
+          if (terrain.isSolid(fwdX, this.y + dy)) {
+            this.x = fwdX;
+            this.y += Math.max(0, dy - 1);
+            foundGround = true;
+            this.ridingPlatform = null;
+            this.lastDismountedPlatform = null;
+            this.dismountCooldown = 0;
+            break;
+          }
+        }
+        if (foundGround) break;
       }
     }
 
     if (!foundGround && !terrain.isSolid(this.x, this.y + 1)) {
+      if (this.ridingPlatform) {
+        this.lastDismountedPlatform = this.ridingPlatform;
+        this.dismountCooldown = 30;
+        this.ridingPlatform = null;
+      }
+      // 발판/절벽 밖으로 한 걸음 전진하며 즉시 낙하 상태 진입 (끝단 멈춤/지체 현상 완전 제거)
+      this.x += this.dir * 1.25 * speedScale;
       this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
       this.fallDistance = 0;
       this.vy = 0;
       return;
+    }
+
+    // 4. 움직이는 발판의 측면 충돌 및 수평 밀기(Pusher) 물리:
+    // 유닛이 발판 상단이 아닌 고정 지형(지면)에 서 있을 때, 다가오는 발판 측면과 충돌하면
+    // 부자연스럽게 발판 위로 워프하지 않고 발판의 이동 방향과 속도에 맞춰 전방으로 밀림
+    if (movingPlatforms && movingPlatforms.length > 0) {
+      for (const p of movingPlatforms) {
+        if (p === this.ridingPlatform) continue;
+
+        // 발판의 두께(몸체) 높이와 유닛 몸통이 겹치는 경우
+        const isPlatformBodyLevel = (this.y > p.y + 2) && (this.y - 12 < p.y + p.h);
+        if (!isPlatformBodyLevel) continue;
+
+        // A. 발판이 우측으로 이동 중: 우측면(선두)으로 유닛을 전방으로 밀어냄
+        if (p.dx > 0) {
+          const rightEdge = p.x + p.w;
+          if (this.x >= p.x - 2 && this.x <= rightEdge + 4) {
+            // 발판과 마주보고 걷고 있었다면 밀리는 방향(우측)으로 몸을 돌림
+            if (this.dir < 0) {
+              this.dir = 1;
+              this.vx = 1.25;
+            }
+            this.x = Math.max(this.x, rightEdge + 2);
+            // 벽 사이에 끼여 압사(Squash)되는지 안전 검사
+            if (terrain.isSolid(this.x + 2, this.y - 6)) {
+              this.die(particles, 'splat');
+              particles.spawnBurst(this.x, this.y - 8, '#ff2255', 20, 3);
+              return;
+            }
+            continue;
+          }
+          // 발판 후미(좌측면)로 뒤따라 걸어가다 부딪히는 경우 벽 반사
+          if (this.dir < 0 && this.x > p.x && this.x < p.x + 8) {
+            this.dir = 1;
+            this.vx = 1.25;
+            this.x = p.x - 2;
+            return;
+          }
+        }
+        // B. 발판이 좌측으로 이동 중: 좌측면(선두)으로 유닛을 좌측으로 밀어냄
+        else if (p.dx < 0) {
+          const leftEdge = p.x;
+          if (this.x <= p.x + p.w + 2 && this.x >= leftEdge - 4) {
+            // 발판과 마주보고 걷고 있었다면 밀리는 방향(좌측)으로 몸을 돌림
+            if (this.dir > 0) {
+              this.dir = -1;
+              this.vx = -1.25;
+            }
+            this.x = Math.min(this.x, leftEdge - 2);
+            // 벽 사이에 끼여 압사(Squash)되는지 안전 검사
+            if (terrain.isSolid(this.x - 2, this.y - 6)) {
+              this.die(particles, 'splat');
+              particles.spawnBurst(this.x, this.y - 8, '#ff2255', 20, 3);
+              return;
+            }
+            continue;
+          }
+          // 발판 후미(우측면)로 뒤따라 걸어가다 부딪히는 경우 벽 반사
+          if (this.dir > 0 && this.x < p.x + p.w && this.x > p.x + p.w - 8) {
+            this.dir = -1;
+            this.vx = -1.25;
+            this.x = p.x + p.w + 2;
+            return;
+          }
+        }
+        // C. 정지 상태(턴어라운드 대기) 발판: 외부 접근 시 일반 벽 충돌 반사
+        else {
+          const nextSideX = this.x + this.dir * 3;
+          const isApproachingFromOutside = (this.dir > 0 && this.x < p.x) || (this.dir < 0 && this.x > p.x + p.w);
+          if (isApproachingFromOutside && p.containsPoint(nextSideX, this.y - 8)) {
+            this.dir = -this.dir;
+            this.vx = this.dir * 1.25;
+            this.x += this.dir * 2;
+            return;
+          }
+        }
+      }
     }
 
     // Two-way barrier: Blocks incoming units from BOTH Left and Right!
@@ -1164,4 +1376,8 @@ class NanoUnit {
     ctx.fillStyle = '#00f3ff';
     ctx.fillRect(frontFootX - 1, frontFootY + 3.5, 5, 1.2);
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { NanoUnit, STATE };
 }

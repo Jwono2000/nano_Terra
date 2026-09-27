@@ -1,0 +1,130 @@
+﻿{
+  "id": 17,
+  "title": "17구역 SECTOR",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "cyan",
+  "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+  "totalUnits": 15,
+  "needPercent": 75,
+  "spawnRate": 40,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 2,
+    "mine": 1,
+    "drill": 2,
+    "bomb": 2,
+    "build": 15,
+    "block": 3,
+    "portal": 0
+  },
+  "spawnX": 190,
+  "spawnY": 170,
+  "gateX": 600,
+  "gateY": 170,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 100,
+      "y": 220,
+      "w": 230,
+      "h": 130,
+      "palette": "cyan"
+    },
+    {
+      "type": "platform",
+      "x": 430,
+      "y": 220,
+      "w": 240,
+      "h": 140,
+      "palette": "cyan"
+    },
+    {
+      "type": "volcanicBasalt",
+      "x": 0,
+      "y": 350,
+      "w": 800,
+      "h": 60,
+      "palette": "cyan",
+      "profile": [
+        67,
+        23,
+        59,
+        23,
+        49,
+        36,
+        60,
+        31,
+        53,
+        47,
+        49,
+        42,
+        77,
+        42,
+        78,
+        47,
+        77,
+        30,
+        59,
+        23,
+        55,
+        49,
+        60,
+        25,
+        65
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 90,
+      "y": 340,
+      "w": 260,
+      "h": 10,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 330,
+      "y": 90,
+      "w": 20,
+      "h": 220,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 90,
+      "y": 140,
+      "w": 20,
+      "h": 210,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 410,
+      "y": 210,
+      "w": 20,
+      "h": 130,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 410,
+      "y": 340,
+      "w": 250,
+      "h": 10,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 660,
+      "y": 150,
+      "w": 20,
+      "h": 200,
+      "palette": "cyan"
+    }
+  ],
+  "solutionDna": [
+    "CUSTOM"
+  ],
+  "difficultyScore": 50}

@@ -56,6 +56,7 @@ class GameEngine {
     this.currentLevelIdx = 0;
     this.gameState = GAME_STATE.MENU;
     this.units = [];
+    this.movingPlatforms = [];
     this.spawnTimer = 0;
     this.spawnedCount = 0;
     this.rescuedCount = 0;
@@ -154,6 +155,7 @@ class GameEngine {
       this.terrain.setPattern(this.wallTextureImg);
     }
     StageDataEngine.buildTerrainFromData(this.terrain, this.activeCustomData);
+    this.initMovingPlatforms(this.activeCustomData);
 
     this.units = [];
     this.spawnTimer = 180;
@@ -209,6 +211,7 @@ class GameEngine {
       this.terrain.setPattern(this.wallTextureImg);
     }
     StageDataEngine.buildTerrainFromData(this.terrain, lvl);
+    this.initMovingPlatforms(lvl);
 
     this.units = [];
     this.spawnTimer = 999; // Trigger first unit spawn immediately on start!
@@ -252,6 +255,16 @@ class GameEngine {
       if (modalStart) modalStart.style.display = 'flex';
     } else {
       if (modalStart) modalStart.style.display = 'none';
+    }
+  }
+
+  initMovingPlatforms(levelData) {
+    this.movingPlatforms = [];
+    if (!levelData || !levelData.elements) return;
+    for (const el of levelData.elements) {
+      if (el.type === 'movingPlatform' && typeof MovingPlatform !== 'undefined') {
+        this.movingPlatforms.push(new MovingPlatform(el));
+      }
     }
   }
 
@@ -976,9 +989,16 @@ class GameEngine {
     let activeUnits = 0;
     let newlyRescued = 0;
 
+    // Update dynamic moving platforms
+    if (this.movingPlatforms && this.movingPlatforms.length > 0) {
+      for (const p of this.movingPlatforms) {
+        p.update(1.0);
+      }
+    }
+
     for (const u of this.units) {
       const prevState = u.state;
-      u.update(this.terrain, this.particles, exitGate, this.portalPair, this.units, 1.0);
+      u.update(this.terrain, this.particles, exitGate, this.portalPair, this.units, 1.0, this.movingPlatforms);
 
       if (u.state === STATE.EXITING && prevState !== STATE.EXITING) {
         newlyRescued++;
@@ -1200,6 +1220,13 @@ class GameEngine {
 
     const currentLvl = this.isCustomPlay ? this.activeCustomData : LEVELS[this.currentLevelIdx];
     if (!currentLvl) return;
+
+    // Render dynamic moving platforms
+    if (this.movingPlatforms && this.movingPlatforms.length > 0) {
+      for (const p of this.movingPlatforms) {
+        p.render(this.ctx, false, false);
+      }
+    }
 
     const spX = (typeof currentLvl.spawnX === 'number' && !isNaN(currentLvl.spawnX)) ? currentLvl.spawnX : 90;
     const spY = (typeof currentLvl.spawnY === 'number' && !isNaN(currentLvl.spawnY)) ? currentLvl.spawnY : 60;

@@ -84,13 +84,10 @@ class NanoUnit {
       const p = this.ridingPlatform;
       const withinY = Math.abs(this.y - p.y) <= 8;
 
-      // 발판 진행 방향 끝단 도달 시 즉시 이탈 판정:
-      // 역방향 이동 중 끝단에서 컨베이어처럼 뒤로 끌려가며 발생하는 떨림(Jitter/Stall/Bottleneck) 방지를 위해
-      // 발판이 진행 반대 방향으로 이동 중일 때는 끝단 여유 마진(Math.abs(p.dx) + 0.5px) 내에서 즉시 이탈 처리
-      const exitMarginRight = (p.dx < 0) ? (Math.abs(p.dx) + 0.5) : 0;
-      const exitMarginLeft = (p.dx > 0) ? (p.dx + 0.5) : 0;
-      const steppingOffRight = (this.dir > 0 && this.x >= p.x + p.w - exitMarginRight);
-      const steppingOffLeft = (this.dir < 0 && this.x <= p.x + exitMarginLeft);
+      // 발판 진행 방향 끝단 도달 시 이탈 판정:
+      // 발판 끝단에 도달할 때까지 온전히 걸어간 뒤 정확한 끝에서 이탈
+      const steppingOffRight = (this.dir > 0 && this.x >= p.x + p.w);
+      const steppingOffLeft = (this.dir < 0 && this.x <= p.x);
       const isDismounting = steppingOffRight || steppingOffLeft;
 
       // 승차 진입단(Entrance) 보호: 진행 방향으로 막 승차한 유닛이 역방향 발판 변위에 의해 진입단 밖으로 조기 방출되지 않도록 4px 버퍼 허용
@@ -346,15 +343,17 @@ class NanoUnit {
     if (movingPlatforms && movingPlatforms.length > 0) {
       for (const p of movingPlatforms) {
         if (p === this.ridingPlatform) continue;
+        if (p === this.lastDismountedPlatform && this.dismountCooldown > 0) continue;
 
-        // 발판의 두께(몸체) 높이와 유닛 몸통이 겹치는 경우
-        const isPlatformBodyLevel = (this.y > p.y + 2) && (this.y - 12 < p.y + p.h);
+        // 발판의 두께(몸체) 높이와 유닛 몸통이 겹치는 경우 (상단 탑승 중인 유닛 제외: this.y > p.y + 4)
+        const isPlatformBodyLevel = (this.y > p.y + 4) && (this.y - 12 < p.y + p.h);
         if (!isPlatformBodyLevel) continue;
 
-        // A. 발판이 우측으로 이동 중: 우측면(선두)으로 유닛을 전방으로 밀어냄
+        // A. 발판이 우측으로 이동 중: 우측 선두면(p.x + p.w)에 접촉한 유닛만 전방으로 밀어냄
         if (p.dx > 0) {
           const rightEdge = p.x + p.w;
-          if (this.x >= p.x - 2 && this.x <= rightEdge + 4) {
+          // 발판 우측 끝단 선두면에 닿은 경우만 밀기 (발판 몸체 중간이나 전체 범위를 대상으로 하지 않음)
+          if (this.x >= rightEdge - 6 && this.x <= rightEdge + 4) {
             // 발판과 마주보고 걷고 있었다면 밀리는 방향(우측)으로 몸을 돌림
             if (this.dir < 0) {
               this.dir = 1;
@@ -370,17 +369,18 @@ class NanoUnit {
             continue;
           }
           // 발판 후미(좌측면)로 뒤따라 걸어가다 부딪히는 경우 벽 반사
-          if (this.dir < 0 && this.x > p.x && this.x < p.x + 8) {
+          if (this.dir < 0 && this.x > p.x && this.x < p.x + 6) {
             this.dir = 1;
             this.vx = 1.25;
             this.x = p.x - 2;
             return;
           }
         }
-        // B. 발판이 좌측으로 이동 중: 좌측면(선두)으로 유닛을 좌측으로 밀어냄
+        // B. 발판이 좌측으로 이동 중: 좌측 선두면(p.x)에 접촉한 유닛만 좌측으로 밀어냄
         else if (p.dx < 0) {
           const leftEdge = p.x;
-          if (this.x <= p.x + p.w + 2 && this.x >= leftEdge - 4) {
+          // 발판 좌측 끝단 선두면에 닿은 경우만 밀기
+          if (this.x <= leftEdge + 6 && this.x >= leftEdge - 4) {
             // 발판과 마주보고 걷고 있었다면 밀리는 방향(좌측)으로 몸을 돌림
             if (this.dir > 0) {
               this.dir = -1;
@@ -396,7 +396,7 @@ class NanoUnit {
             continue;
           }
           // 발판 후미(우측면)로 뒤따라 걸어가다 부딪히는 경우 벽 반사
-          if (this.dir > 0 && this.x < p.x + p.w && this.x > p.x + p.w - 8) {
+          if (this.dir > 0 && this.x < p.x + p.w && this.x > p.x + p.w - 6) {
             this.dir = -1;
             this.vx = -1.25;
             this.x = p.x + p.w + 2;

@@ -222,9 +222,9 @@ class MovingPlatform {
     drawRivet(x + inset, y + h - inset);
     drawRivet(x + w - inset, y + h - inset);
 
-    // Glowing Neon Energy Channel (Center strip indicator)
-    const stripY = y + Math.floor(h * 0.55);
+    // Glowing Neon Energy Channel (Center strip indicator - 정확한 중앙 높이로 정렬)
     const stripH = 2.5;
+    const stripY = y + (h - stripH) / 2;
     ctx.fillStyle = 'rgba(10, 15, 22, 0.9)';
     ctx.fillRect(x + 12, stripY, w - 24, stripH);
 

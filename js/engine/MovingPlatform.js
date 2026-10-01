@@ -118,10 +118,11 @@ class MovingPlatform {
    * @param {number} footX
    * @param {number} footY
    * @param {number} [tolerance=6]
+   * @param {number} [margin=0] - Horizontal margin for edge clearance
    * @returns {boolean}
    */
-  checkFooting(footX, footY, tolerance = 6) {
-    const onX = footX >= this.x && footX <= this.x + this.w;
+  checkFooting(footX, footY, tolerance = 6, margin = 0) {
+    const onX = footX >= this.x - margin && footX <= this.x + this.w + margin;
     const onY = footY >= this.y - 2 && footY <= this.y + tolerance;
     return onX && onY;
   }

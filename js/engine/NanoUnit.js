@@ -85,14 +85,15 @@ class NanoUnit {
       const withinY = Math.abs(this.y - p.y) <= 8;
 
       // 발판 진행 방향 끝단 도달 시 이탈 판정:
-      // 발판 끝단에 도달할 때까지 온전히 걸어간 뒤 정확한 끝에서 이탈
-      const steppingOffRight = (this.dir > 0 && this.x >= p.x + p.w);
-      const steppingOffLeft = (this.dir < 0 && this.x <= p.x);
+      // 발판 끝단(캐릭터 발 및 몸체 너비 18px 기준, 완전 이탈 마진 10px)을 완전히 지날 때까지 온전히 걸어간 뒤 정확한 끝에서 이탈
+      const exitOffset = 10;
+      const steppingOffRight = (this.dir > 0 && this.x >= p.x + p.w + exitOffset);
+      const steppingOffLeft = (this.dir < 0 && this.x <= p.x - exitOffset);
       const isDismounting = steppingOffRight || steppingOffLeft;
 
-      // 승차 진입단(Entrance) 보호: 진행 방향으로 막 승차한 유닛이 역방향 발판 변위에 의해 진입단 밖으로 조기 방출되지 않도록 4px 버퍼 허용
-      const minBoardingX = (this.dir > 0) ? (p.x - 4) : p.x;
-      const maxBoardingX = (this.dir < 0) ? (p.x + p.w + 4) : (p.x + p.w);
+      // 승차 진입단(Entrance) 보호 & 출구단 여유 마진
+      const minBoardingX = (this.dir > 0) ? (p.x - 4) : (p.x - exitOffset);
+      const maxBoardingX = (this.dir < 0) ? (p.x + p.w + 4) : (p.x + p.w + exitOffset);
       const withinX = !isDismounting && (this.x >= minBoardingX && this.x <= maxBoardingX);
 
       if (withinX && withinY) {
@@ -223,7 +224,7 @@ class NanoUnit {
     if (movingPlatforms && movingPlatforms.length > 0) {
       for (const p of movingPlatforms) {
         if (p === this.lastDismountedPlatform && this.dismountCooldown > 0) continue;
-        if (this.x >= p.x && this.x <= p.x + p.w) {
+        if (this.x >= p.x - 2 && this.x <= p.x + p.w + 2) {
           if (prevFootY <= p.y + 4 && this.y >= p.y - 2) {
             if (this.fallDistance > this.maxSafeFall && !isFloater) {
               this.die(particles, 'splat');
@@ -237,6 +238,32 @@ class NanoUnit {
               this.hasAntiGrav = false;
             }
             return;
+          }
+        }
+      }
+    }
+
+    // 2. Moving Platform Horizontal Pusher / Non-Penetration Guard:
+    // 낙하/부유 중인 유닛과 이동 발판이 접촉할 때, 발판의 진행 방향 및 위치에 맞춰 유닛을 안전하게 밀어내어
+    // 발판 끝단 직전 관통/뚫림 현상을 원천 방지
+    if (movingPlatforms && movingPlatforms.length > 0) {
+      const exitOffset = 10;
+      for (const p of movingPlatforms) {
+        // 발판의 두께(몸체) 높이와 유닛 몸통이 겹치는 경우
+        const isAtPlatformLevel = (this.y >= p.y - 2) && (this.y - 22 <= p.y + p.h);
+        if (!isAtPlatformLevel) continue;
+
+        if (this.x >= p.x + p.w - 14) {
+          // 우측 끝단 외곽으로 안전 유지
+          const minSafeX = p.x + p.w + exitOffset;
+          if (this.x < minSafeX) {
+            this.x = minSafeX;
+          }
+        } else if (this.x <= p.x + 14) {
+          // 좌측 끝단 외곽으로 안전 유지
+          const maxSafeX = p.x - exitOffset;
+          if (this.x > maxSafeX) {
+            this.x = maxSafeX;
           }
         }
       }
@@ -273,15 +300,18 @@ class NanoUnit {
 
     let foundGround = false;
 
-    // 1. 움직이는 플랫폼 상단 승차 발판 검사 (유닛이 실제로 발판 상단 표면(오차 6px)에 서 있을 때만 탑승)
+    // 1. 움직이는 플랫폼 상단 승차 발판 검사 (유닛이 실제로 발판 상단 표면에 서 있을 때만 탑승)
     if (movingPlatforms && movingPlatforms.length > 0) {
+      const exitOffset = 10;
       for (const p of movingPlatforms) {
         if (p === this.lastDismountedPlatform && this.dismountCooldown > 0) continue;
-        // 진행 방향 출구 끝단을 이미 넘은 발판은 재흡착 방지
-        if (this.dir > 0 && this.x >= p.x + p.w) continue;
-        if (this.dir < 0 && this.x <= p.x) continue;
+        // 진행 방향 출구 끝단을 완전히 넘은 발판은 재흡착 방지
+        if (this.dir > 0 && this.x >= p.x + p.w + exitOffset) continue;
+        if (this.dir < 0 && this.x <= p.x - exitOffset) continue;
 
-        if (p.checkFooting(this.x, this.y, 6)) {
+        // 현재 탑승 중인 발판은 exitOffset 마진까지 온전히 탑승 유지 허용
+        const margin = (p === this.ridingPlatform) ? exitOffset : 0;
+        if (p.checkFooting(this.x, this.y, 6, margin)) {
           foundGround = true;
           this.ridingPlatform = p;
           this.y = p.y;

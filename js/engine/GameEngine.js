@@ -57,6 +57,7 @@ class GameEngine {
     this.gameState = GAME_STATE.MENU;
     this.units = [];
     this.movingPlatforms = [];
+    this.jumpPads = [];
     this.spawnTimer = 0;
     this.spawnedCount = 0;
     this.rescuedCount = 0;
@@ -260,10 +261,13 @@ class GameEngine {
 
   initMovingPlatforms(levelData) {
     this.movingPlatforms = [];
+    this.jumpPads = [];
     if (!levelData || !levelData.elements) return;
     for (const el of levelData.elements) {
       if (el.type === 'movingPlatform' && typeof MovingPlatform !== 'undefined') {
         this.movingPlatforms.push(new MovingPlatform(el));
+      } else if (el.type === 'jumpPad' && typeof JumpPad !== 'undefined') {
+        this.jumpPads.push(new JumpPad(el));
       }
     }
   }
@@ -846,6 +850,19 @@ class GameEngine {
         if (isFalling) {
           return;
         }
+        // Check if diagonal path in front is steel
+        const mineAheadX = unit.x + unit.dir * 6;
+        const isSteelMine = this.terrain.isSteel(mineAheadX, unit.y + 2) || 
+                            this.terrain.isSteel(mineAheadX, unit.y - 4) || 
+                            this.terrain.isSteel(unit.x + unit.dir * 4, unit.y + 1) ||
+                            this.terrain.isSteel(unit.x, unit.y + 1);
+        if (isSteelMine) {
+          this.particles.spawnBurst(unit.x + unit.dir * 4, unit.y - 4, '#ffffff', 8, 2.5);
+          this.particles.spawnBurst(unit.x + unit.dir * 4, unit.y - 4, '#ffb700', 10, 3.2);
+          this.particles.spawnFloatingText(unit.x, unit.y - 16, '🛡️ STEEL!', '#ffb700');
+          if (typeof SFX !== 'undefined' && SFX.playHit) SFX.playHit();
+          return;
+        }
         unit.stopSounds();
         unit.state = STATE.DIAGONAL_MINING;
         unit.cutSteps = 0;
@@ -855,6 +872,19 @@ class GameEngine {
 
       case 'drill':
         if (isFalling) {
+          return;
+        }
+        // Check if directly standing on steel
+        const isSteelFloor = this.terrain.isSteel(unit.x, unit.y + 1) || 
+                             this.terrain.isSteel(unit.x, unit.y + 3) || 
+                             this.terrain.isSteel(unit.x - 4, unit.y + 2) || 
+                             this.terrain.isSteel(unit.x + 4, unit.y + 2) ||
+                             this.terrain.isSteel(unit.x, unit.y + 5);
+        if (isSteelFloor) {
+          this.particles.spawnBurst(unit.x, unit.y, '#ffffff', 8, 2.5);
+          this.particles.spawnBurst(unit.x, unit.y, '#ffb700', 10, 3.2);
+          this.particles.spawnFloatingText(unit.x, unit.y - 16, '🛡️ STEEL!', '#ffb700');
+          if (typeof SFX !== 'undefined' && SFX.playHit) SFX.playHit();
           return;
         }
         unit.stopSounds();
@@ -996,9 +1026,16 @@ class GameEngine {
       }
     }
 
+    // Update dynamic jump pads
+    if (this.jumpPads && this.jumpPads.length > 0) {
+      for (const pad of this.jumpPads) {
+        pad.update(1.0);
+      }
+    }
+
     for (const u of this.units) {
       const prevState = u.state;
-      u.update(this.terrain, this.particles, exitGate, this.portalPair, this.units, 1.0, this.movingPlatforms);
+      u.update(this.terrain, this.particles, exitGate, this.portalPair, this.units, 1.0, this.movingPlatforms, this.jumpPads);
 
       if (u.state === STATE.EXITING && prevState !== STATE.EXITING) {
         newlyRescued++;
@@ -1225,6 +1262,13 @@ class GameEngine {
     if (this.movingPlatforms && this.movingPlatforms.length > 0) {
       for (const p of this.movingPlatforms) {
         p.render(this.ctx, false, false);
+      }
+    }
+
+    // Render dynamic jump pads
+    if (this.jumpPads && this.jumpPads.length > 0) {
+      for (const pad of this.jumpPads) {
+        pad.render(this.ctx, false, false);
       }
     }
 

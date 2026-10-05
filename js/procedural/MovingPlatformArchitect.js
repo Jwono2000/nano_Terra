@@ -12,7 +12,8 @@
 
   const SOLID_TYPES = [
     'platform', 'steelBarrier', 'rockWall', 'craggyRock',
-    'volcanicBasalt', 'quantumCrystal'
+    'volcanicBasalt', 'quantumCrystal', 'steelPlatform',
+    'triangleSlope', 'diagonalBeam', 'jumpPad'
   ];
 
   /**

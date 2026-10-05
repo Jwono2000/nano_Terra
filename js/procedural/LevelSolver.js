@@ -73,8 +73,8 @@
     const t = new PixelTerrain(phys.width, phys.height);
     const els = level.elements || [];
     for (const el of els) {
-      if (![ 'platform', 'steelBarrier', 'rockWall', 'craggyRock', 'volcanicBasalt', 'quantumCrystal' ].includes(el.type)) continue;
-      const v = el.type === 'steelBarrier' ? STEEL : DIRT;
+      if (![ 'platform', 'steelBarrier', 'steelPlatform', 'rockWall', 'craggyRock', 'volcanicBasalt', 'quantumCrystal' ].includes(el.type)) continue;
+      const v = (el.type === 'steelBarrier' || el.type === 'steelPlatform' || el.isSteel) ? STEEL : DIRT;
       const x0 = Math.max(0, Math.round(el.x)), x1 = Math.min(phys.width, Math.round(el.x + el.w));
       const hasProfile = Array.isArray(el.profile) && el.profile.length > 0 &&
         (el.type === 'craggyRock' || el.type === 'volcanicBasalt' || el.type === 'quantumCrystal');

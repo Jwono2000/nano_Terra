@@ -147,6 +147,9 @@ class TerrainEngine {
     this.grid = new Uint8Array(width * height);
     this.pattern = null;
     this.steelBarriers = [];
+    this.steelPlatforms = [];
+    this.steelSlopes = [];
+    this.steelBeams = [];
     this.constructedStructures = [];
   }
 
@@ -167,6 +170,9 @@ class TerrainEngine {
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.grid.fill(0);
     this.steelBarriers = [];
+    this.steelPlatforms = [];
+    this.steelSlopes = [];
+    this.steelBeams = [];
     this.constructedStructures = [];
   }
 
@@ -909,11 +915,428 @@ class TerrainEngine {
   }
 
   restoreSteelBarriersInBox(rx, ry, rw, rh) {
-    for (const b of this.steelBarriers) {
-      if (rx < b.x + b.w && rx + rw > b.x && ry < b.y + b.h && ry + rh > b.y) {
-        this.renderSingleSteelBarrier(b.x, b.y, b.w, b.h);
+    if (this.steelBarriers) {
+      for (const b of this.steelBarriers) {
+        if (rx < b.x + b.w && rx + rw > b.x && ry < b.y + b.h && ry + rh > b.y) {
+          this.renderSingleSteelBarrier(b.x, b.y, b.w, b.h);
+        }
       }
     }
+    if (this.steelPlatforms) {
+      for (const p of this.steelPlatforms) {
+        if (rx < p.x + p.w && rx + rw > p.x && ry < p.y + p.h && ry + rh > p.y) {
+          this.renderSingleSteelPlatform(p.x, p.y, p.w, p.h);
+        }
+      }
+    }
+    if (this.steelSlopes) {
+      for (const s of this.steelSlopes) {
+        if (rx < s.x + s.w && rx + rw > s.x && ry < s.y + s.h && ry + rh > s.y) {
+          this.renderSingleTriangleSlope(s.x, s.y, s.w, s.h, s.slopeType, true, null);
+        }
+      }
+    }
+    if (this.steelBeams) {
+      for (const bm of this.steelBeams) {
+        if (rx < bm.x + bm.w && rx + rw > bm.x && ry < bm.y + bm.h && ry + rh > bm.y) {
+          this.renderSingleDiagonalBeam(bm.x, bm.y, bm.w, bm.h, bm.dir, bm.thickness);
+        }
+      }
+    }
+  }
+
+  // --- 1. Heavy Indestructible Steel Platform ---
+  drawSteelPlatform(x, y, w, h) {
+    x = Math.floor(x); y = Math.floor(y); w = Math.floor(w); h = Math.floor(h);
+    if (!this.steelPlatforms) this.steelPlatforms = [];
+    if (!this.steelPlatforms.some(b => b.x === x && b.y === y && b.w === w && b.h === h)) {
+      this.steelPlatforms.push({ x, y, w, h });
+    }
+    this.renderSingleSteelPlatform(x, y, w, h);
+  }
+
+  renderSingleSteelPlatform(x, y, w, h) {
+    for (let py = y; py < y + h; py++) {
+      if (py < 0 || py >= this.height) continue;
+      for (let px = x; px < x + w; px++) {
+        if (px < 0 || px >= this.width) continue;
+        this.grid[py * this.width + px] = 2; // Indestructible Steel
+      }
+    }
+
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = 'source-over';
+
+    // 1. Polished Mirror Chrome Multi-Stop Gradient Body
+    const chromeGrad = this.ctx.createLinearGradient(x, y, x, y + h);
+    chromeGrad.addColorStop(0.00, '#ffffff'); // Mirror top specular glare
+    chromeGrad.addColorStop(0.12, '#e6f3ff'); // Silver sky reflection
+    chromeGrad.addColorStop(0.35, '#8daec9'); // Chrome mid tone
+    chromeGrad.addColorStop(0.48, '#ffffff'); // Horizon glare highlight
+    chromeGrad.addColorStop(0.52, '#384d63'); // Ground shadow contrast boundary
+    chromeGrad.addColorStop(0.80, '#1c2836'); // Deep metallic steel core
+    chromeGrad.addColorStop(0.95, '#5e7d9b'); // Under-edge reflected light
+    chromeGrad.addColorStop(1.00, '#101720'); // Bottom drop shadow rim
+    this.ctx.fillStyle = chromeGrad;
+    this.ctx.fillRect(x, y, w, h);
+
+    // 2. 45° Specular Glare Streaks (Shining metallic reflection sweeps across entire width)
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rect(x + 1, y + 1, w - 2, h - 2);
+    this.ctx.clip();
+
+    // Draw multiple diagonal reflection bars across chrome body
+    for (let sx = -h * 2; sx < w + h * 2; sx += 55) {
+      const barGrad = this.ctx.createLinearGradient(x + sx, y, x + sx + 24, y);
+      barGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.0)');
+      barGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.65)');
+      barGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+      this.ctx.fillStyle = barGrad;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x + sx, y);
+      this.ctx.lineTo(x + sx + 22, y);
+      this.ctx.lineTo(x + sx + 22 + h, y + h);
+      this.ctx.lineTo(x + sx + h, y + h);
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
+
+    // Horizon specular glare line (classic high-gloss chrome hallmark)
+    const horizGrad = this.ctx.createLinearGradient(x, y + h * 0.48, x + w, y + h * 0.48);
+    horizGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    horizGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
+    horizGrad.addColorStop(1, 'rgba(255, 255, 255, 0.4)');
+    this.ctx.strokeStyle = horizGrad;
+    this.ctx.lineWidth = 1.0;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + 1, y + Math.floor(h * 0.48));
+    this.ctx.lineTo(x + w - 1, y + Math.floor(h * 0.48));
+    this.ctx.stroke();
+
+    // Top walking surface hairline micro-grip track (1px mirror silver accent)
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillRect(x + 2, y + 1, w - 4, 1.2);
+    this.ctx.fillStyle = 'rgba(0, 243, 255, 0.6)';
+    this.ctx.fillRect(x + 4, y + 2, w - 8, 1);
+    this.ctx.restore();
+
+    // 3. Beveled Chrome Perimeter Border
+    this.ctx.strokeStyle = '#ffffff';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + 0.5, y + h - 0.5);
+    this.ctx.lineTo(x + 0.5, y + 0.5);
+    this.ctx.lineTo(x + w - 0.5, y + 0.5);
+    this.ctx.stroke();
+
+    // Bottom dark rim outline
+    this.ctx.strokeStyle = '#0d151e';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y + h - 0.5);
+    this.ctx.lineTo(x + w, y + h - 0.5);
+    this.ctx.stroke();
+
+    // 4. Polished Chrome Hex Rivets with Specular Highlights
+    const drawChromeRivet = (rx, ry) => {
+      this.ctx.save();
+      // Rivet shadow
+      this.ctx.fillStyle = '#141c26';
+      this.ctx.beginPath();
+      this.ctx.arc(rx, ry + 0.5, 2.2, 0, Math.PI * 2);
+      this.ctx.fill();
+      // Chrome rivet body
+      const rg = this.ctx.createRadialGradient(rx - 0.6, ry - 0.6, 0.2, rx, ry, 2);
+      rg.addColorStop(0, '#ffffff');
+      rg.addColorStop(0.4, '#cce6ff');
+      rg.addColorStop(0.8, '#58738e');
+      rg.addColorStop(1, '#253444');
+      this.ctx.fillStyle = rg;
+      this.ctx.beginPath();
+      this.ctx.arc(rx, ry, 2.0, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
+    };
+
+    if (w >= 24) {
+      const rivetY = Math.min(y + h - 4, y + 8);
+      drawChromeRivet(x + 6, rivetY);
+      drawChromeRivet(x + w - 6, rivetY);
+      for (let rx = x + 36; rx < x + w - 24; rx += 36) {
+        drawChromeRivet(rx, rivetY);
+      }
+    }
+    this.ctx.restore();
+  }
+
+  // --- 2. Triangle Ramp / Slope ---
+  drawTriangleSlope(x, y, w, h, slopeType = 'upRight', isSteel = false, paletteKey = 'cyan') {
+    x = Math.floor(x); y = Math.floor(y); w = Math.floor(w); h = Math.floor(h);
+    const pal = this.getPalette(paletteKey, 'cyan');
+    // Normalize slopeType string
+    let normType = 'upRight';
+    if (slopeType === 'up-left' || slopeType === 'upLeft') normType = 'upLeft';
+    else if (slopeType === 'down-right' || slopeType === 'ceilRight' || slopeType === 'downRight') normType = 'ceilRight';
+    else if (slopeType === 'down-left' || slopeType === 'ceilLeft' || slopeType === 'downLeft') normType = 'ceilLeft';
+
+    if (isSteel) {
+      if (!this.steelSlopes) this.steelSlopes = [];
+      if (!this.steelSlopes.some(s => s.x === x && s.y === y && s.w === w && s.h === h && s.slopeType === normType)) {
+        this.steelSlopes.push({ x, y, w, h, slopeType: normType });
+      }
+    }
+    this.renderSingleTriangleSlope(x, y, w, h, normType, isSteel, pal);
+  }
+
+  renderSingleTriangleSlope(x, y, w, h, slopeType, isSteel, pal) {
+    const gridVal = isSteel ? 2 : 1;
+
+    // Normalize slopeType string defensively
+    let normType = 'upRight';
+    if (slopeType === 'up-left' || slopeType === 'upLeft') normType = 'upLeft';
+    else if (slopeType === 'down-right' || slopeType === 'ceilRight' || slopeType === 'downRight') normType = 'ceilRight';
+    else if (slopeType === 'down-left' || slopeType === 'ceilLeft' || slopeType === 'downLeft') normType = 'ceilLeft';
+
+    // 1. Bitmask Grid Rasterization
+    for (let dx = 0; dx < w; dx++) {
+      const px = x + dx;
+      if (px < 0 || px >= this.width) continue;
+
+      let colH;
+      if (normType === 'upRight') {
+        colH = Math.max(1, Math.floor(h * ((dx + 1) / w)));
+        for (let dy = h - colH; dy < h; dy++) {
+          const py = y + dy;
+          if (py >= 0 && py < this.height) this.grid[py * this.width + px] = gridVal;
+        }
+      } else if (normType === 'upLeft') {
+        colH = Math.max(1, Math.floor(h * ((w - dx) / w)));
+        for (let dy = h - colH; dy < h; dy++) {
+          const py = y + dy;
+          if (py >= 0 && py < this.height) this.grid[py * this.width + px] = gridVal;
+        }
+      } else if (normType === 'ceilRight') {
+        colH = Math.max(1, Math.floor(h * ((w - dx) / w)));
+        for (let dy = 0; dy < colH; dy++) {
+          const py = y + dy;
+          if (py >= 0 && py < this.height) this.grid[py * this.width + px] = gridVal;
+        }
+      } else { // ceilLeft
+        colH = Math.max(1, Math.floor(h * ((dx + 1) / w)));
+        for (let dy = 0; dy < colH; dy++) {
+          const py = y + dy;
+          if (py >= 0 && py < this.height) this.grid[py * this.width + px] = gridVal;
+        }
+      }
+    }
+
+    // 2. Canvas Geometry Path
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = 'source-over';
+    this.ctx.beginPath();
+    if (normType === 'upRight') {
+      this.ctx.moveTo(x, y + h);
+      this.ctx.lineTo(x + w, y);
+      this.ctx.lineTo(x + w, y + h);
+    } else if (normType === 'upLeft') {
+      this.ctx.moveTo(x, y);
+      this.ctx.lineTo(x + w, y + h);
+      this.ctx.lineTo(x, y + h);
+    } else if (normType === 'ceilRight') {
+      this.ctx.moveTo(x, y);
+      this.ctx.lineTo(x + w, y);
+      this.ctx.lineTo(x, y + h);
+    } else { // ceilLeft
+      this.ctx.moveTo(x, y);
+      this.ctx.lineTo(x + w, y);
+      this.ctx.lineTo(x + w, y + h);
+    }
+    this.ctx.closePath();
+
+    if (isSteel) {
+      // --- Polished Mirror Chrome Slope Aesthetic ---
+      const chromeGrad = this.ctx.createLinearGradient(x, y, x + w, y + h);
+      chromeGrad.addColorStop(0.00, '#ffffff');
+      chromeGrad.addColorStop(0.20, '#d8ecff');
+      chromeGrad.addColorStop(0.40, '#85a7c4');
+      chromeGrad.addColorStop(0.55, '#ffffff');
+      chromeGrad.addColorStop(0.60, '#314457');
+      chromeGrad.addColorStop(0.85, '#16212d');
+      chromeGrad.addColorStop(1.00, '#4b6782');
+      this.ctx.fillStyle = chromeGrad;
+      this.ctx.fill();
+
+      // Specular sheen sweep clip
+      this.ctx.save();
+      this.ctx.clip();
+      const sheenGrad = this.ctx.createLinearGradient(x, y, x + w, y + h);
+      sheenGrad.addColorStop(0, 'rgba(255,255,255,0)');
+      sheenGrad.addColorStop(0.45, 'rgba(255,255,255,0.45)');
+      sheenGrad.addColorStop(0.55, 'rgba(255,255,255,0.45)');
+      sheenGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      this.ctx.fillStyle = sheenGrad;
+      this.ctx.fillRect(x, y, w, h);
+      this.ctx.restore();
+
+      // Glowing chrome rim highlight along slope surface
+      this.ctx.strokeStyle = '#ffffff';
+      this.ctx.lineWidth = 2.0;
+      this.ctx.beginPath();
+      if (normType === 'upRight') { this.ctx.moveTo(x, y + h); this.ctx.lineTo(x + w, y); }
+      else if (normType === 'upLeft') { this.ctx.moveTo(x, y); this.ctx.lineTo(x + w, y + h); }
+      else if (normType === 'ceilRight') { this.ctx.moveTo(x, y + h); this.ctx.lineTo(x + w, y); }
+      else { this.ctx.moveTo(x, y); this.ctx.lineTo(x + w, y + h); }
+      this.ctx.stroke();
+
+      // Outer chrome border
+      this.ctx.strokeStyle = 'rgba(215, 235, 255, 0.9)';
+      this.ctx.lineWidth = 1.0;
+      this.ctx.stroke();
+
+      // Chrome rivets
+      const drawChromeRivet = (rx, ry) => {
+        const rg = this.ctx.createRadialGradient(rx - 0.5, ry - 0.5, 0.2, rx, ry, 1.8);
+        rg.addColorStop(0, '#ffffff');
+        rg.addColorStop(0.5, '#cce6ff');
+        rg.addColorStop(1, '#2c3e50');
+        this.ctx.fillStyle = rg;
+        this.ctx.beginPath();
+        this.ctx.arc(rx, ry, 1.8, 0, Math.PI * 2);
+        this.ctx.fill();
+      };
+      if (normType === 'upRight') {
+        drawChromeRivet(x + w - 6, y + h - 5);
+        drawChromeRivet(x + w - 6, y + 10);
+        drawChromeRivet(x + 10, y + h - 5);
+      } else {
+        drawChromeRivet(x + 6, y + h - 5);
+        drawChromeRivet(x + 6, y + 10);
+        drawChromeRivet(x + w - 10, y + h - 5);
+      }
+    } else {
+      // --- Natural Rock/Basalt/Crystal Slope Aesthetic ---
+      const p = pal || this.getPalette('cyan');
+      const grad = this.ctx.createLinearGradient(x, y, x + w, y + h);
+      grad.addColorStop(0, p.base);
+      grad.addColorStop(0.65, '#101d2a');
+      grad.addColorStop(1, '#070d14');
+      this.ctx.fillStyle = grad;
+      this.ctx.fill();
+
+      // Rugged rock crack details
+      this.ctx.strokeStyle = p.shadow || 'rgba(0,0,0,0.5)';
+      this.ctx.lineWidth = 1.0;
+      this.ctx.beginPath();
+      if (normType === 'upRight') {
+        this.ctx.moveTo(x + w * 0.4, y + h * 0.7);
+        this.ctx.lineTo(x + w * 0.6, y + h * 0.85);
+        this.ctx.moveTo(x + w * 0.7, y + h * 0.35);
+        this.ctx.lineTo(x + w * 0.82, y + h * 0.55);
+      } else {
+        this.ctx.moveTo(x + w * 0.6, y + h * 0.7);
+        this.ctx.lineTo(x + w * 0.4, y + h * 0.85);
+        this.ctx.moveTo(x + w * 0.3, y + h * 0.35);
+        this.ctx.lineTo(x + w * 0.18, y + h * 0.55);
+      }
+      this.ctx.stroke();
+
+      this.ctx.strokeStyle = p.border;
+      this.ctx.lineWidth = 1.2;
+      this.ctx.stroke();
+
+      // Lighted slope edge line
+      this.ctx.strokeStyle = p.top;
+      this.ctx.lineWidth = 2.2;
+      this.ctx.beginPath();
+      if (normType === 'upRight') {
+        this.ctx.moveTo(x, y + h);
+        this.ctx.lineTo(x + w, y);
+      } else if (normType === 'upLeft') {
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x + w, y + h);
+      } else if (normType === 'ceilRight') {
+        this.ctx.moveTo(x, y + h);
+        this.ctx.lineTo(x + w, y);
+      } else {
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x + w, y + h);
+      }
+      this.ctx.stroke();
+    }
+    this.ctx.restore();
+  }
+
+  // --- 3. Diagonal Steel Beam ---
+  drawDiagonalBeam(x, y, w, h, dir = 'downRight', thickness = 16) {
+    x = Math.floor(x); y = Math.floor(y); w = Math.floor(w); h = Math.floor(h);
+    let normDir = 'downRight';
+    if (dir === 'downLeft' || dir === 'down-left' || dir === -1) normDir = 'downLeft';
+
+    if (!this.steelBeams) this.steelBeams = [];
+    if (!this.steelBeams.some(b => b.x === x && b.y === y && b.w === w && b.h === h && b.dir === normDir)) {
+      this.steelBeams.push({ x, y, w, h, dir: normDir, thickness });
+    }
+    this.renderSingleDiagonalBeam(x, y, w, h, normDir, thickness);
+  }
+
+  renderSingleDiagonalBeam(x, y, w, h, dir = 'downRight', thickness = 16) {
+    let normDir = 'downRight';
+    if (dir === 'downLeft' || dir === 'down-left' || dir === -1) normDir = 'downLeft';
+
+    const t = Math.max(8, thickness || 16);
+    const halfT = Math.floor(t / 2);
+
+    for (let dx = 0; dx < w; dx++) {
+      const px = x + dx;
+      if (px < 0 || px >= this.width) continue;
+      const centerFrac = (normDir === 'downRight') ? (dx / w) : ((w - dx) / w);
+      const cy = y + Math.floor(h * centerFrac);
+      for (let dy = cy - halfT; dy <= cy + halfT; dy++) {
+        if (dy >= 0 && dy < this.height) {
+          this.grid[dy * this.width + px] = 2; // Steel
+        }
+      }
+    }
+
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = 'source-over';
+
+    const p1 = (normDir === 'downRight') ? { x1: x, y1: y, x2: x + w, y2: y + h } : { x1: x + w, y1: y, x2: x, y2: y + h };
+    
+    // 1. Chrome Truss Main Beam (Silver Chrome Stroke)
+    this.ctx.strokeStyle = '#2d3e50';
+    this.ctx.lineWidth = t;
+    this.ctx.lineCap = 'butt';
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1.x1, p1.y1);
+    this.ctx.lineTo(p1.x2, p1.y2);
+    this.ctx.stroke();
+
+    // 2. Chrome Center Mirror Sheen Line
+    this.ctx.strokeStyle = '#e6f3ff';
+    this.ctx.lineWidth = Math.max(3, t * 0.45);
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1.x1, p1.y1);
+    this.ctx.lineTo(p1.x2, p1.y2);
+    this.ctx.stroke();
+
+    // 3. Ultra-Bright Specular Core Stripe (Mirror Highlight)
+    this.ctx.strokeStyle = '#ffffff';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1.x1, p1.y1);
+    this.ctx.lineTo(p1.x2, p1.y2);
+    this.ctx.stroke();
+
+    // 4. Endplate Chrome Reinforcements
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.beginPath();
+    this.ctx.arc(p1.x1, p1.y1, t * 0.35, 0, Math.PI * 2);
+    this.ctx.arc(p1.x2, p1.y2, t * 0.35, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.restore();
   }
 
   carveCircle(cx, cy, radius, particles) {
@@ -994,10 +1417,8 @@ class TerrainEngine {
     this.ctx.fillRect(x, y, w, h);
     this.ctx.restore();
 
-    // Instantly restore and protect steel barriers and constructed structures
-    if (this.steelBarriers && this.steelBarriers.length > 0) {
-      this.restoreSteelBarriersInBox(x - 2, y - 2, w + 4, h + 4);
-    }
+    // Instantly restore and protect all steel barriers, platforms, slopes, beams and constructed structures
+    this.restoreSteelBarriersInBox(x - 2, y - 2, w + 4, h + 4);
     if (this.constructedStructures && this.constructedStructures.length > 0) {
       this.restoreStructuresInBox(x - 2, y - 2, w + 4, h + 4);
     }
@@ -1091,4 +1512,8 @@ class TerrainEngine {
       }
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = TerrainEngine;
 }

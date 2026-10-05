@@ -41,7 +41,7 @@
       BLOCK: 'block', BLOCKER: 'block',
       PORTAL: 'portal'
     },
-    solidTypes: ['platform', 'steelBarrier', 'rockWall', 'craggyRock', 'volcanicBasalt', 'quantumCrystal', 'movingPlatform'],
+    solidTypes: ['platform', 'steelBarrier', 'rockWall', 'craggyRock', 'volcanicBasalt', 'quantumCrystal', 'movingPlatform', 'steelPlatform', 'triangleSlope', 'diagonalBeam', 'jumpPad'],
     profileTypes: ['craggyRock', 'volcanicBasalt', 'quantumCrystal']
   };
 
@@ -54,7 +54,7 @@
 
   function isNum(v) { return typeof v === 'number' && !isNaN(v); }
 
-  /** 요소의 x=px 열에서 "가장 높은 고체 픽셀의 y" (profile 타입은 세그먼트 높이 반영) */
+  /** 요소의 x=px 열에서 "가장 높은 고체 픽셀의 y" (profile 타입은 세그먼트 높이 반영, 경사로는 빗면 반영) */
   function topAt(el, px) {
     if (px < el.x || px > el.x + el.w) return null;
     if (CFG.profileTypes.indexOf(el.type) >= 0 && Array.isArray(el.profile) && el.profile.length > 0) {
@@ -62,6 +62,27 @@
       const idx = Math.min(el.profile.length - 1, Math.max(0, Math.floor((px - el.x) / segW)));
       const colH = Math.min(el.h, Math.max(0, el.profile[idx] || 0));
       return el.y + el.h - colH;
+    }
+    if (el.type === 'triangleSlope') {
+      const relX = Math.max(0, Math.min(el.w, px - el.x));
+      const t = el.w > 0 ? relX / el.w : 0;
+      const dir = el.direction || 'up-right';
+      if (dir === 'up-right') {
+        // ◣: x=0일 때 y+h (바닥), x=w일 때 y (꼭대기)
+        return el.y + el.h - t * el.h;
+      } else if (dir === 'up-left') {
+        // ◢: x=0일 때 y (꼭대기), x=w일 때 y+h (바닥)
+        return el.y + t * el.h;
+      }
+      return el.y;
+    }
+    if (el.type === 'diagonalBeam') {
+      const relX = Math.max(0, Math.min(el.w, px - el.x));
+      const t = el.w > 0 ? relX / el.w : 0;
+      if (el.slope === -1) {
+        return el.y + (1 - t) * el.h;
+      }
+      return el.y + t * el.h;
     }
     return el.y;
   }

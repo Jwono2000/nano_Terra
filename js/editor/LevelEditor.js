@@ -25,6 +25,8 @@ class LevelEditor {
     this.isMovingElement = false;
     this.isResizingWidth = false;
     this.isResizingThickness = false;
+    this.isResizingRange = false;
+    this.isResizingSlope = false;
     this.initialResizeW = 100;
     this.initialResizeH = 20;
     this.initialResizeX = 0;
@@ -52,6 +54,8 @@ class LevelEditor {
     this.snap = true;
     this.isResizingWidth = false;
     this.isResizingThickness = false;
+    this.isResizingRange = false;
+    this.isResizingSlope = false;
     this.history = [JSON.stringify(this.levelData)];
     this.redoStack = [];
     this.solverOverlay = null;
@@ -178,6 +182,138 @@ class LevelEditor {
       };
     }
 
+    // Triangle Slope Direction & Steel Toggle Buttons
+    const bindSlopeDir = (id, dir) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'triangleSlope') {
+            el.direction = dir;
+            this.saveHistory();
+            this.syncTerrain();
+            this.updateStatus();
+            this._toast(`경사로 방향: ${dir}`);
+          }
+        }
+      };
+    };
+    bindSlopeDir('btn-slope-ur', 'up-right');
+    bindSlopeDir('btn-slope-ul', 'up-left');
+    bindSlopeDir('btn-slope-dr', 'down-right');
+    bindSlopeDir('btn-slope-dl', 'down-left');
+
+    const btnSlopeSteel = document.getElementById('btn-slope-toggle-steel');
+    if (btnSlopeSteel) {
+      btnSlopeSteel.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'triangleSlope') {
+            el.isSteel = !el.isSteel;
+            this.saveHistory();
+            this.syncTerrain();
+            this.updateStatus();
+            this._toast(el.isSteel ? '🛡️ 경사로 재질: 관통 불가 스틸' : '🪨 경사로 재질: 채굴 가능 암석');
+          }
+        }
+      };
+    }
+
+    const btnMatToggle = document.getElementById('btn-material-toggle');
+    if (btnMatToggle) {
+      btnMatToggle.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'platform') {
+            el.type = 'steelPlatform';
+            el.isSteel = true;
+            this._toast('🛡️ 재질 전환: 거울광택 크롬 스틸 발판');
+          } else if (el.type === 'steelPlatform') {
+            el.type = 'platform';
+            el.isSteel = false;
+            this._toast('🪨 재질 전환: 일반 채굴 플랫폼');
+          } else if (el.type === 'triangleSlope') {
+            el.isSteel = !el.isSteel;
+            this._toast(el.isSteel ? '🛡️ 경사로 재질: 크롬 스틸' : '🪨 경사로 재질: 일반 암석');
+          } else if (el.type === 'rockWall') {
+            el.type = 'steelBarrier';
+            el.isSteel = true;
+            this._toast('🛡️ 재질 전환: 파괴불가 강철 격벽');
+          } else if (el.type === 'steelBarrier') {
+            el.type = 'rockWall';
+            el.isSteel = false;
+            this._toast('⛰️ 재질 전환: 채굴 가능 암벽');
+          }
+          this.saveHistory();
+          this.syncTerrain();
+          this.updateStatus();
+          SFX.playClick();
+        }
+      };
+    }
+
+    // Diagonal Beam Direction & Thickness Buttons
+    const bindBeamDir = (id, slope) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'diagonalBeam') {
+            el.slope = slope;
+            this.saveHistory();
+            this.syncTerrain();
+            this.updateStatus();
+            this._toast(`사선빔 방향: ${slope === 1 ? '↘ 우하향 (\\)' : '↙ 좌하향 (/)'}`);
+          }
+        }
+      };
+    };
+    bindBeamDir('btn-beam-dr', 1);
+    bindBeamDir('btn-beam-dl', -1);
+
+    const btnBeamThick = document.getElementById('btn-beam-thick-toggle');
+    if (btnBeamThick) {
+      btnBeamThick.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'diagonalBeam') {
+            const thicknesses = [16, 24, 32];
+            const curIdx = thicknesses.indexOf(el.thickness || 16);
+            el.thickness = thicknesses[(curIdx + 1) % thicknesses.length];
+            this.saveHistory();
+            this.syncTerrain();
+            this.updateStatus();
+            this._toast(`사선빔 두께: ${el.thickness}px`);
+          }
+        }
+      };
+    }
+
+    // Repulsor Jump Pad Direction & Power Buttons
+    const bindJumpDir = (id, dir) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.onclick = () => {
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'jumpPad') {
+            el.dir = dir;
+            this.saveHistory();
+            this.updateStatus();
+            this._toast(`점프패드 도약 각도: ${dir}`);
+          }
+        }
+      };
+    };
+    bindJumpDir('btn-jump-up', 'up');
+    bindJumpDir('btn-jump-ur', 'up-right');
+    bindJumpDir('btn-jump-ul', 'up-left');
+    bindJumpDir('btn-jump-r', 'right');
+
+    const btnJumpSub = document.getElementById('btn-jump-power-sub');
+    if (btnJumpSub) btnJumpSub.onclick = () => this.adjustSelectedPower(-1.0);
+    const btnJumpAdd = document.getElementById('btn-jump-power-add');
+    if (btnJumpAdd) btnJumpAdd.onclick = () => this.adjustSelectedPower(1.0);
+
     // Color Palette Selector Buttons
     ['cyan', 'red', 'brown', 'green', 'purple'].forEach(palKey => {
       const btn = document.getElementById(`btn-pal-${palKey}`);
@@ -275,7 +411,9 @@ class LevelEditor {
       layout: getVal('gen-layout') || 'random',
       theme: getVal('gen-theme') || 'random',
       palette: getVal('gen-palette') || 'random',
-      includeMovingPlatform: getChecked('gen-moving-platform')
+      includeMovingPlatform: getChecked('gen-moving-platform'),
+      includeOptionA: getChecked('gen-opt-a'),
+      includeOptionB: getChecked('gen-opt-b')
     };
   }
 
@@ -302,6 +440,17 @@ class LevelEditor {
       let generatedData = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
       if (params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
         generatedData = MovingPlatformArchitect.injectMovingPlatforms(generatedData, { seed });
+      }
+      if (typeof AdvancedFeatureArchitect !== 'undefined') {
+        const doOptA = params.includeOptionA !== false;
+        const doOptB = params.includeOptionB !== false;
+        if (doOptA || doOptB) {
+          generatedData = AdvancedFeatureArchitect.injectFeatures(generatedData, {
+            seed,
+            optionA: doOptA,
+            optionB: doOptB
+          });
+        }
       }
       generatedData.seed = seed;
       generatedData.genParams = params;
@@ -391,6 +540,17 @@ class LevelEditor {
         let data = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
         if (params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
           data = MovingPlatformArchitect.injectMovingPlatforms(data, { seed });
+        }
+        if (typeof AdvancedFeatureArchitect !== 'undefined') {
+          const doOptA = params.includeOptionA !== false;
+          const doOptB = params.includeOptionB !== false;
+          if (doOptA || doOptB) {
+            data = AdvancedFeatureArchitect.injectFeatures(data, {
+              seed,
+              optionA: doOptA,
+              optionB: doOptB
+            });
+          }
         }
         data.seed = seed;
         data.genParams = params;
@@ -706,6 +866,21 @@ class LevelEditor {
     SFX.playClick();
   }
 
+  adjustSelectedPower(delta) {
+    if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
+    const el = this.levelData.elements[this.selectedElementIndex];
+    if (el.type !== 'jumpPad') return;
+
+    const oldP = typeof el.power === 'number' ? el.power : 9.5;
+    const newP = Math.max(5.0, Math.min(18.0, Math.round((oldP + delta) * 10) / 10));
+    if (newP === oldP) return;
+
+    el.power = newP;
+    this.saveHistory();
+    this.updateStatus();
+    SFX.playClick();
+  }
+
   setSelectedPalette(palKey) {
     if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
     const el = this.levelData.elements[this.selectedElementIndex];
@@ -757,15 +932,83 @@ class LevelEditor {
       const pal = TERRAIN_PALETTES[palKey] || TERRAIN_PALETTES.cyan;
       const rangeGroup = document.getElementById('editor-selected-range-group');
       const rangeVal = document.getElementById('editor-selected-range-val');
+      const slopeGroup = document.getElementById('editor-selected-slope-group');
+      const beamGroup = document.getElementById('editor-selected-beam-group');
+      const jumpGroup = document.getElementById('editor-selected-jump-group');
+      const jumpVal = document.getElementById('editor-selected-jump-val');
+
+      // Hide all dynamic property sub-groups by default
+      if (rangeGroup) rangeGroup.style.display = 'none';
+      if (slopeGroup) slopeGroup.style.display = 'none';
+      if (beamGroup) beamGroup.style.display = 'none';
+      if (jumpGroup) jumpGroup.style.display = 'none';
+
+      const matGroup = document.getElementById('editor-selected-material-group');
+      const btnMatToggle = document.getElementById('btn-material-toggle');
+      if (matGroup) {
+        const canChangeMaterial = ['platform', 'steelPlatform', 'triangleSlope', 'rockWall', 'steelBarrier'].includes(el.type);
+        matGroup.style.display = canChangeMaterial ? 'flex' : 'none';
+        if (btnMatToggle) {
+          const isChrome = (el.type === 'steelPlatform' || el.type === 'steelBarrier' || el.isSteel);
+          btnMatToggle.innerText = isChrome ? '🛡️ 크롬 스틸' : '🪨 일반 암석';
+          btnMatToggle.style.color = isChrome ? '#00f3ff' : '#ffb700';
+          btnMatToggle.style.borderColor = isChrome ? '#00f3ff' : '#ffb700';
+        }
+      }
 
       if (el.type === 'movingPlatform') {
         const axisText = el.axis === 'vertical' ? '↕ 상하' : '↔ 좌우';
-        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [⚡ 무빙발판 (${axisText})]</span> ${el.w}×${el.h}px | 범위: ${el.range || 120}px | 속도: ${el.speed || 0.75} | <span style="color:#ffb700;">[단축키 [: 범위-, ]: 범위+, X: ↔/↕ 전환]</span>`;
+        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [⚡ 무빙발판 (${axisText})]</span> ${el.w}×${el.h}px | 범위: ${el.range || 120}px | 속도: ${el.speed || 0.75} | <span style="color:#ffb700;">[💡 끝점 핸들 캡슐을 마우스로 드래그하여 범위 조절 | 단축키 [: 범위-, ]: 범위+, X: ↔/↕ 전환]</span>`;
         if (rangeGroup) rangeGroup.style.display = 'flex';
         if (rangeVal) rangeVal.innerText = `${el.range || 120}px`;
+      } else if (el.type === 'triangleSlope') {
+        const dirIcons = { 'up-right': '◣ 우상향', 'up-left': '◢ 좌상향', 'down-right': '◤ 우하향', 'down-left': '◥ 좌하향' };
+        const dirName = dirIcons[el.direction] || '◣ 우상향';
+        const matName = el.isSteel ? '🛡️ 거울광택 크롬스틸' : '🪨 일반 암석';
+        const angleDeg = Math.round(Math.atan2(el.h, el.w) * 180 / Math.PI);
+        if (info) info.innerHTML = `<span style="color:#00ff88; font-weight:700;">선택: [📐 삼각형 경사로]</span> ${el.w}×${el.h}px (${angleDeg}°) | 빗면: ${dirName} | 재질: ${matName} | <span style="color:#00ff88;">[💡 꼭짓점 📐 핸들을 마우스로 드래그하여 각도/방향을 실시간 조절하세요 | 단축키 X: 방향, M: 재질]</span>`;
+        if (slopeGroup) {
+          slopeGroup.style.display = 'flex';
+          const btnSteel = document.getElementById('btn-slope-toggle-steel');
+          if (btnSteel) btnSteel.innerText = el.isSteel ? '🛡️ 재질: 스틸' : '🪨 재질: 암석';
+          ['ur', 'ul', 'dr', 'dl'].forEach(k => {
+            const map = { ur: 'up-right', ul: 'up-left', dr: 'down-right', dl: 'down-left' };
+            const b = document.getElementById(`btn-slope-${k}`);
+            if (b) b.classList.toggle('active', (el.direction || 'up-right') === map[k]);
+          });
+        }
+      } else if (el.type === 'diagonalBeam') {
+        const slopeText = (el.slope === -1) ? '↙ 좌하향 (/)' : '↘ 우하향 (\\)';
+        const thick = el.thickness || 16;
+        if (info) info.innerHTML = `<span style="color:#a8c2e0; font-weight:700;">선택: [🥢 대각선 강철 빔]</span> ${el.w}×${el.h}px (두께 ${thick}px) | 기울기: ${slopeText} | <span style="color:#a8c2e0;">[💡 레이저/드릴 불침 트러스 빔 | 단축키 X: 기울기 반전]</span>`;
+        if (beamGroup) {
+          beamGroup.style.display = 'flex';
+          const bdr = document.getElementById('btn-beam-dr');
+          const bdl = document.getElementById('btn-beam-dl');
+          if (bdr) bdr.classList.toggle('active', (el.slope !== -1));
+          if (bdl) bdl.classList.toggle('active', (el.slope === -1));
+          const bThick = document.getElementById('btn-beam-thick-toggle');
+          if (bThick) bThick.innerText = `두께: ${thick}px`;
+        }
+      } else if (el.type === 'jumpPad') {
+        const dirNames = { 'up': '▲ 수직', 'up-right': '↗ 우상', 'up-left': '↖ 좌상', 'right': '➔ 우측' };
+        const p = typeof el.power === 'number' ? el.power : 9.5;
+        if (info) info.innerHTML = `<span style="color:#ffaa00; font-weight:700;">선택: [🚀 척력 점프 패드]</span> ${el.w}×${el.h}px | 도약: ${dirNames[el.dir] || '▲ 수직'} | 추진력: ${p}G | <span style="color:#ffb700;">[💡 밟는 순간 공중으로 강력 사출 | 단축키 X: 각도 순환, [: 파워-, ]: 파워+]</span>`;
+        if (jumpGroup) {
+          jumpGroup.style.display = 'flex';
+          if (jumpVal) jumpVal.innerText = `${p}G`;
+          const map = { 'btn-jump-up': 'up', 'btn-jump-ur': 'up-right', 'btn-jump-ul': 'up-left', 'btn-jump-r': 'right' };
+          Object.keys(map).forEach(bid => {
+            const b = document.getElementById(bid);
+            if (b) b.classList.toggle('active', (el.dir || 'up') === map[bid]);
+          });
+        }
+      } else if (el.type === 'steelPlatform') {
+        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [🛡️ 거울광택 크롬 스틸 발판]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | <span style="color:#00f3ff;">[💡 채굴/파괴 불침 영구 크롬 합금 | 단축키 M: 암석 전환]</span>`;
+      } else if (el.type === 'platform') {
+        if (info) info.innerHTML = `<span style="color:#00ff88; font-weight:700;">선택: [🪨 기본 플랫폼]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | <span style="color:#ffb700;">[💡 채굴 가능한 일반 발판 | 단축키 M: 크롬 스틸 전환]</span>`;
       } else {
         if (info) info.innerText = `선택: [${el.type.toUpperCase()}] ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 ${pal.name}`;
-        if (rangeGroup) rangeGroup.style.display = 'none';
       }
       if (selectedControls) selectedControls.style.display = 'flex';
       if (widthVal) widthVal.innerText = `${el.w}px`;
@@ -898,9 +1141,13 @@ class LevelEditor {
       case '5': stop(); this.setTool('quantumCrystal'); return;
       case '6': stop(); this.setTool('rockWall'); return;
       case '7': stop(); this.setTool('steelBarrier'); return;
-      case '8': stop(); this.setTool('spawn'); return;
-      case '9': stop(); this.setTool('gate'); return;
+      case '8': stop(); this.setTool('triangleSlope'); return;
+      case '9': stop(); this.setTool('steelPlatform'); return;
       case '0': stop(); this.setTool('movingPlatform'); return;
+      case 'j':
+      case 'J': stop(); this.setTool('jumpPad'); return;
+      case 'b':
+      case 'B': stop(); this.setTool('diagonalBeam'); return;
       case 'v':
       case 'V': stop(); this.setTool('select'); return;
       case 'x':
@@ -914,21 +1161,89 @@ class LevelEditor {
             this.updateStatus();
             this._toast(`발판 방향: ${el.axis === 'horizontal' ? '↔ 좌우 이동' : '↕ 상하 이동'}`);
             return;
+          } else if (el.type === 'triangleSlope') {
+            stop();
+            const dirs = ['up-right', 'up-left', 'down-right', 'down-left'];
+            const curIdx = dirs.indexOf(el.direction || 'up-right');
+            el.direction = dirs[(curIdx + 1) % dirs.length];
+            this.saveHistory();
+            this.syncTerrain();
+            this.updateStatus();
+            this._toast(`경사로 방향: ${el.direction}`);
+            return;
+          } else if (el.type === 'diagonalBeam') {
+            stop();
+            el.slope = (el.slope === -1) ? 1 : -1;
+            this.saveHistory();
+            this.syncTerrain();
+            this.updateStatus();
+            this._toast(`사선빔 방향: ${el.slope === 1 ? '↘ 우하향 (\\)' : '↙ 좌하향 (/)'}`);
+            return;
+          } else if (el.type === 'jumpPad') {
+            stop();
+            const dirs = ['up', 'up-right', 'up-left', 'right'];
+            const curIdx = dirs.indexOf(el.dir || 'up');
+            el.dir = dirs[(curIdx + 1) % dirs.length];
+            this.saveHistory();
+            this.updateStatus();
+            this._toast(`점프패드 각도: ${el.dir}`);
+            return;
+          }
+        }
+        break;
+      case 'm':
+      case 'M':
+        if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'platform') {
+            stop(); el.type = 'steelPlatform'; el.isSteel = true;
+            this.saveHistory(); this.syncTerrain(); this.updateStatus();
+            this._toast('🛡️ 재질 전환: 거울광택 크롬 스틸 발판'); return;
+          } else if (el.type === 'steelPlatform') {
+            stop(); el.type = 'platform'; el.isSteel = false;
+            this.saveHistory(); this.syncTerrain(); this.updateStatus();
+            this._toast('🪨 재질 전환: 일반 채굴 플랫폼'); return;
+          } else if (el.type === 'triangleSlope') {
+            stop(); el.isSteel = !el.isSteel;
+            this.saveHistory(); this.syncTerrain(); this.updateStatus();
+            this._toast(el.isSteel ? '🛡️ 경사로 재질: 크롬 스틸' : '🪨 경사로 재질: 일반 암석'); return;
+          } else if (el.type === 'rockWall') {
+            stop(); el.type = 'steelBarrier'; el.isSteel = true;
+            this.saveHistory(); this.syncTerrain(); this.updateStatus();
+            this._toast('🛡️ 재질 전환: 강철 격벽'); return;
+          } else if (el.type === 'steelBarrier') {
+            stop(); el.type = 'rockWall'; el.isSteel = false;
+            this.saveHistory(); this.syncTerrain(); this.updateStatus();
+            this._toast('⛰️ 재질 전환: 일반 암벽'); return;
           }
         }
         break;
       case '[':
         if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
-          stop();
-          this.adjustSelectedRange(e.shiftKey ? -50 : -10);
-          return;
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'movingPlatform') {
+            stop();
+            this.adjustSelectedRange(e.shiftKey ? -50 : -10);
+            return;
+          } else if (el.type === 'jumpPad') {
+            stop();
+            this.adjustSelectedPower(e.shiftKey ? -3.0 : -1.0);
+            return;
+          }
         }
         break;
       case ']':
         if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
-          stop();
-          this.adjustSelectedRange(e.shiftKey ? 50 : 10);
-          return;
+          const el = this.levelData.elements[this.selectedElementIndex];
+          if (el.type === 'movingPlatform') {
+            stop();
+            this.adjustSelectedRange(e.shiftKey ? 50 : 10);
+            return;
+          } else if (el.type === 'jumpPad') {
+            stop();
+            this.adjustSelectedPower(e.shiftKey ? 3.0 : 1.0);
+            return;
+          }
         }
         break;
       case 'l':
@@ -1102,12 +1417,61 @@ class LevelEditor {
     this.isMovingElement = false;
     this.isResizingWidth = false;
     this.isResizingThickness = false;
+    this.isResizingRange = false;
+    this.isResizingSlope = false;
     this.isDrawing = false;
 
     const sx = this.snapCoord(x);
     const sy = this.snapCoord(y);
 
     if (this.selectedTool === 'select') {
+      // Check for Triangle Slope Apex Drag Handle [📐 경사/각도 조절]
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        const el = this.levelData.elements[this.selectedElementIndex];
+        if (el.type === 'triangleSlope') {
+          const dir = el.direction || 'up-right';
+          let apexX = el.x + el.w;
+          let apexY = el.y;
+          if (dir === 'up-left') {
+            apexX = el.x;
+            apexY = el.y;
+          } else if (dir === 'down-right') {
+            apexX = el.x;
+            apexY = el.y + el.h;
+          } else if (dir === 'down-left') {
+            apexX = el.x + el.w;
+            apexY = el.y + el.h;
+          }
+          if (Math.abs(x - apexX) < 48 && Math.abs(y - apexY) < 18) {
+            this.isResizingSlope = true;
+            this.slopeBaseY = el.y + el.h;
+            this.slopeFixedLeft = el.x;
+            this.slopeFixedRight = el.x + el.w;
+            SFX.playClick();
+            return;
+          }
+        }
+      }
+
+      // Check for Moving Platform Range Drag Handle [↔/↕ 범위]
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        const el = this.levelData.elements[this.selectedElementIndex];
+        if (el.type === 'movingPlatform') {
+          const curR = typeof el.range === 'number' ? el.range : 120;
+          const isVert = (el.axis === 'vertical');
+          const endX = isVert ? el.x : (el.x + curR);
+          const endY = isVert ? (el.y + curR) : el.y;
+          const handleX = endX + el.w / 2;
+          const handleY = endY + el.h / 2;
+          if (Math.abs(x - handleX) < 45 && Math.abs(y - handleY) < 22) {
+            this.isResizingRange = true;
+            this.initialRange = curR;
+            SFX.playClick();
+            return;
+          }
+        }
+      }
+
       // Check for Thickness Drag Handle
       if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
         const el = this.levelData.elements[this.selectedElementIndex];
@@ -1254,6 +1618,68 @@ class LevelEditor {
       return;
     }
 
+    if (this.isResizingRange) {
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        const el = this.levelData.elements[this.selectedElementIndex];
+        if (el && el.type === 'movingPlatform') {
+          const curPointerX = this.snapCoord(x);
+          const curPointerY = this.snapCoord(y);
+          let newR;
+          if (el.axis === 'vertical') {
+            const rawDist = curPointerY - (el.y + el.h / 2);
+            newR = Math.max(20, Math.min(450 - el.y - el.h, Math.round(rawDist)));
+          } else {
+            const rawDist = curPointerX - (el.x + el.w / 2);
+            newR = Math.max(20, Math.min(800 - el.x - el.w, Math.round(rawDist)));
+          }
+          if (this.snap) {
+            newR = this.snapCoord(newR);
+          }
+          newR = Math.max(20, newR);
+          if (newR !== el.range) {
+            el.range = newR;
+            this.updateStatus();
+          }
+        }
+      }
+      return;
+    }
+
+    if (this.isResizingSlope) {
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        const el = this.levelData.elements[this.selectedElementIndex];
+        if (el && el.type === 'triangleSlope') {
+          const sx = this.snapCoord(x);
+          const sy = this.snapCoord(y);
+          const baseY = this.slopeBaseY || (el.y + el.h);
+
+          // Center dividing line of the slope base
+          const centerX = el.x + el.w * 0.5;
+          const isRight = (sx >= centerX);
+          const newDir = isRight ? 'up-right' : 'up-left';
+
+          let newW = el.w;
+          let newH = Math.max(20, Math.min(260, baseY - sy));
+          if (isRight) {
+            newW = Math.max(30, Math.min(450, sx - el.x));
+            el.y = baseY - newH;
+          } else {
+            const fixedRight = this.slopeFixedRight || (el.x + el.w);
+            newW = Math.max(30, Math.min(450, fixedRight - sx));
+            el.x = Math.max(0, fixedRight - newW);
+            el.y = baseY - newH;
+          }
+          el.w = newW;
+          el.h = newH;
+          el.direction = newDir;
+
+          this.syncTerrain();
+          this.updateStatus();
+        }
+      }
+      return;
+    }
+
     if (this.isResizingThickness) {
       if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
         const el = this.levelData.elements[this.selectedElementIndex];
@@ -1334,6 +1760,35 @@ class LevelEditor {
       return;
     }
 
+    if (this.isResizingRange) {
+      this.isResizingRange = false;
+      this.saveHistory();
+      this.updateStatus();
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        const el = this.levelData.elements[this.selectedElementIndex];
+        if (el && el.type === 'movingPlatform') {
+          this._toast(`발판 이동 범위 조절: ${el.range}px (${el.axis === 'vertical' ? '↕ 상하' : '↔ 좌우'})`);
+        }
+      }
+      return;
+    }
+
+    if (this.isResizingSlope) {
+      this.isResizingSlope = false;
+      this.saveHistory();
+      this.syncTerrain();
+      this.updateStatus();
+      if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+        const el = this.levelData.elements[this.selectedElementIndex];
+        if (el && el.type === 'triangleSlope') {
+          const dirNames = { 'up-right': '◣ 우상향', 'up-left': '◢ 좌상향', 'down-right': '◤ 우하향', 'down-left': '◥ 좌하향' };
+          const angleDeg = Math.round(Math.atan2(el.h, el.w) * 180 / Math.PI);
+          this._toast(`📐 경사로 조절: ${dirNames[el.direction] || el.direction} (${angleDeg}°, ${el.w}×${el.h}px)`);
+        }
+      }
+      return;
+    }
+
     if (this.isMovingElement) {
       this.isMovingElement = false;
       this.saveHistory();
@@ -1344,6 +1799,65 @@ class LevelEditor {
       this.isDrawing = false;
       const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
       const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
+
+      // Special placement for movingPlatform: mouse drag determines movement range & axis
+      if (this.selectedTool === 'movingPlatform') {
+        const w = 100;
+        const h = 18;
+        let axis = 'horizontal';
+        let rangeVal = 120;
+        let x0, y0;
+
+        if (rawW < 14 && rawH < 14) {
+          // Single click placement: default 120px horizontal
+          x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+          y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+          axis = 'horizontal';
+          rangeVal = 120;
+        } else if (rawW >= rawH) {
+          // Horizontal drag: distance becomes range
+          axis = 'horizontal';
+          const minX = Math.min(this.dragStart.x, this.dragCurrent.x);
+          x0 = this.snap ? this.snapCoord(minX) : Math.round(minX);
+          y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+          rangeVal = this.snap ? this.snapCoord(rawW) : Math.round(rawW);
+          rangeVal = Math.max(30, Math.min(750, rangeVal));
+        } else {
+          // Vertical drag: distance becomes range
+          axis = 'vertical';
+          const minY = Math.min(this.dragStart.y, this.dragCurrent.y);
+          x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+          y0 = this.snap ? this.snapCoord(minY) : Math.round(minY);
+          rangeVal = this.snap ? this.snapCoord(rawH) : Math.round(rawH);
+          rangeVal = Math.max(30, Math.min(420, rangeVal));
+        }
+
+        x0 = Math.max(0, Math.min(800 - w, x0));
+        y0 = Math.max(0, Math.min(450 - h, y0));
+
+        const newEl = {
+          type: 'movingPlatform',
+          x: x0,
+          y: y0,
+          w: w,
+          h: h,
+          axis: axis,
+          range: rangeVal,
+          speed: 0.75,
+          pauseTicks: 30,
+          palette: this.levelData.terrainTheme || 'cyan'
+        };
+
+        this.levelData.elements.push(newEl);
+        this.selectedElementIndex = this.levelData.elements.length - 1;
+        this.selectedSpecial = null;
+        this.saveHistory();
+        this.syncTerrain();
+        this.updateStatus();
+        SFX.playBuild();
+        this._toast(`⚡ 무빙발판 배치: 범위 ${rangeVal}px (${axis === 'horizontal' ? '↔ 좌우' : '↕ 상하'})`);
+        return;
+      }
 
       let x0, y0, w, h;
 
@@ -1361,6 +1875,18 @@ class LevelEditor {
         } else if (this.selectedTool === 'craggyRock' || this.selectedTool === 'volcanicBasalt' || this.selectedTool === 'quantumCrystal') {
           w = 120;
           h = 40;
+        } else if (this.selectedTool === 'steelPlatform') {
+          w = 120;
+          h = 16;
+        } else if (this.selectedTool === 'triangleSlope') {
+          w = 80;
+          h = 40;
+        } else if (this.selectedTool === 'diagonalBeam') {
+          w = 80;
+          h = 80;
+        } else if (this.selectedTool === 'jumpPad') {
+          w = 40;
+          h = 10;
         } else {
           // platform
           w = 140;
@@ -1374,8 +1900,8 @@ class LevelEditor {
         // Drag placement
         x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
         y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
-        const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
-        const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
+        const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall' || this.selectedTool === 'jumpPad') ? this.snapSize : this.snapSize * 2;
+        const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall' || this.selectedTool === 'jumpPad') ? this.snapSize : this.snapSize;
         w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, Math.round(rawW));
         h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, Math.round(rawH));
       }
@@ -1389,7 +1915,19 @@ class LevelEditor {
         palette: this.levelData.terrainTheme || 'cyan'
       };
 
-      if (newEl.type === 'craggyRock') {
+      if (newEl.type === 'steelPlatform') {
+        newEl.isSteel = true;
+      } else if (newEl.type === 'triangleSlope') {
+        newEl.direction = 'up-right';
+        newEl.isSteel = false;
+      } else if (newEl.type === 'diagonalBeam') {
+        newEl.slope = 1;
+        newEl.thickness = 16;
+        newEl.isSteel = true;
+      } else if (newEl.type === 'jumpPad') {
+        newEl.dir = 'up';
+        newEl.power = 9.5;
+      } else if (newEl.type === 'craggyRock') {
         const segs = Math.max(3, Math.floor(w / 35));
         newEl.profile = [];
         for (let i = 0; i < segs; i++) {
@@ -1462,13 +2000,16 @@ class LevelEditor {
     ctx.restore();
 
     ctx.save();
-    // 1.5 Dynamic Moving Platforms Rendering & Trajectory Guide in Editor
+    // 1.5 Dynamic Moving Platforms & Jump Pads Rendering in Editor
     if (this.levelData && this.levelData.elements) {
       this.levelData.elements.forEach((el, idx) => {
+        const isSelected = (this.selectedElementIndex === idx);
         if (el.type === 'movingPlatform' && typeof MovingPlatform !== 'undefined') {
-          const isSelected = (this.selectedElementIndex === idx);
           const previewPlat = new MovingPlatform(el);
           previewPlat.render(ctx, true, isSelected);
+        } else if (el.type === 'jumpPad' && typeof JumpPad !== 'undefined') {
+          const previewPad = new JumpPad(el);
+          previewPad.render(ctx, true, isSelected);
         }
       });
     }
@@ -1476,10 +2017,34 @@ class LevelEditor {
     // 2. Selected element bounding box & resize handles
     if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
       const el = this.levelData.elements[this.selectedElementIndex];
-      ctx.strokeStyle = '#00f3ff';
+      ctx.strokeStyle = (el.type === 'triangleSlope') ? '#00ff88' : ((el.type === 'jumpPad') ? '#ffaa00' : ((el.type === 'diagonalBeam') ? '#a8c2e0' : '#00f3ff'));
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 4]);
       ctx.strokeRect(el.x, el.y, el.w, el.h);
+
+      // Special directional guide for triangle slope
+      if (el.type === 'triangleSlope') {
+        ctx.strokeStyle = '#00ff88';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const dir = el.direction || 'up-right';
+        if (dir === 'up-right') { ctx.moveTo(el.x, el.y + el.h); ctx.lineTo(el.x + el.w, el.y); }
+        else if (dir === 'up-left') { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + el.w, el.y + el.h); }
+        else if (dir === 'down-right') { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + el.w, el.y + el.h); }
+        else if (dir === 'down-left') { ctx.moveTo(el.x, el.y + el.h); ctx.lineTo(el.x + el.w, el.y); }
+        ctx.stroke();
+      }
+
+      // Special diagonal line guide for diagonal beam
+      if (el.type === 'diagonalBeam') {
+        ctx.strokeStyle = '#a8c2e0';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (el.slope === -1) { ctx.moveTo(el.x + el.w, el.y); ctx.lineTo(el.x, el.y + el.h); }
+        else { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + el.w, el.y + el.h); }
+        ctx.stroke();
+      }
+
       ctx.setLineDash([]);
 
       const palKey = el.palette || this.levelData.terrainTheme || 'cyan';
@@ -1520,26 +2085,170 @@ class LevelEditor {
       ctx.fillStyle = '#000';
       ctx.font = 'bold 9px sans-serif';
       ctx.fillText('↕ 두께', hx, hy);
+
+      // Moving Platform Range Drag Handle [↔/↕ 범위 조절] at trajectory endpoint
+      if (el.type === 'movingPlatform') {
+        const curR = typeof el.range === 'number' ? el.range : 120;
+        const isVert = (el.axis === 'vertical');
+        const endX = isVert ? el.x : (el.x + curR);
+        const endY = isVert ? (el.y + curR) : el.y;
+        const handleX = endX + el.w / 2;
+        const handleY = endY + el.h / 2;
+
+        ctx.save();
+        ctx.fillStyle = '#ffb700';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#ffb700';
+        ctx.shadowBlur = 8;
+
+        const pillW = 76;
+        const pillH = 20;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(handleX - pillW / 2, handleY - pillH / 2, pillW, pillH, 10);
+        } else {
+          ctx.rect(handleX - pillW / 2, handleY - pillH / 2, pillW, pillH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(isVert ? `↕ ${curR}px (드래그)` : `↔ ${curR}px (드래그)`, handleX, handleY);
+        ctx.restore();
+      }
+
+      // Triangle Slope Dynamic Apex Drag Handle [📐 경사/각도 조절]
+      if (el.type === 'triangleSlope') {
+        const dir = el.direction || 'up-right';
+        let apexX = el.x + el.w;
+        let apexY = el.y;
+        if (dir === 'up-left') {
+          apexX = el.x;
+          apexY = el.y;
+        } else if (dir === 'down-right') {
+          apexX = el.x;
+          apexY = el.y + el.h;
+        } else if (dir === 'down-left') {
+          apexX = el.x + el.w;
+          apexY = el.y + el.h;
+        }
+
+        ctx.save();
+        ctx.fillStyle = '#00ff88';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#00ff88';
+        ctx.shadowBlur = 8;
+
+        const pillW = 88;
+        const pillH = 20;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(apexX - pillW / 2, apexY - pillH / 2, pillW, pillH, 10);
+        } else {
+          ctx.rect(apexX - pillW / 2, apexY - pillH / 2, pillW, pillH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const angleDeg = Math.round(Math.atan2(el.h, el.w) * 180 / Math.PI);
+        const icon = (dir === 'up-right') ? '◣' : (dir === 'up-left' ? '◢' : (dir === 'down-right' ? '◤' : '◥'));
+        ctx.fillText(`📐 ${icon} ${angleDeg}° (드래그)`, apexX, apexY);
+        ctx.restore();
+      }
     }
 
     // 3. Current drawing preview box (Snapped to grid)
     if (this.isDrawing) {
-      const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
-      const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
-      const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
-      const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
-      const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
-      const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
-      const w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, rawW);
-      const h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, rawH);
+      if (this.selectedTool === 'movingPlatform') {
+        const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
+        const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
+        const isVert = (rawW < rawH && (rawW >= 14 || rawH >= 14));
+        const w = 100;
+        const h = 18;
+        let x0, y0, rangeVal;
 
-      ctx.strokeStyle = '#ffb700';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 2]);
-      ctx.strokeRect(x0, y0, w, h);
-      ctx.fillStyle = 'rgba(255, 183, 0, 0.2)';
-      ctx.fillRect(x0, y0, w, h);
-      ctx.setLineDash([]);
+        if (rawW < 14 && rawH < 14) {
+          x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+          y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+          rangeVal = 120;
+        } else if (!isVert) {
+          const minX = Math.min(this.dragStart.x, this.dragCurrent.x);
+          x0 = this.snap ? this.snapCoord(minX) : Math.round(minX);
+          y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+          rangeVal = Math.max(30, Math.min(750, this.snap ? this.snapCoord(rawW) : Math.round(rawW)));
+        } else {
+          const minY = Math.min(this.dragStart.y, this.dragCurrent.y);
+          x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+          y0 = this.snap ? this.snapCoord(minY) : Math.round(minY);
+          rangeVal = Math.max(30, Math.min(420, this.snap ? this.snapCoord(rawH) : Math.round(rawH)));
+        }
+        x0 = Math.max(0, Math.min(800 - w, x0));
+        y0 = Math.max(0, Math.min(450 - h, y0));
+
+        const endX = isVert ? x0 : (x0 + rangeVal);
+        const endY = isVert ? (y0 + rangeVal) : y0;
+
+        ctx.save();
+        // 1) 시작 위치 발판 박스
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(0, 243, 255, 0.4)';
+        ctx.strokeRect(x0, y0, w, h);
+        ctx.fillRect(x0, y0, w, h);
+
+        // 2) 이동 경로 점선 궤적
+        ctx.setLineDash([6, 3]);
+        ctx.strokeStyle = '#ffb700';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x0 + w / 2, y0 + h / 2);
+        ctx.lineTo(endX + w / 2, endY + h / 2);
+        ctx.stroke();
+
+        // 3) 도착 위치 고스트 발판 박스
+        ctx.strokeStyle = '#ffb700';
+        ctx.fillStyle = 'rgba(255, 183, 0, 0.25)';
+        ctx.strokeRect(endX, endY, w, h);
+        ctx.fillRect(endX, endY, w, h);
+
+        // 4) 네온 안내 배지
+        ctx.setLineDash([]);
+        ctx.font = 'bold 11px Orbitron, sans-serif';
+        ctx.fillStyle = '#ffb700';
+        ctx.textAlign = 'center';
+        const midX = (x0 + endX) / 2 + w / 2;
+        const midY = (y0 + endY) / 2 + h / 2 - 12;
+        ctx.fillText(`⚡ [${isVert ? '↕ 상하' : '↔ 좌우'}] 이동범위: ${rangeVal}px`, midX, midY);
+        ctx.restore();
+      } else {
+        const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
+        const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
+        const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
+        const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
+        const minW = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize * 2;
+        const minH = (this.selectedTool === 'steelBarrier' || this.selectedTool === 'rockWall') ? this.snapSize : this.snapSize;
+        const w = this.snap ? Math.max(minW, this.snapCoord(rawW)) : Math.max(minW, rawW);
+        const h = this.snap ? Math.max(minH, this.snapCoord(rawH)) : Math.max(minH, rawH);
+
+        ctx.strokeStyle = '#ffb700';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 2]);
+        ctx.strokeRect(x0, y0, w, h);
+        ctx.fillStyle = 'rgba(255, 183, 0, 0.2)';
+        ctx.fillRect(x0, y0, w, h);
+        ctx.setLineDash([]);
+      }
     }
 
     // [NEW] 3.5 린트 마커

@@ -116,7 +116,11 @@
               <button class="btn-tool" data-tool="quantumCrystal" id="tool-quantum" title="양자 크리스탈 유적">🔮 양자암</button>
               <button class="btn-tool" data-tool="rockWall" id="tool-wall" title="파괴 가능 수직 암벽">⛰️ 암벽</button>
               <button class="btn-tool" data-tool="steelBarrier" id="tool-steel" title="파괴 불가 강철 격벽">🚧 강철벽</button>
-              <button class="btn-tool" data-tool="movingPlatform" id="tool-moving" title="좌우/상하 움직이는 무적 스틸 발판 (단축키: 0)" style="border-color: #00f3ff; color: #00f3ff;">⚡ 무빙발판</button>
+              <button class="btn-tool" data-tool="steelPlatform" id="tool-steel-plat" title="파괴 불가 영구 스틸 발판 (단축키: 9)" style="border-color: #ffb700; color: #ffb700;">⬛ 스틸발판</button>
+              <button class="btn-tool" data-tool="triangleSlope" id="tool-slope" title="걸어 올라갈 수 있는 삼각형 경사로 (단축키: 8)" style="border-color: #00ff88; color: #00ff88;">📐 경사로</button>
+              <button class="btn-tool" data-tool="diagonalBeam" id="tool-beam" title="대각선 45도 강철 빔 (단축키: 7)" style="border-color: #a8c2e0; color: #a8c2e0;">🥢 사선빔</button>
+              <button class="btn-tool" data-tool="movingPlatform" id="tool-moving" title="좌우/상하 움직이는 무적 스틸 발판 (단축키: 0) — 마우스로 드래그하여 이동 범위와 방향을 즉시 지정할 수 있습니다" style="border-color: #00f3ff; color: #00f3ff;">⚡ 무빙발판</button>
+              <button class="btn-tool" data-tool="jumpPad" id="tool-jump" title="유닛을 높이 튕겨 올리는 척력 점프 패드 (단축키: J)" style="border-color: #ffaa00; color: #ffaa00;">🚀 점프패드</button>
               <button class="btn-tool" data-tool="spawn" id="tool-spawn" title="스폰 해치 위치 지정">🚪 스폰</button>
               <button class="btn-tool" data-tool="gate" id="tool-gate" title="탈출 웜홀 위치 지정">🌀 웜홀</button>
               <button class="btn-tool btn-tool-danger" data-tool="delete" id="tool-delete" title="오브젝트 삭제">🗑️
@@ -184,6 +188,13 @@
                   id="btn-thick-add20" title="두께 20px 증가">+20</button>
               </div>
 
+              <!-- Universal Material Switcher (Platform & Wall) -->
+              <div id="editor-selected-material-group" style="display: flex; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: #ffb700; font-weight: 700;">재질:</span>
+                <button class="btn-tool" style="padding: 2px 7px; font-size: 10px; min-width: unset; color: #ffb700; border-color: #ffb700;"
+                  id="btn-material-toggle" title="일반 채굴암석 ↔ 거울광택 크롬 스틸 재질 전환 (단축키: M)">🛡️ 크롬 스틸</button>
+              </div>
+
               <!-- Moving Platform Range Resizer (Only visible when movingPlatform is selected) -->
               <div id="editor-selected-range-group" style="display: none; align-items: center; gap: 3px;">
                 <span style="font-size: 10px; color: #00f3ff; font-weight: 700;">이동범위(R):</span>
@@ -199,6 +210,37 @@
                   id="btn-range-add50" title="이동 범위 50px 증가 (단축키: Shift+])">+50</button>
                 <button class="btn-tool" style="padding: 2px 6px; font-size: 10px; min-width: unset; color: #ffb700; border-color: #ffb700;"
                   id="btn-range-toggle-axis" title="이동 방향 전환: 좌우(↔) / 상하(↕) (단축키: X)">↔/↕ 방향</button>
+              </div>
+
+              <!-- Triangle Slope Controls (Visible when triangleSlope is selected) -->
+              <div id="editor-selected-slope-group" style="display: none; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: #00ff88; font-weight: 700;">경사방향:</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-slope-ur" title="우상향 빗면 (◣)">◣ 우상</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-slope-ul" title="좌상향 빗면 (◢)">◢ 좌상</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-slope-dr" title="우하향 처마 (◤)">◤ 우하</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-slope-dl" title="좌하향 처마 (◥)">◥ 좌하</button>
+                <button class="btn-tool" style="padding: 2px 6px; font-size: 10px; min-width: unset; color: #ffb700; border-color: #ffb700;" id="btn-slope-toggle-steel" title="암석 ↔ 관통불가 스틸 재질 전환">🛡️ 재질: 암석</button>
+              </div>
+
+              <!-- Diagonal Beam Controls (Visible when diagonalBeam is selected) -->
+              <div id="editor-selected-beam-group" style="display: none; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: #a8c2e0; font-weight: 700;">사선기울기:</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-beam-dr" title="우하향 사선 (\)">↘ 우하 (\)</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-beam-dl" title="좌하향 사선 (/)">↙ 좌하 (/)</button>
+                <button class="btn-tool" style="padding: 2px 6px; font-size: 10px; min-width: unset; color: #a8c2e0; border-color: #a8c2e0;" id="btn-beam-thick-toggle" title="트러스 빔 두께 순환 (16px / 24px / 32px)">두께: 16px</button>
+              </div>
+
+              <!-- Repulsor Jump Pad Controls (Visible when jumpPad is selected) -->
+              <div id="editor-selected-jump-group" style="display: none; align-items: center; gap: 3px;">
+                <span style="font-size: 10px; color: #ffaa00; font-weight: 700;">도약각도:</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-jump-up" title="수직 90도 도약 (▲)">▲ 수직</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-jump-ur" title="우상향 포물선 도약 (↗)">↗ 우상</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-jump-ul" title="좌상향 포물선 도약 (↖)">↖ 좌상</button>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-jump-r" title="수평 우측 추진 (➔)">➔ 우측</button>
+                <span style="font-size: 10px; color: #ffaa00; font-weight: 700; margin-left: 3px;">파워:</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-jump-power-sub" title="점프 파워 1.0 감소">-1</button>
+                <span id="editor-selected-jump-val" style="font-size: 11px; color: #ffaa00; font-weight: 900; min-width: 38px; text-align: center;">9.5G</span>
+                <button class="btn-tool" style="padding: 2px 5px; font-size: 10px; min-width: unset;" id="btn-jump-power-add" title="점프 파워 1.0 증가">+1</button>
               </div>
 
               <!-- Palette Selector -->
@@ -603,6 +645,14 @@
             <input type="checkbox" id="gen-moving-platform" style="cursor:pointer; width:15px; height:15px;">
             <span>⚡ <b>움직이는 무적 발판 포함</b> (셔틀/엘리베이터 타이밍 요소 추가)</span>
           </label>
+          <label style="display:flex; gap:6px; align-items:center; font-size:11px; color:#00ff88; cursor:pointer;">
+            <input type="checkbox" id="gen-opt-a" checked style="cursor:pointer; width:15px; height:15px;">
+            <span>📐 <b>옵션 A: 보행 삼각형 경사로 & 영구 스틸 발판</b> (다양한 언덕 등판 및 굴착 불가 지형)</span>
+          </label>
+          <label style="display:flex; gap:6px; align-items:center; font-size:11px; color:#ffaa00; cursor:pointer;">
+            <input type="checkbox" id="gen-opt-b" checked style="cursor:pointer; width:15px; height:15px;">
+            <span>🚀 <b>옵션 B: 대각선 강철 빔 & 척력 점프 패드</b> (45도 사선 바리케이드 및 슈퍼 도약 기믹)</span>
+          </label>
           <div style="display:flex; gap:8px; align-items:center; font-size:11px; color:#a0e8ff;">
             <span>🎲 재현 시드(Seed):</span>
             <input type="text" id="gen-seed" placeholder="비우면 완전 랜덤" class="prop-input" style="width:130px; font-size:11px; padding:3px 6px;">
@@ -721,6 +771,7 @@
   <script src="js/engine/SFX.js?v=8"></script>
   <script src="js/engine/TerrainEngine.js?v=10"></script>
   <script src="js/engine/MovingPlatform.js?v=1"></script>
+  <script src="js/engine/JumpPad.js?v=1"></script>
   <script src="js/engine/NanoUnit.js?v=10"></script>
   <script src="js/engine/GatewayRenderer.js?v=9"></script>
   <script src="js/procedural/MapCore.js?v=7"></script>
@@ -733,6 +784,7 @@
   <script src="js/procedural/FullCanvasLevelArchitect.js?v=9"></script>
   <script src="js/procedural/ProceduralMapEngine.js?v=8"></script>
   <script src="js/procedural/MovingPlatformArchitect.js?v=1"></script>
+  <script src="js/procedural/AdvancedFeatureArchitect.js?v=1"></script>
   <script src="js/editor/LevelLint.js?v=1"></script>
   <script src="js/procedural/LevelSolver.js?v=1"></script>
   <script src="js/editor/StageManager.js?v=8"></script>

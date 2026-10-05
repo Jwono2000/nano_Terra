@@ -43,6 +43,7 @@ class NanoUnit {
     this.ridingPlatform = null; // Active moving platform being ridden
     this.lastDismountedPlatform = null; // Platform recently dismounted to prevent self-collision jitter
     this.dismountCooldown = 0;
+    this.jumpPadCooldown = 0; // Cooldown after being launched by a JumpPad
     this.animFrame = Math.floor(Math.random() * 60);
   }
 
@@ -64,13 +65,28 @@ class NanoUnit {
     }
   }
 
-  update(terrain, particles, exitGate, portalPair, otherUnits, speedScale = 1, movingPlatforms = []) {
+  update(terrain, particles, exitGate, portalPair, otherUnits, speedScale = 1, movingPlatforms = [], jumpPads = []) {
     if (this.state === STATE.DEAD) {
       this.stopSounds();
       return;
     }
     if (this.state === STATE.EXITING) return;
     this.animFrame += speedScale;
+
+    if (this.jumpPadCooldown > 0) {
+      this.jumpPadCooldown -= speedScale;
+    }
+
+    // Repulsor Jump Pad Trigger Check
+    if (jumpPads && jumpPads.length > 0 && this.jumpPadCooldown <= 0 && this.state !== STATE.DEAD && this.state !== STATE.EXITING && this.state !== STATE.BLOCKING_SHIELD) {
+      for (const pad of jumpPads) {
+        if (pad.checkFooting(this.x, this.y)) {
+          if (pad.trigger(this, particles)) {
+            break;
+          }
+        }
+      }
+    }
 
     if (this.dismountCooldown > 0) {
       this.dismountCooldown -= speedScale;
@@ -170,10 +186,10 @@ class NanoUnit {
     switch (this.state) {
       case STATE.FALLING:
       case STATE.FLOATING:
-        this.updateFalling(terrain, particles, speedScale, movingPlatforms);
+        this.updateFalling(terrain, particles, speedScale, movingPlatforms, jumpPads);
         break;
       case STATE.WALKING:
-        this.updateWalking(terrain, particles, otherUnits, speedScale, movingPlatforms);
+        this.updateWalking(terrain, particles, otherUnits, speedScale, movingPlatforms, jumpPads);
         break;
       case STATE.CLIMBING:
         this.updateClimbing(terrain, particles, speedScale);
@@ -196,7 +212,7 @@ class NanoUnit {
     }
   }
 
-  updateFalling(terrain, particles, speedScale, movingPlatforms = []) {
+  updateFalling(terrain, particles, speedScale, movingPlatforms = [], jumpPads = []) {
     const isFloater = this.hasAntiGrav || this.state === STATE.FLOATING;
     
     if (isFloater) {
@@ -205,18 +221,46 @@ class NanoUnit {
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 6, this.y + 2, '#cceeff', 2, 1.2);
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 4, this.y + 1, '#00f3ff', 2, 1.0);
       }
+    } else if (this.vy < 0) {
+      // Upward launch boost from JumpPad (decelerate smoothly with gravity)
+      this.vy += 0.22 * speedScale;
+      // Head-ceiling collision check while airborne upwards
+      if (terrain.isSolid(this.x, this.y - 18) || terrain.isSolid(this.x, this.y - 14)) {
+        this.vy = 0; // Bonk head and begin falling downward
+      }
     } else {
-      this.vy = Math.min(3.2, (this.vy || 0) + 0.15 * speedScale);
+      this.vy = Math.min(3.6, (this.vy || 0) + 0.15 * speedScale);
+    }
+
+    // Apply horizontal airborne momentum if launched with directional angle
+    if (this.vx && Math.abs(this.vx) > 0.05) {
+      const nextAirX = this.x + this.vx * speedScale;
+      // Check lateral wall collision while airborne
+      if (terrain.isSolid(nextAirX, this.y - 10)) {
+        this.dir = -this.dir;
+        this.vx = -this.vx * 0.4; // Bounce off wall
+      } else {
+        this.x = nextAirX;
+      }
+      // Air drag on horizontal velocity
+      this.vx *= 0.985;
     }
 
     const prevFootY = this.y;
     this.y += this.vy * speedScale;
-    this.fallDistance += this.vy * speedScale;
+    if (this.vy > 0) {
+      this.fallDistance += this.vy * speedScale;
+    }
 
     // Bottom Screen Abyss / Void Kill Zone
     if (this.y >= 425) {
       this.die(particles, 'splat');
       particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
+      return;
+    }
+
+    // While ascending upwards (vy < 0), skip floor landing check!
+    if (this.vy < 0) {
       return;
     }
 
@@ -237,6 +281,34 @@ class NanoUnit {
               this.ridingPlatform = p;
               this.hasAntiGrav = false;
             }
+            return;
+          }
+        }
+      }
+    }
+
+    // 1.5. Jump Pad Landing / Kinetic Re-launch Guard (점프패드 안전 착지 및 연속 도약 판정)
+    if (jumpPads && jumpPads.length > 0) {
+      for (const pad of jumpPads) {
+        if (this.x >= pad.x - 4 && this.x <= pad.x + pad.w + 4) {
+          if (prevFootY <= pad.y + 6 && this.y >= pad.y - 4) {
+            // Jump pad surface completely cushions and negates all fall damage
+            this.fallDistance = 0;
+            this.hasAntiGrav = false;
+            this.y = pad.y;
+
+            // Trigger immediate kinetic re-launch if available
+            if (this.jumpPadCooldown <= 0) {
+              if (pad.trigger(this, particles)) {
+                return;
+              }
+            }
+
+            // If unit is in cooldown, safely land and walk on the pad surface instead of falling through into the abyss!
+            this.state = STATE.WALKING;
+            this.vy = 0;
+            this.ridingPlatform = null;
+            this.lastDismountedPlatform = null;
             return;
           }
         }
@@ -290,7 +362,7 @@ class NanoUnit {
     }
   }
 
-  updateWalking(terrain, particles, otherUnits, speedScale, movingPlatforms = []) {
+  updateWalking(terrain, particles, otherUnits, speedScale, movingPlatforms = [], jumpPads = []) {
     // Abyss / Screen Edge Out-of-Bounds Check
     if (this.y >= 425 || this.x < -30 || this.x > 830) {
       this.die(particles, 'splat');
@@ -350,6 +422,18 @@ class NanoUnit {
           }
         }
         if (foundGround) break;
+      }
+    }
+
+    // 3.5. 점프패드 상단 발판 검사 (공중에 설치된 점프패드 위에서도 발이 빠지지 않고 견고하게 지지)
+    if (!foundGround && jumpPads && jumpPads.length > 0) {
+      for (const pad of jumpPads) {
+        if (this.x >= pad.x - 2 && this.x <= pad.x + pad.w + 2 && Math.abs(this.y - pad.y) <= 4) {
+          this.y = pad.y;
+          foundGround = true;
+          this.ridingPlatform = null;
+          break;
+        }
       }
     }
 
@@ -604,6 +688,32 @@ class NanoUnit {
     if (!this.cutStartY) this.cutStartY = Math.round(this.y);
     this.y = this.cutStartY;
 
+    // 1. Pre-check: Check if steel barrier or constructed structure is directly in front BEFORE cutting!
+    const aheadX = this.x + this.dir * 6;
+    const isObstacleAhead = terrain.isSteel(aheadX, this.cutStartY - 14) || 
+                            terrain.isSteel(aheadX, this.cutStartY - 22) ||
+                            terrain.isSteel(aheadX, this.cutStartY - 6) ||
+                            terrain.isSteel(this.x + this.dir * 4, this.cutStartY - 2);
+    if (isObstacleAhead) {
+      this.stopSounds();
+      this.dir = -this.dir;
+      this.vx = this.dir * 1.25;
+      this.state = STATE.WALKING;
+      this.y = this.cutStartY;
+      this.cutSteps = 0;
+      this.cutStartY = 0;
+      this.exitSteps = 0;
+      if (particles) {
+        particles.spawnBurst(aheadX, this.cutStartY - 12, '#ffffff', 8, 2.5);
+        particles.spawnBurst(aheadX, this.cutStartY - 12, '#ffb700', 10, 3.2);
+        particles.spawnFloatingText(this.x, this.cutStartY - 20, '🛡️ STEEL!', '#ffb700');
+      }
+      if (typeof SFX !== 'undefined' && SFX.playHit) {
+        SFX.playHit();
+      }
+      return;
+    }
+
     // Start sustained continuous lightsaber / plasma cutting beam sound
     SFX.startContinuousBeam('laser_' + this.id, 'laser');
 
@@ -612,22 +722,6 @@ class NanoUnit {
       const cutH = 28;
       const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
       terrain.carveRect(cutX, this.cutStartY - 26, cutW, cutH, particles);
-      
-      // Check if steel barrier or constructed structure is directly in front
-      const isObstacleAhead = terrain.isSteel(this.x + this.dir * 6, this.cutStartY - 14) || 
-                              terrain.isSteel(this.x + this.dir * 6, this.cutStartY - 22) ||
-                              terrain.isSteel(this.x + this.dir * 6, this.cutStartY - 6);
-      if (isObstacleAhead) {
-        this.stopSounds();
-        this.dir = -this.dir;
-        this.vx = this.dir * 1.25;
-        this.state = STATE.WALKING;
-        this.y = this.cutStartY;
-        this.cutSteps = 0;
-        this.cutStartY = 0;
-        this.exitSteps = 0;
-        return;
-      }
 
       // Smooth continuous forward advancement
       this.x += this.dir * 1.35 * speedScale;
@@ -698,6 +792,28 @@ class NanoUnit {
   }
 
   updateThermalDrill(terrain, particles, speedScale) {
+    // 1. Pre-check: Check if directly standing on or approaching steel BEFORE cutting!
+    const isObstacleBelow = terrain.isSteel(this.x, this.y + 1) || 
+                            terrain.isSteel(this.x, this.y + 3) || 
+                            terrain.isSteel(this.x - 4, this.y + 2) || 
+                            terrain.isSteel(this.x + 4, this.y + 2) ||
+                            terrain.isSteel(this.x, this.y + 5);
+    if (isObstacleBelow) {
+      this.stopSounds();
+      this.state = STATE.WALKING;
+      this.cutSteps = 0;
+      this.exitSteps = 0;
+      if (particles) {
+        particles.spawnBurst(this.x, this.y, '#ffffff', 8, 2.5);
+        particles.spawnBurst(this.x, this.y, '#ffb700', 10, 3.2);
+        particles.spawnFloatingText(this.x, this.y - 16, '🛡️ STEEL!', '#ffb700');
+      }
+      if (typeof SFX !== 'undefined' && SFX.playHit) {
+        SFX.playHit();
+      }
+      return;
+    }
+
     // Start continuous thermal core melting rumble
     SFX.startContinuousBeam('drill_' + this.id, 'drill');
 
@@ -706,18 +822,6 @@ class NanoUnit {
       const cutH = 18;
       const cutX = this.x - 10;
       terrain.carveRect(cutX, this.y - 4, cutW, cutH, particles);
-      
-      // Only abort if steel barrier or constructed structure is directly beneath feet
-      const isObstacleBelow = terrain.isSteel(this.x, this.y + 4) || 
-                              terrain.isSteel(this.x - 4, this.y + 4) || 
-                              terrain.isSteel(this.x + 4, this.y + 4);
-      if (isObstacleBelow) {
-        this.stopSounds();
-        this.state = STATE.WALKING;
-        this.cutSteps = 0;
-        this.exitSteps = 0;
-        return;
-      }
 
       // Smooth continuous downward progression
       this.y += 1.35 * speedScale;
@@ -762,6 +866,30 @@ class NanoUnit {
   }
 
   updateDiagonalMining(terrain, particles, speedScale) {
+    // 1. Pre-check: Check if steel barrier or constructed structure is directly in diagonal progression path BEFORE cutting!
+    const aheadX = this.x + this.dir * 6;
+    const isObstacleAhead = terrain.isSteel(aheadX, this.y + 2) || 
+                            terrain.isSteel(aheadX, this.y - 4) || 
+                            terrain.isSteel(aheadX, this.y - 12) ||
+                            terrain.isSteel(this.x + this.dir * 4, this.y + 1);
+    if (isObstacleAhead) {
+      this.stopSounds();
+      this.dir = -this.dir;
+      this.vx = this.dir * 1.25;
+      this.state = STATE.WALKING;
+      this.cutSteps = 0;
+      this.exitSteps = 0;
+      if (particles) {
+        particles.spawnBurst(aheadX, this.y - 4, '#ffffff', 8, 2.5);
+        particles.spawnBurst(aheadX, this.y - 4, '#ffb700', 10, 3.2);
+        particles.spawnFloatingText(this.x, this.y - 16, '🛡️ STEEL!', '#ffb700');
+      }
+      if (typeof SFX !== 'undefined' && SFX.playHit) {
+        SFX.playHit();
+      }
+      return;
+    }
+
     // Start continuous diagonal plasma cutter stream
     SFX.startContinuousBeam('mine_' + this.id, 'mine');
 
@@ -770,19 +898,6 @@ class NanoUnit {
       const cutH = 20;
       const cutX = this.dir > 0 ? this.x - 4 : this.x - (cutW - 4);
       terrain.carveRect(cutX, this.y - 17, cutW, cutH, particles);
-      
-      // Only abort if steel barrier or constructed structure is directly in the diagonal progression path
-      const isObstacleAhead = terrain.isSteel(this.x + this.dir * 4, this.y + 2) || 
-                              terrain.isSteel(this.x + this.dir * 4, this.y - 8);
-      if (isObstacleAhead) {
-        this.stopSounds();
-        this.dir = -this.dir;
-        this.vx = this.dir * 1.25;
-        this.state = STATE.WALKING;
-        this.cutSteps = 0;
-        this.exitSteps = 0;
-        return;
-      }
 
       // Smooth diagonal progression
       this.x += this.dir * 1.25 * speedScale;

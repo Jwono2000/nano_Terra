@@ -9,7 +9,11 @@ class StageDataEngine {
       const pal = el.palette || stagePal;
       switch (el.type) {
         case 'platform':
-          terrain.drawPlatform(el.x, el.y, el.w, el.h || 20, pal);
+          if (el.isSteel) {
+            terrain.drawSteelPlatform(el.x, el.y, el.w, el.h || 20);
+          } else {
+            terrain.drawPlatform(el.x, el.y, el.w, el.h || 20, pal);
+          }
           break;
         case 'craggyRock':
           terrain.drawCraggyRockFloor(el.x, el.y, el.w, el.h || 22, el.profile || [18, 24, 36, 16], pal);
@@ -26,7 +30,19 @@ class StageDataEngine {
         case 'steelBarrier':
           terrain.drawSteelBarrier(el.x, el.y, el.w || 20, el.h || 80);
           break;
+        case 'steelPlatform':
+          terrain.drawSteelPlatform(el.x, el.y, el.w, el.h || 20);
+          break;
+        case 'triangleSlope':
+          const slopeDir = el.direction || el.slopeType || 'upRight';
+          terrain.drawTriangleSlope(el.x, el.y, el.w, el.h || 40, slopeDir, el.isSteel || false, pal);
+          break;
+        case 'diagonalBeam':
+          const beamDir = (el.slope === -1 || el.dir === 'downLeft' || el.dir === 'down-left') ? 'downLeft' : 'downRight';
+          terrain.drawDiagonalBeam(el.x, el.y, el.w, el.h || 80, beamDir, el.thickness || 16);
+          break;
         case 'movingPlatform':
+        case 'jumpPad':
           // Dynamic kinetic entity — rendered separately by GameEngine / LevelEditor
           break;
       }
@@ -2062,4 +2078,8 @@ class StageManager {
       console.warn('[StageManager] campaign.json auto-save failed:', e);
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { StageManager, StageDataEngine };
 }

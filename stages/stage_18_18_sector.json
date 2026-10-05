@@ -1,0 +1,143 @@
+﻿{
+  "id": 18,
+  "title": "18구역 SECTOR",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "cyan",
+  "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+  "totalUnits": 15,
+  "needPercent": 70,
+  "spawnRate": 35,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 2,
+    "mine": 1,
+    "drill": 2,
+    "bomb": 2,
+    "build": 30,
+    "block": 3,
+    "portal": 0
+  },
+  "spawnX": 190,
+  "spawnY": 170,
+  "gateX": 600,
+  "gateY": 190,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 100,
+      "y": 220,
+      "w": 200,
+      "h": 130,
+      "palette": "cyan"
+    },
+    {
+      "type": "platform",
+      "x": 440,
+      "y": 230,
+      "w": 240,
+      "h": 140,
+      "palette": "cyan"
+    },
+    {
+      "type": "volcanicBasalt",
+      "x": 0,
+      "y": 360,
+      "w": 800,
+      "h": 60,
+      "palette": "cyan",
+      "profile": [
+        67,
+        23,
+        59,
+        23,
+        49,
+        36,
+        60,
+        31,
+        53,
+        47,
+        49,
+        42,
+        77,
+        42,
+        78,
+        47,
+        77,
+        30,
+        59,
+        23,
+        55,
+        49,
+        60,
+        25,
+        65
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 90,
+      "y": 350,
+      "w": 210,
+      "h": 10,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 280,
+      "y": 120,
+      "w": 20,
+      "h": 180,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 90,
+      "y": 180,
+      "w": 20,
+      "h": 170,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 440,
+      "y": 230,
+      "w": 20,
+      "h": 130,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 440,
+      "y": 350,
+      "w": 240,
+      "h": 10,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 660,
+      "y": 160,
+      "w": 20,
+      "h": 200,
+      "palette": "cyan"
+    },
+    {
+      "type": "craggyRock",
+      "x": 380,
+      "y": 230,
+      "w": 60,
+      "h": 20,
+      "palette": "cyan",
+      "profile": [
+        14,
+        15,
+        17
+      ]
+    }
+  ],
+  "solutionDna": [
+    "CUSTOM"
+  ],
+  "difficultyScore": 50}

@@ -843,12 +843,37 @@ class StageManager {
   }
 
   // --- Save Target Slot Modal ---
+  async updateSaveServerStatus() {
+    const bar = document.getElementById('save-server-status-bar');
+    const dot = document.getElementById('save-server-status-dot');
+    const text = document.getElementById('save-server-status-text');
+    if (!bar || !dot || !text) return;
+
+    await this.checkApiAvailability();
+
+    if (this._apiAvailable) {
+      bar.style.background = 'rgba(0, 255, 136, 0.08)';
+      bar.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+      bar.style.color = '#00ff88';
+      dot.innerText = '🟢';
+      text.innerHTML = '<strong>로컬 서버 연결됨:</strong> 저장 시 <code>stages/</code> 폴더에 JSON 파일이 즉시 자동 저장 및 manifest가 갱신됩니다.';
+    } else {
+      bar.style.background = 'rgba(255, 183, 0, 0.12)';
+      bar.style.borderColor = 'rgba(255, 183, 0, 0.4)';
+      bar.style.color = '#ffb700';
+      dot.innerText = '🟡';
+      text.innerHTML = '<strong>정적 웹 모드 (로컬 서버 미연결):</strong> 현재 환경에서는 브라우저 다운로드로 저장됩니다. 로컬 파일 직접 저장을 원하시면 <code>start_server.bat</code>을 실행하세요.';
+    }
+  }
+
   openSaveSlotModal(stageData, defaultSlot = null) {
     this.pendingSaveData = JSON.parse(JSON.stringify(stageData));
     const modal = document.getElementById('modal-save-slot');
     const select = document.getElementById('save-target-slot-select');
     const titleInput = document.getElementById('save-target-title-input');
     if (!modal || !select) return;
+
+    this.updateSaveServerStatus();
 
     const nextSlotNum = LEVELS.length + 1;
     const subTitle = document.getElementById('modal-save-subtitle');
@@ -1167,23 +1192,32 @@ class StageManager {
       const cleanTitle = newTitle.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
       downloadFileName = `stage_${slotIdx + 1}_${cleanTitle}.json`;
 
-      // Download JSON if checked OR auto-save to stages/ folder via API
-      if (downloadCheck && downloadCheck.checked) {
-        this.saveStageToApi(finalSavedData, downloadFileName).catch(() => {
-          try {
-            const jsonStr = JSON.stringify(finalSavedData, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = downloadFileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          } catch(e) {}
+      // Always save to stages/ folder via API if available, fallback to browser download if offline
+      this.saveStageToApi(finalSavedData, downloadFileName)
+        .then((res) => {
+          console.log('[StageManager] Saved to stages/ folder:', res.filename);
+          this.saveCampaignJsonToApi();
+          if (this.game && this.game.particles) {
+            this.game.particles.spawnFloatingText(400, 180, `💾 stages/${res.filename} 저장 & manifest 동기화 완료!`, "#00ff88");
+          }
+        })
+        .catch(() => {
+          // If offline / static web (e.g. GitHub Pages) and download checkbox checked, download file
+          if (downloadCheck && downloadCheck.checked) {
+            try {
+              const jsonStr = JSON.stringify(finalSavedData, null, 2);
+              const blob = new Blob([jsonStr], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = downloadFileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch(e) {}
+          }
         });
-      }
     }
 
     // Feedback

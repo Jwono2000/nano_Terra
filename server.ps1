@@ -50,6 +50,40 @@ function Send-Text($response, [int]$statusCode, [string]$text) {
     $response.Close()
 }
 
+function Update-StagesManifest([string]$dir) {
+    try {
+        $stagesDir = [System.IO.Path]::Combine($dir, "stages")
+        if (-not [System.IO.Directory]::Exists($stagesDir)) { return }
+        $files = Get-ChildItem -Path $stagesDir -Filter "*.json" | Where-Object { $_.Name -ne "campaign.json" -and $_.Name -ne "manifest.json" } | Sort-Object Name
+        $result = @()
+        foreach ($f in $files) {
+            try {
+                $content = [System.IO.File]::ReadAllText($f.FullName, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+                $result += @{
+                    filename  = $f.Name
+                    title     = if ($content.title) { $content.title } else { $f.BaseName }
+                    createdAt = $f.CreationTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    sizeBytes = $f.Length
+                    data      = $content
+                }
+            } catch {}
+        }
+        $stagesJson = @()
+        foreach ($s in $result) {
+            $dataJson = $s.data | ConvertTo-Json -Depth 20 -Compress
+            $stagesJson += '{"filename":"' + $s.filename + '","title":"' + ($s.title -replace '"','\"') + '","createdAt":"' + $s.createdAt + '","sizeBytes":' + $s.sizeBytes + ',"data":' + $dataJson + '}'
+        }
+        $manifest = '{"ok":true,"count":' + $result.Count + ',"stages":[' + ($stagesJson -join ',') + ']}'
+        [System.IO.File]::WriteAllText([System.IO.Path]::Combine($stagesDir, "manifest.json"), $manifest, [System.Text.Encoding]::UTF8)
+        Write-Host "  -> [MANIFEST AUTO-SYNC] stages/manifest.json updated ($($result.Count) stages ready for GitHub)"
+    } catch {
+        Write-Host "  -> [MANIFEST WARN] Failed to auto-sync manifest: $($_.Exception.Message)"
+    }
+}
+
+# Auto-sync manifest on server launch
+Update-StagesManifest $baseDir
+
 while ($listener.IsListening) {
     try {
         $context = $listener.GetContext()
@@ -178,6 +212,7 @@ while ($listener.IsListening) {
 
             [System.IO.File]::WriteAllText($filePath, $body, [System.Text.Encoding]::UTF8)
             Write-Host "[SAVE] $filename ($(($body).Length) bytes)"
+            Update-StagesManifest $baseDir
 
             $safeFilename = $filename -replace '"', '\"'
             Send-JsonStr $response 200 ('{"ok":true,"filename":"' + $safeFilename + '","path":"stages/' + $safeFilename + '"}')
@@ -206,6 +241,7 @@ while ($listener.IsListening) {
             if ([System.IO.File]::Exists($filePath)) {
                 [System.IO.File]::Delete($filePath)
                 Write-Host "[DELETE] $filename"
+                Update-StagesManifest $baseDir
                 $safeDel = $filename -replace '"', '\"'
                 Send-JsonStr $response 200 ('{"ok":true,"deleted":"' + $safeDel + '"}')
             } else {

@@ -10,19 +10,19 @@
   "timeLimit": 240,
   "skills": {
     "climb": 1,
-    "float": 1,
+    "float": 5,
     "bash": 2,
-    "mine": 1,
-    "drill": 2,
+    "mine": 6,
+    "drill": 6,
     "bomb": 2,
     "build": 30,
-    "block": 3,
+    "block": 7,
     "portal": 0
   },
   "spawnX": 190,
   "spawnY": 170,
-  "gateX": 600,
-  "gateY": 190,
+  "gateX": 640,
+  "gateY": 160,
   "elements": [
     {
       "type": "platform",
@@ -79,7 +79,7 @@
       "type": "steelBarrier",
       "x": 90,
       "y": 350,
-      "w": 210,
+      "w": 350,
       "h": 10,
       "palette": "cyan"
     },
@@ -102,7 +102,7 @@
     {
       "type": "steelBarrier",
       "x": 440,
-      "y": 230,
+      "y": 100,
       "w": 20,
       "h": 130,
       "palette": "cyan"
@@ -118,7 +118,7 @@
     {
       "type": "steelBarrier",
       "x": 660,
-      "y": 160,
+      "y": 150,
       "w": 20,
       "h": 200,
       "palette": "cyan"
@@ -135,9 +135,83 @@
         15,
         17
       ]
+    },
+    {
+      "type": "craggyRock",
+      "x": 300,
+      "y": 170,
+      "w": 70,
+      "h": 10,
+      "palette": "cyan",
+      "profile": [
+        7,
+        9,
+        9
+      ]
+    },
+    {
+      "type": "jumpPad",
+      "x": 310,
+      "y": 160,
+      "w": 40,
+      "h": 10,
+      "palette": "cyan",
+      "dir": "up-right",
+      "power": 9.5
+    },
+    {
+      "type": "craggyRock",
+      "x": 460,
+      "y": 190,
+      "w": 60,
+      "h": 10,
+      "palette": "cyan",
+      "profile": [
+        11,
+        9,
+        7
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 440,
+      "y": 290,
+      "w": 220,
+      "h": 20,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 440,
+      "y": 330,
+      "w": 220,
+      "h": 20,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "triangleSlope",
+      "x": 310,
+      "y": 290,
+      "w": 130,
+      "h": 60,
+      "palette": "cyan",
+      "direction": "up-right",
+      "isSteel": false
+    },
+    {
+      "type": "steelPlatform",
+      "x": 440,
+      "y": 310,
+      "w": 220,
+      "h": 20,
+      "palette": "cyan",
+      "isSteel": true
     }
   ],
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50}
+  "difficultyScore": 50,
+  "isOverridden": false}

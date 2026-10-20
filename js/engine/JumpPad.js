@@ -18,10 +18,12 @@ class JumpPad {
     this.power = Math.max(4.0, Math.min(18.0, typeof cfg.power === 'number' ? cfg.power : 9.5));
     // Normalize angle / dir
     const rawAngle = cfg.angle || cfg.dir || 'up';
-    if (rawAngle === 'up-right' || rawAngle === 'right') this.angle = 'up-right';
-    else if (rawAngle === 'up-left' || rawAngle === 'left') this.angle = 'up-left';
-    else if (rawAngle === 'forward') this.angle = 'forward';
+    if (rawAngle === 'up-right') this.angle = 'up-right';
+    else if (rawAngle === 'up-left') this.angle = 'up-left';
+    else if (rawAngle === 'right' || rawAngle === 'forward') this.angle = 'right';
+    else if (rawAngle === 'left') this.angle = 'left';
     else this.angle = 'up';
+    this.dir = this.angle;
 
     this.cooldown = 0;
     this.compression = 0; // 0.0 ~ 1.0 (spring recoil compression)
@@ -79,10 +81,16 @@ class JumpPad {
       unit.dir = -1;
       unit.vx = -3.6;
       unit.x -= 6;
-    } else if (this.angle === 'forward') {
-      unit.vy = -this.power * 0.88;
-      unit.vx = unit.dir * 3.6;
-      unit.x += unit.dir * 6;
+    } else if (this.angle === 'right' || this.angle === 'forward') {
+      unit.vy = -this.power * 0.65;
+      unit.dir = 1;
+      unit.vx = 4.8;
+      unit.x += 6;
+    } else if (this.angle === 'left') {
+      unit.vy = -this.power * 0.65;
+      unit.dir = -1;
+      unit.vx = -4.8;
+      unit.x -= 6;
     } else {
       // 'up' - purely vertical boost, maintain slight forward momentum if walking
       unit.vy = -this.power;
@@ -159,26 +167,115 @@ class JumpPad {
       ctx.fillRect(x + 2, padTopY, w - 4, 3.5);
     }
 
-    // 5. Directional Arrow on Top Plate
+    // 5. Directional Arrow on Top Plate (matching user-configured direction)
     ctx.fillStyle = '#ffffff';
     const arrowX = x + w / 2;
     const arrowY = padTopY + 1.8;
     ctx.beginPath();
-    if (this.angle === 'forward' || this.angle === 'right') {
-      ctx.moveTo(arrowX - 4, arrowY + 1.5);
-      ctx.lineTo(arrowX + 4, arrowY - 1.5);
+    if (this.angle === 'right' || this.angle === 'forward') {
+      // ➔ Right
+      ctx.moveTo(arrowX - 4, arrowY - 2);
+      ctx.lineTo(arrowX + 2, arrowY - 2);
       ctx.lineTo(arrowX + 2, arrowY - 3.5);
+      ctx.lineTo(arrowX + 5, arrowY);
+      ctx.lineTo(arrowX + 2, arrowY + 3.5);
+      ctx.lineTo(arrowX + 2, arrowY + 2);
+      ctx.lineTo(arrowX - 4, arrowY + 2);
+      ctx.closePath();
     } else if (this.angle === 'left') {
-      ctx.moveTo(arrowX + 4, arrowY + 1.5);
-      ctx.lineTo(arrowX - 4, arrowY - 1.5);
+      // ⬅ Left
+      ctx.moveTo(arrowX + 4, arrowY - 2);
+      ctx.lineTo(arrowX - 2, arrowY - 2);
       ctx.lineTo(arrowX - 2, arrowY - 3.5);
+      ctx.lineTo(arrowX - 5, arrowY);
+      ctx.lineTo(arrowX - 2, arrowY + 3.5);
+      ctx.lineTo(arrowX - 2, arrowY + 2);
+      ctx.lineTo(arrowX + 4, arrowY + 2);
+      ctx.closePath();
+    } else if (this.angle === 'up-right') {
+      // ↗ Up-Right
+      ctx.moveTo(arrowX - 3.5, arrowY + 2.5);
+      ctx.lineTo(arrowX + 1.5, arrowY - 2.5);
+      ctx.lineTo(arrowX - 1.0, arrowY - 3.5);
+      ctx.lineTo(arrowX + 4.5, arrowY - 3.5);
+      ctx.lineTo(arrowX + 4.5, arrowY + 2.0);
+      ctx.lineTo(arrowX + 3.5, arrowY + 0.0);
+      ctx.lineTo(arrowX - 1.5, arrowY + 4.0);
+      ctx.closePath();
+    } else if (this.angle === 'up-left') {
+      // ↖ Up-Left
+      ctx.moveTo(arrowX + 3.5, arrowY + 2.5);
+      ctx.lineTo(arrowX - 1.5, arrowY - 2.5);
+      ctx.lineTo(arrowX + 1.0, arrowY - 3.5);
+      ctx.lineTo(arrowX - 4.5, arrowY - 3.5);
+      ctx.lineTo(arrowX - 4.5, arrowY + 2.0);
+      ctx.lineTo(arrowX - 3.5, arrowY + 0.0);
+      ctx.lineTo(arrowX + 1.5, arrowY + 4.0);
+      ctx.closePath();
     } else {
-      // 'up'
-      ctx.moveTo(arrowX, arrowY - 2.5);
-      ctx.lineTo(arrowX - 3.5, arrowY + 1.5);
-      ctx.lineTo(arrowX + 3.5, arrowY + 1.5);
+      // ▲ Straight Up
+      ctx.moveTo(arrowX, arrowY - 3.5);
+      ctx.lineTo(arrowX - 4.0, arrowY + 1.8);
+      ctx.lineTo(arrowX - 1.5, arrowY + 1.8);
+      ctx.lineTo(arrowX - 1.5, arrowY + 3.5);
+      ctx.lineTo(arrowX + 1.5, arrowY + 3.5);
+      ctx.lineTo(arrowX + 1.5, arrowY + 1.8);
+      ctx.lineTo(arrowX + 4.0, arrowY + 1.8);
+      ctx.closePath();
     }
     ctx.fill();
+
+    // 5.5 Holographic Cipher Readout: Arrow & Jump Power (암호처럼 숫자표기)
+    const arrowMap = {
+      'up': '▲',
+      'up-right': '↗',
+      'up-left': '↖',
+      'right': '➔',
+      'forward': '➔',
+      'left': '⬅'
+    };
+    const arrowGlyph = arrowMap[this.angle] || '▲';
+    const pStr = (typeof this.power === 'number') ? (this.power % 1 === 0 ? this.power.toFixed(1) : this.power.toString()) : '9.5';
+    const cipherText = `${arrowGlyph} ${pStr}`;
+
+    ctx.save();
+    ctx.font = 'bold 8.5px Orbitron, monospace, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textMetrics = ctx.measureText(cipherText);
+    const badgeW = Math.max(26, textMetrics.width + 6);
+    const badgeH = 11;
+    const badgeX = arrowX - badgeW / 2;
+    const badgeY = y - 7 - badgeH / 2;
+
+    // Semi-transparent tactical dark backing
+    ctx.fillStyle = 'rgba(10, 16, 26, 0.82)';
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+    }
+
+    // High-tech neon border
+    ctx.strokeStyle = isSelected ? '#ffaa00' : 'rgba(0, 243, 255, 0.55)';
+    ctx.lineWidth = 1;
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 2);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+    }
+
+    // Glowing cipher text: Neon cyan in-game / Cyber amber when selected
+    ctx.shadowColor = isSelected ? '#ffaa00' : '#00f3ff';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = isSelected ? '#ffcc00' : '#00f3ff';
+    ctx.fillText(cipherText, arrowX, y - 7);
+    ctx.restore();
 
     // 6. Editor Bounding & Trajectory Guide
     if (isEditor) {
@@ -187,26 +284,26 @@ class JumpPad {
       ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 3]);
 
-      // Jump trajectory arc preview
+      // Jump trajectory arc preview matching configured angle
       const peakY = Math.max(10, y - (this.power * this.power * 2.2));
       ctx.beginPath();
       ctx.moveTo(arrowX, y);
       if (this.angle === 'right' || this.angle === 'forward') {
-        ctx.quadraticCurveTo(arrowX + 40, peakY, arrowX + 80, y);
+        ctx.quadraticCurveTo(arrowX + 45, peakY + 15, arrowX + 80, y);
       } else if (this.angle === 'left') {
-        ctx.quadraticCurveTo(arrowX - 40, peakY, arrowX - 80, y);
+        ctx.quadraticCurveTo(arrowX - 45, peakY + 15, arrowX - 80, y);
+      } else if (this.angle === 'up-right') {
+        ctx.quadraticCurveTo(arrowX + 35, peakY, arrowX + 70, y - (this.power * 4));
+      } else if (this.angle === 'up-left') {
+        ctx.quadraticCurveTo(arrowX - 35, peakY, arrowX - 70, y - (this.power * 4));
       } else {
+        // 'up'
         ctx.lineTo(arrowX, peakY);
       }
       ctx.stroke();
 
-      ctx.setLineDash([]);
-      ctx.font = 'bold 9px Orbitron, sans-serif';
-      ctx.fillStyle = isSelected ? '#ffaa00' : 'rgba(255, 170, 0, 0.7)';
-      ctx.textAlign = 'center';
-      ctx.fillText(`▲ JUMP (${this.angle.toUpperCase()}) P:${this.power}`, arrowX, y - 8);
-
       if (isSelected) {
+        ctx.setLineDash([]);
         ctx.strokeStyle = '#ffaa00';
         ctx.lineWidth = 1.8;
         ctx.strokeRect(x - 2, y - 2, w + 4, h + 4);

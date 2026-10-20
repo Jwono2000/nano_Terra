@@ -549,12 +549,12 @@ class NanoUnit {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
     }
 
-    // --- 전방 충돌 및 통과 판정 ---
-    // 1) 머리/가슴 높이(cy = -20 ~ -4): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
+    // 1) 머리/가슴 높이(cy = -20 ~ -9): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
     //    계단(3)은 머리/가슴 높이에서 절대 벽으로 감지하지 않음 (계단 밑 및 역방향 완전 통과 보장)
+    //    (참고: h = 1~8px 단차/경사로는 아래 2단계 오르막 등반에서 처리되므로 cy는 -9 이하만 검사)
     let isHighWallAhead = false;
-    for (let cy = -20; cy <= -4; cy += 4) {
-      const checkX = nextX + this.dir * 2;
+    for (let cy = -20; cy <= -9; cy += 3) {
+      const checkX = nextX + this.dir * 1;
       const checkY = this.y + cy;
       if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : (terrain.isSolid(checkX, checkY) && !terrain.isStructure(checkX, checkY))) {
         isHighWallAhead = true;

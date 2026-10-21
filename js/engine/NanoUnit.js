@@ -353,7 +353,7 @@ class NanoUnit {
       if (beamContact && !beamContact.isBottomEnd) {
         this.state = STATE.BEAM_SLIDING;
         this.dir = beamContact.slopeDir;
-        this.vx = this.dir * 2.65;
+        this.vx = this.dir * 1.38;
         this.y = beamContact.topY;
         this.vy = 0;
         this.fallDistance = 0;
@@ -407,7 +407,7 @@ class NanoUnit {
       if (beamContact && !beamContact.isBottomEnd) {
         this.state = STATE.BEAM_SLIDING;
         this.dir = beamContact.slopeDir;
-        this.vx = this.dir * 2.65;
+        this.vx = this.dir * 1.38;
         this.y = beamContact.topY;
         this.fallDistance = 0;
         this.ridingPlatform = null;
@@ -859,7 +859,8 @@ class NanoUnit {
       return;
     }
 
-    const slideSpeed = 2.65 * speedScale;
+    // Normal walking speed is 1.25. Slide speed is 10% faster: 1.25 * 1.10 = 1.38
+    const slideSpeed = 1.38 * speedScale;
     const nextX = this.x + this.dir * slideSpeed;
     const beamContact = terrain.getDiagonalBeamAt ? terrain.getDiagonalBeamAt(nextX, this.y, 14) : null;
 
@@ -867,12 +868,9 @@ class NanoUnit {
       this.x = nextX;
       this.y = beamContact.topY;
 
-      // Dynamic friction skate sparks trailing behind the sliding blade
-      if (particles && Math.random() < 0.65) {
-        particles.spawnBurst(this.x - this.dir * 4, this.y + 0.5, '#00f3ff', 2, 1.4);
-        if (Math.random() < 0.3) {
-          particles.spawnBurst(this.x - this.dir * 6, this.y, '#ffffff', 1, 1.0);
-        }
+      // Subtle friction micro-spark
+      if (particles && Math.random() < 0.25) {
+        particles.spawnBurst(this.x - this.dir * 3, this.y, '#00f3ff', 1, 0.8);
       }
     } else {
       // Reached or slid past the bottom end of the diagonal beam!
@@ -903,11 +901,11 @@ class NanoUnit {
       } else {
         // Launch smoothly off the end into falling/floating with forward ramp momentum!
         this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
-        this.vx = this.dir * 1.6;
+        this.vx = this.dir * 1.38;
         this.vy = 0.8;
         this.fallDistance = 0;
         if (particles) {
-          particles.spawnBurst(this.x, this.y, '#00f3ff', 8, 2.2);
+          particles.spawnBurst(this.x, this.y, '#00f3ff', 6, 1.5);
         }
       }
     }
@@ -1384,10 +1382,7 @@ class NanoUnit {
         ctx.restore();
         return;
 
-      } else if (this.state === STATE.BEAM_SLIDING) {
-        this.renderSkatingPose(ctx);
-        ctx.restore();
-        return;
+
 
       } else if (this.state === STATE.BLOCKING_SHIELD) {
         sx = 535; sy = 142; sw = 104; sh = 140;
@@ -1539,14 +1534,26 @@ class NanoUnit {
 
         // Walk cycle timing
         const isWalking = (this.state === STATE.WALKING);
+        const isSliding = (this.state === STATE.BEAM_SLIDING);
         const time = this.animFrame * 0.22;
         const stride = isWalking ? Math.sin(time) : 0;
         const lift = isWalking ? Math.cos(time) : 0;
         const walkBob = isWalking ? Math.abs(stride) * 1.5 : 0;
 
         // 1. Draw back leg & boot first (depth layering)
-        const backStrideX = -stride * 4.5;
-        const backLiftY = Math.max(0, -lift) * 3.5;
+        let backStrideX = -stride * 4.5;
+        let backLiftY = Math.max(0, -lift) * 3.5;
+        let frontStrideX = stride * 4.5;
+        let frontLiftY = Math.max(0, lift) * 3.5;
+
+        if (isSliding) {
+          // Subtle skate glide: front foot forward, back foot slightly trailing and raised 2px
+          frontStrideX = 2.5;
+          frontLiftY = 0;
+          backStrideX = -3.0;
+          backLiftY = 2.0;
+        }
+
         const backFootX = 1 + backStrideX;
         const backFootY = -4.5 - backLiftY;
 
@@ -1567,8 +1574,6 @@ class NanoUnit {
         ctx.restore();
 
         // 3. Draw front leg & boot (clearly visible stepping in front of torso)
-        const frontStrideX = stride * 4.5;
-        const frontLiftY = Math.max(0, lift) * 3.5;
         const frontFootX = -3.5 + frontStrideX;
         const frontFootY = -4.5 - frontLiftY;
 
@@ -1582,11 +1587,11 @@ class NanoUnit {
         ctx.fillStyle = '#00f3ff';
         ctx.fillRect(frontFootX - 1, frontFootY + 3.5, 5, 1.2);
 
-        // Ground landing spark when foot touches ground
-        if (isWalking && frontLiftY < 0.3 && Math.random() < 0.15) {
+        // Ground landing spark / subtle skate rail spark
+        if ((isWalking && frontLiftY < 0.3 && Math.random() < 0.15) || (isSliding && Math.random() < 0.2)) {
           ctx.fillStyle = '#00f3ff';
           ctx.beginPath();
-          ctx.arc(frontFootX + 1.5, 0, 1.2, 0, Math.PI * 2);
+          ctx.arc(frontFootX + 1.5, 0, 1.0, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.restore();
@@ -1604,20 +1609,27 @@ class NanoUnit {
   }
 
   renderHDChibiAstronaut(ctx) {
-    if (this.state === STATE.BEAM_SLIDING) {
-      this.renderSkatingPose(ctx);
-      return;
-    }
-
-    const time = this.animFrame * 0.22;
     const isWalking = (this.state === STATE.WALKING);
+    const isSliding = (this.state === STATE.BEAM_SLIDING);
+    const time = this.animFrame * 0.22;
     const stride = isWalking ? Math.sin(time) : 0;
     const lift = isWalking ? Math.cos(time) : 0;
     const walkBob = isWalking ? Math.abs(stride) * 1.5 : 0;
 
     // Back leg
-    const backFootX = 1 - stride * 4.5;
-    const backFootY = -4.5 - Math.max(0, -lift) * 3.5;
+    let backFootX = 1 - stride * 4.5;
+    let backFootY = -4.5 - Math.max(0, -lift) * 3.5;
+    // Front leg
+    let frontFootX = -3.5 + stride * 4.5;
+    let frontFootY = -4.5 - Math.max(0, lift) * 3.5;
+
+    if (isSliding) {
+      frontFootX = -1.0;
+      frontFootY = -4.5;
+      backFootX = -2.0;
+      backFootY = -6.5;
+    }
+
     ctx.fillStyle = '#680a18';
     ctx.fillRect(backFootX + 0.5, -9 - walkBob, 3.5, 6);
     ctx.fillStyle = '#8a0d20';
@@ -1647,184 +1659,12 @@ class NanoUnit {
     ctx.fill();
 
     // Front leg
-    const frontFootX = -3.5 + stride * 4.5;
-    const frontFootY = -4.5 - Math.max(0, lift) * 3.5;
     ctx.fillStyle = '#9e0c25';
     ctx.fillRect(frontFootX + 0.5, -9 - walkBob, 3.5, 6);
     ctx.fillStyle = '#e62244';
     ctx.fillRect(frontFootX - 1, frontFootY, 5, 4.5);
     ctx.fillStyle = '#00f3ff';
     ctx.fillRect(frontFootX - 1, frontFootY + 3.5, 5, 1.2);
-  }
-
-  renderSkatingPose(ctx) {
-    ctx.save();
-
-    // Subtle high-speed aerodynamic wind vibration
-    const vibration = Math.sin(this.animFrame * 0.8) * 0.4;
-    ctx.translate(0, vibration);
-
-    // 1. Back leg LIFTED HIGH in the air behind the body (one-foot speed skate pose)
-    ctx.save();
-    // Back thigh (crimson shadow)
-    ctx.strokeStyle = '#680a18';
-    ctx.lineWidth = 4.2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-2, -11);
-    ctx.lineTo(-9, -14);
-    ctx.stroke();
-
-    // Back calf (raised upward into the air)
-    ctx.strokeStyle = '#8a0d20';
-    ctx.lineWidth = 3.6;
-    ctx.beginPath();
-    ctx.moveTo(-9, -14);
-    ctx.lineTo(-16, -16.5);
-    ctx.stroke();
-
-    // Raised back boot (floating high above ground)
-    ctx.fillStyle = '#e62244';
-    ctx.strokeStyle = '#3a0812';
-    ctx.lineWidth = 1.0;
-    ctx.beginPath();
-    ctx.roundRect(-19, -18.5, 6, 4, 1.5);
-    ctx.fill();
-    ctx.stroke();
-
-    // Cyan sole accent on raised boot
-    ctx.fillStyle = '#00f3ff';
-    ctx.fillRect(-19, -15.5, 6, 1.2);
-    ctx.restore();
-
-    // 2. Trailing arm (reaching backward-upward for balance)
-    ctx.save();
-    ctx.strokeStyle = '#680a18';
-    ctx.lineWidth = 3.2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-2, -15);
-    ctx.lineTo(-11, -19);
-    ctx.stroke();
-    // Glove
-    ctx.fillStyle = '#00f3ff';
-    ctx.beginPath();
-    ctx.arc(-11, -19, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 3. Torso (aerodynamic forward lean, tilted ~15 degrees down the slope)
-    ctx.save();
-    ctx.rotate(0.26);
-
-    // Backpack / life-support thruster unit
-    ctx.fillStyle = '#220308';
-    ctx.strokeStyle = '#00f3ff';
-    ctx.lineWidth = 1.0;
-    ctx.fillRect(-8.5, -20, 4, 9);
-    ctx.strokeRect(-8.5, -20, 4, 9);
-    // Micro thruster flame trail
-    ctx.fillStyle = 'rgba(0, 243, 255, 0.6)';
-    ctx.beginPath();
-    ctx.moveTo(-8.5, -17);
-    ctx.lineTo(-12 - Math.random() * 3, -15.5);
-    ctx.lineTo(-8.5, -14);
-    ctx.fill();
-
-    // Crimson torso suit
-    ctx.fillStyle = '#e62244';
-    ctx.strokeStyle = '#3a0812';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.roundRect(-5.5, -19, 11, 8.5, 2.5);
-    ctx.fill();
-    ctx.stroke();
-
-    // Chest reactor core
-    ctx.fillStyle = '#00f3ff';
-    ctx.shadowColor = '#00f3ff';
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.arc(1.5, -15, 1.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Helmet & visor
-    ctx.fillStyle = '#e62244';
-    ctx.strokeStyle = '#3a0812';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.arc(2, -24, 7.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Cyan visor (focused down the slope)
-    ctx.fillStyle = '#00f3ff';
-    ctx.shadowColor = '#00f3ff';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.roundRect(1, -27, 7.5, 6, 2.5);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Visor highlight
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(4, -26, 3, 1.5);
-    ctx.restore();
-
-    // 4. Leading arm (reaching forward for balance)
-    ctx.save();
-    ctx.strokeStyle = '#9e0c25';
-    ctx.lineWidth = 3.2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(3, -13);
-    ctx.lineTo(10, -11);
-    ctx.stroke();
-    // Glove
-    ctx.fillStyle = '#00f3ff';
-    ctx.beginPath();
-    ctx.arc(10, -11, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 5. Front supporting leg (planted firmly on the rail, gliding forward)
-    ctx.save();
-    ctx.strokeStyle = '#9e0c25';
-    ctx.lineWidth = 4.2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(0, -9);
-    ctx.lineTo(2, -4.5);
-    ctx.stroke();
-
-    // Supporting front boot
-    ctx.fillStyle = '#e62244';
-    ctx.strokeStyle = '#3a0812';
-    ctx.lineWidth = 1.0;
-    ctx.beginPath();
-    ctx.roundRect(-1.5, -4.5, 7, 4.5, 1.5);
-    ctx.fill();
-    ctx.stroke();
-
-    // Glowing cyan friction skate blade runner
-    ctx.shadowColor = '#00f3ff';
-    ctx.shadowBlur = 8;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-3, -0.6, 9.5, 1.2);
-    ctx.fillStyle = '#00f3ff';
-    ctx.fillRect(-4, 0.4, 11, 1.0);
-    ctx.shadowBlur = 0;
-
-    // Blade sparks shooting backward from runner
-    const sparkPhase = (this.animFrame % 6);
-    ctx.fillStyle = (sparkPhase < 3) ? '#ffffff' : '#00f3ff';
-    ctx.beginPath();
-    ctx.arc(-5 - sparkPhase * 1.5, 0.5, 1.0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.restore();
   }
 }
 

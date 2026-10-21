@@ -20,5 +20,5 @@ foreach ($s in $result) {
     $stagesJson += '{"filename":"' + $s.filename + '","title":"' + ($s.title -replace '"','\"') + '","createdAt":"' + $s.createdAt + '","sizeBytes":' + $s.sizeBytes + ',"data":' + $dataJson + '}'
 }
 $manifest = '{"ok":true,"count":' + $result.Count + ',"stages":[' + ($stagesJson -join ',') + ']}'
-[System.IO.File]::WriteAllText((Join-Path $stagesDir 'manifest.json'), $manifest, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $stagesDir 'manifest.json'), $manifest, [System.Text.UTF8Encoding]::new($false))
 Write-Output ("Manifest created with " + $result.Count + " stages in " + (Join-Path $stagesDir 'manifest.json'))

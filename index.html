@@ -66,12 +66,11 @@
         </div>
 
         <div class="hud-group" id="hud-ctrl-group">
-          <!-- Segmented Speed Controls -->
+          <!-- Segmented Speed Controls: 0.8x base, 0.5x slow, 2x fast -->
           <div class="segmented-control">
             <button class="btn-seg" id="btn-pause" title="일시정지 (Space)">⏸</button>
             <button class="btn-seg" id="btn-speed-05" title="0.5배속 (슬로우)">0.5x</button>
-            <button class="btn-seg" id="btn-speed-07" title="0.7배속 (정밀)">0.7x</button>
-            <button class="btn-seg active" id="btn-speed-1" title="1배속 (기본)">1x</button>
+            <button class="btn-seg active" id="btn-speed-1" title="1배속 (기본, 기존 0.8배 기준)">1x</button>
             <button class="btn-seg" id="btn-speed-2" title="2배속 (빠르게)">2x</button>
           </div>
 
@@ -112,6 +111,7 @@
               <button class="btn-tool active" data-tool="select" id="tool-select" title="선택 / 이동">👆 선택</button>
               <button class="btn-tool" data-tool="platform" id="tool-platform" title="기본 SFX 플로어">🟦 플랫폼</button>
               <button class="btn-tool" data-tool="craggyRock" id="tool-craggy" title="천연 암반층 (두께 가변)">🪨 암석</button>
+              <button class="btn-tool" data-tool="polygonRock" id="tool-poly-rock" title="점들을 클릭하여 연결하고 닫으면 완성되는 다각형 암석 (단축키: P)" style="border-color: #ff9900; color: #ff9900;">📐 다각형암석</button>
               <button class="btn-tool" data-tool="volcanicBasalt" id="tool-volcano" title="마그마 현무암층">🌋 화산암</button>
               <button class="btn-tool" data-tool="quantumCrystal" id="tool-quantum" title="양자 크리스탈 유적">🔮 양자암</button>
               <button class="btn-tool" data-tool="rockWall" id="tool-wall" title="파괴 가능 수직 암벽">⛰️ 암벽</button>
@@ -470,6 +470,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
           <span style="font-size: 11px; color: var(--text-dim);" id="campaign-stage-count-text">총 10개 캠페인 구역 (순차 진행)</span>
           <div style="display: flex; gap: 4px; align-items: center;">
+            <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #ffb700; color: #ffb700; font-weight: bold;"
+              id="btn-edit-stage-list" title="캠페인 맵 목록 이름 및 슬롯 순서 일괄 수정">📋 맵 목록수정</button>
             <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #00f3ff; color: #00f3ff;"
               id="btn-campaign-add-slot" title="새 구역(11구역~) 슬롯 추가 제작">➕ 새 구역 추가</button>
             <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #00ff88; color: #00ff88;"
@@ -524,6 +526,31 @@
 
       <button class="btn-tool" id="btn-stage-mgr-close" style="margin-top: 8px;"
         onclick="window.game.stageMgr.closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- Edit Map List (Order & Title Batch Editor) Modal -->
+  <div class="modal-overlay" id="modal-edit-stage-list" style="display: none; z-index: 1005;">
+    <div class="modal-card" style="max-width: 680px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-title" style="color: #ffb700;">📋 캠페인 맵 목록 및 순서(슬롯번호) 수정</div>
+      <div class="modal-subtitle" style="margin-bottom: 8px;">
+        각 맵의 순서(슬롯 번호)와 이름을 자유롭게 수정할 수 있습니다.<br>
+        <span style="color: var(--neon-cyan);">※ 번호 수정 시 해당 번호에 있던 기존 맵은 뒷쪽 번호 슬롯으로 자동 배정(밀어내기)됩니다.</span>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; max-height: 54vh; padding: 4px; margin-bottom: 8px; border: 1px solid rgba(0, 243, 255, 0.2); border-radius: 6px; background: rgba(5, 12, 24, 0.6);" id="edit-stage-list-container">
+        <!-- Dynamically rendered rows -->
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px; line-height: 1.4;">
+        💡 <strong>안내:</strong> 슬롯 번호를 직접 입력하거나 <span style="color: #00ff88;">▲ / ▼ 버튼</span>으로 순서를 조정한 후 <span style="color: #ffb700; font-weight: bold;">[적용]</span>을 누르면 캠페인 맵이 순서대로 정렬 배치됩니다.
+      </div>
+
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn-tool" id="btn-edit-stage-list-cancel">취소</button>
+        <button class="btn-tool btn-tool-play" id="btn-edit-stage-list-apply"
+          style="background: linear-gradient(90deg, #ffb700, #ff8800); color: #000; font-weight: bold;">✅ 순서 및 이름 적용</button>
+      </div>
     </div>
   </div>
 

@@ -41,7 +41,7 @@
       BLOCK: 'block', BLOCKER: 'block',
       PORTAL: 'portal'
     },
-    solidTypes: ['platform', 'steelBarrier', 'rockWall', 'craggyRock', 'volcanicBasalt', 'quantumCrystal', 'movingPlatform', 'steelPlatform', 'triangleSlope', 'diagonalBeam', 'jumpPad'],
+    solidTypes: ['platform', 'steelBarrier', 'rockWall', 'craggyRock', 'polygonRock', 'volcanicBasalt', 'quantumCrystal', 'movingPlatform', 'steelPlatform', 'triangleSlope', 'diagonalBeam', 'jumpPad'],
     profileTypes: ['craggyRock', 'volcanicBasalt', 'quantumCrystal']
   };
 

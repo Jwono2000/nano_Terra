@@ -18,6 +18,11 @@ class StageDataEngine {
         case 'craggyRock':
           terrain.drawCraggyRockFloor(el.x, el.y, el.w, el.h || 22, el.profile || [18, 24, 36, 16], pal);
           break;
+        case 'polygonRock':
+          if (el.points && el.points.length >= 3) {
+            terrain.drawPolygonRock(el.points, pal);
+          }
+          break;
         case 'volcanicBasalt':
           terrain.drawVolcanicBasaltFloor(el.x, el.y, el.w, el.h || 24, el.profile || [16, 28, 40, 14], el.palette || (stagePal === 'cyan' ? 'red' : stagePal));
           break;
@@ -572,12 +577,13 @@ class StageManager {
     this.initJsonButtons();
     this.initSaveSlotModalEvents();
     this.initUnassignedTabEvents();
+    this.initEditStageListEvents();
     this.checkApiAvailability();
   }
 
   static async loadCampaignLevels() {
     try {
-      const res = await fetch('stages/campaign.json');
+      const res = await fetch('stages/campaign.json?t=' + Date.now());
       if (res.ok) {
         const json = await res.json();
         if (Array.isArray(json) && json.length >= 10) {
@@ -695,14 +701,28 @@ class StageManager {
     if (typeof clone.gateX !== 'number' || isNaN(clone.gateX)) clone.gateX = 710;
     if (typeof clone.gateY !== 'number' || isNaN(clone.gateY)) clone.gateY = 254;
     
+    // Explicitly update in-memory defaults and active levels arrays
+    if (DEFAULT_CAMPAIGN_LEVELS) {
+      DEFAULT_CAMPAIGN_LEVELS[slotIdx] = JSON.parse(JSON.stringify(clone));
+    }
+    if (LEVELS) {
+      LEVELS[slotIdx] = JSON.parse(JSON.stringify(clone));
+    }
     this.campaignOverrides[slotIdx] = clone;
     this.saveCampaignOverridesToStorage();
     this.renderStageList();
 
-    // If game is currently on this stage, reload terrain
-    if (!this.game.isCustomPlay && this.game.currentLevelIdx === slotIdx) {
+    if (this.game) {
+      this.game.currentLevelIdx = slotIdx;
+      this.game.isCustomPlay = false;
+      this.game.activeCustomData = null;
+
+      // If game is in play mode or on this stage, reload terrain
       if (this.game.gameState !== GAME_STATE.EDITOR) {
         this.game.loadLevel(slotIdx, false);
+      } else if (this.game.editor) {
+        this.game.editor.levelData = JSON.parse(JSON.stringify(clone));
+        this.game.editor.updateStatus();
       }
     }
     return clone;
@@ -1210,11 +1230,12 @@ class StageManager {
 
       // Always save to stages/ folder via API if available, fallback to browser download if offline
       this.saveStageToApi(finalSavedData, downloadFileName)
-        .then((res) => {
+        .then(async (res) => {
           console.log('[StageManager] Saved to stages/ folder:', res.filename);
-          this.saveCampaignJsonToApi();
+          await this.cleanOldStageSlotFiles(slotIdx + 1, res.filename);
+          await this.saveCampaignJsonToApi();
           if (this.game && this.game.particles) {
-            this.game.particles.spawnFloatingText(400, 180, `💾 stages/${res.filename} 저장 & manifest 동기화 완료!`, "#00ff88");
+            this.game.particles.spawnFloatingText(400, 180, `💾 stages/${res.filename} 저장 & 캠페인 덮어쓰기 완료!`, "#00ff88");
           }
         })
         .catch(() => {
@@ -2061,21 +2082,258 @@ class StageManager {
 
   // Auto-save campaign.json to stages/ folder via API
   async saveCampaignJsonToApi() {
-    if (!this._apiAvailable) return;
     const campaignSet = LEVELS.map(lvl => {
       const clone = JSON.parse(JSON.stringify(lvl));
       delete clone.isOverridden;
       return clone;
     });
     try {
-      await fetch('/api/campaign/save', {
+      const res = await fetch('/api/campaign/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(campaignSet, null, 2)
       });
-      console.log('[StageManager] campaign.json auto-saved to stages/ folder');
+      if (res.ok) {
+        this._apiAvailable = true;
+        console.log('[StageManager] campaign.json auto-saved to stages/ folder');
+      }
     } catch(e) {
       console.warn('[StageManager] campaign.json auto-save failed:', e);
+    }
+  }
+
+  // Clean obsolete stage files for a specific slot number (prevents duplicate files for same slot)
+  async cleanOldStageSlotFiles(slotNum, currentFilename) {
+    try {
+      const res = await fetch('/api/stages');
+      if (res.ok) {
+        this._apiAvailable = true;
+        const json = await res.json();
+        const files = json.stages || [];
+        const prefix = `stage_${slotNum}_`;
+        for (const file of files) {
+          if (file.filename && file.filename !== currentFilename && file.filename.toLowerCase().startsWith(prefix.toLowerCase())) {
+            console.log(`[StageManager] Removing obsolete file for slot ${slotNum}:`, file.filename);
+            await fetch(`/api/stages/${encodeURIComponent(file.filename)}`, { method: 'DELETE' });
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('[StageManager] Failed to clean old slot files:', e);
+    }
+  }
+
+  // --- Map List (Slot Order & Title Batch Editor) ---
+  initEditStageListEvents() {
+    const btnOpen = document.getElementById('btn-edit-stage-list');
+    if (btnOpen) {
+      btnOpen.onclick = () => this.openEditStageListModal();
+    }
+
+    const btnCancel = document.getElementById('btn-edit-stage-list-cancel');
+    if (btnCancel) {
+      btnCancel.onclick = () => this.closeEditStageListModal();
+    }
+
+    const btnApply = document.getElementById('btn-edit-stage-list-apply');
+    if (btnApply) {
+      btnApply.onclick = () => this.applyEditedStageList();
+    }
+  }
+
+  openEditStageListModal() {
+    const modal = document.getElementById('modal-edit-stage-list');
+    if (!modal) return;
+
+    // Clone current campaign levels into temporary editing list
+    this.editingStageList = LEVELS.map((lvl, idx) => ({
+      origIdx: idx,
+      id: idx + 1,
+      slot: idx + 1,
+      title: lvl.title || `${idx + 1}구역 SECTOR`,
+      totalUnits: lvl.totalUnits || 15,
+      needPercent: lvl.needPercent || 70,
+      timeLimit: lvl.timeLimit || 240,
+      data: JSON.parse(JSON.stringify(lvl))
+    }));
+
+    this.renderEditStageList();
+    modal.style.display = 'flex';
+    SFX.playClick();
+  }
+
+  closeEditStageListModal() {
+    const modal = document.getElementById('modal-edit-stage-list');
+    if (modal) modal.style.display = 'none';
+    this.editingStageList = null;
+  }
+
+  renderEditStageList() {
+    const container = document.getElementById('edit-stage-list-container');
+    if (!container || !this.editingStageList) return;
+
+    container.innerHTML = '';
+    const totalCount = this.editingStageList.length;
+
+    this.editingStageList.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.className = 'edit-stage-row';
+      row.dataset.idx = i.toString();
+      row.style.cssText = `display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.07); background: ${i % 2 === 0 ? 'rgba(0,0,0,0.2)' : 'transparent'}; transition: background 0.15s;`;
+
+      const safeTitle = (item.title || '').replace(/"/g, '&quot;');
+
+      row.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 4px; min-width: 90px;">
+          <span style="font-size: 11px; color: var(--neon-cyan); font-weight: bold; width: 36px; text-align: center;">#${item.slot}</span>
+          <input type="number" min="1" max="${totalCount}" value="${item.slot}" class="prop-input edit-stage-slot-input" data-idx="${i}" style="width: 46px; padding: 2px 4px; text-align: center; height: 26px; font-weight: bold; color: #ffb700; border-color: rgba(255,183,0,0.4);" title="이동할 슬롯 번호 입력 후 Enter">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <button type="button" class="btn-tool btn-move-up" data-idx="${i}" style="padding: 0 4px; font-size: 8px; line-height: 10px; height: 11px; border: none; background: rgba(0,243,255,0.25); color: #00f3ff; cursor: pointer;" title="위로 이동" ${i === 0 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>▲</button>
+          <button type="button" class="btn-tool btn-move-down" data-idx="${i}" style="padding: 0 4px; font-size: 8px; line-height: 10px; height: 11px; border: none; background: rgba(0,243,255,0.25); color: #00f3ff; cursor: pointer;" title="아래로 이동" ${i === totalCount - 1 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>▼</button>
+        </div>
+        <input type="text" class="prop-input edit-stage-title-input" data-idx="${i}" value="${safeTitle}" style="flex: 1; padding: 3px 8px; height: 26px; font-size: 11px;" placeholder="맵 이름 입력">
+        <span style="font-size: 10px; color: var(--text-dim); white-space: nowrap; min-width: 90px; text-align: right;">${item.totalUnits}기 | ${item.needPercent}%</span>
+      `;
+      container.appendChild(row);
+    });
+
+    // Real-time slot number change: shifts occupied slot to posterior
+    container.querySelectorAll('.edit-stage-slot-input').forEach(input => {
+      input.onchange = (e) => {
+        const fromIdx = parseInt(input.dataset.idx, 10);
+        let targetSlot = parseInt(e.target.value, 10);
+        if (isNaN(targetSlot) || targetSlot < 1) targetSlot = 1;
+        if (targetSlot > totalCount) targetSlot = totalCount;
+
+        this.syncEditStageListTitlesFromDOM();
+
+        const targetIdx = targetSlot - 1;
+        if (fromIdx !== targetIdx) {
+          const [movedItem] = this.editingStageList.splice(fromIdx, 1);
+          this.editingStageList.splice(targetIdx, 0, movedItem);
+          this.editingStageList.forEach((it, idx) => it.slot = idx + 1);
+          this.renderEditStageList();
+          SFX.playClick();
+        }
+      };
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          input.blur();
+        }
+      };
+    });
+
+    // Move Up
+    container.querySelectorAll('.btn-move-up').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (idx > 0) {
+          this.syncEditStageListTitlesFromDOM();
+          const temp = this.editingStageList[idx];
+          this.editingStageList[idx] = this.editingStageList[idx - 1];
+          this.editingStageList[idx - 1] = temp;
+          this.editingStageList.forEach((it, i) => it.slot = i + 1);
+          this.renderEditStageList();
+          SFX.playClick();
+        }
+      };
+    });
+
+    // Move Down
+    container.querySelectorAll('.btn-move-down').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (idx < this.editingStageList.length - 1) {
+          this.syncEditStageListTitlesFromDOM();
+          const temp = this.editingStageList[idx];
+          this.editingStageList[idx] = this.editingStageList[idx + 1];
+          this.editingStageList[idx + 1] = temp;
+          this.editingStageList.forEach((it, i) => it.slot = i + 1);
+          this.renderEditStageList();
+          SFX.playClick();
+        }
+      };
+    });
+
+    // Save title changes on input
+    container.querySelectorAll('.edit-stage-title-input').forEach(input => {
+      input.oninput = () => {
+        const idx = parseInt(input.dataset.idx, 10);
+        if (this.editingStageList[idx]) {
+          this.editingStageList[idx].title = input.value;
+        }
+      };
+    });
+  }
+
+  syncEditStageListTitlesFromDOM() {
+    const container = document.getElementById('edit-stage-list-container');
+    if (!container || !this.editingStageList) return;
+    container.querySelectorAll('.edit-stage-title-input').forEach(input => {
+      const idx = parseInt(input.dataset.idx, 10);
+      if (this.editingStageList[idx]) {
+        this.editingStageList[idx].title = input.value.trim() || this.editingStageList[idx].title;
+      }
+    });
+  }
+
+  async applyEditedStageList() {
+    if (!this.editingStageList || this.editingStageList.length === 0) return;
+
+    this.syncEditStageListTitlesFromDOM();
+
+    // Build newly ordered levels
+    const newLevels = [];
+    this.campaignOverrides = {};
+
+    for (let i = 0; i < this.editingStageList.length; i++) {
+      const item = this.editingStageList[i];
+      const stageObj = JSON.parse(JSON.stringify(item.data));
+      stageObj.id = i + 1;
+      stageObj.title = item.title;
+      stageObj.isOverridden = true;
+      newLevels.push(stageObj);
+      this.campaignOverrides[i] = stageObj;
+    }
+
+    LEVELS = newLevels;
+    DEFAULT_CAMPAIGN_LEVELS = JSON.parse(JSON.stringify(newLevels));
+    this.saveCampaignOverridesToStorage();
+
+    // Auto-save each stage file and campaign.json to stages/ folder
+    try {
+      await this.saveCampaignJsonToApi();
+      for (let i = 0; i < newLevels.length; i++) {
+        const lvl = newLevels[i];
+        const cleanTitle = lvl.title.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
+        const filename = `stage_${i + 1}_${cleanTitle}.json`;
+        await this.saveStageToApi(lvl, filename);
+        await this.cleanOldStageSlotFiles(i + 1, filename);
+      }
+      console.log('[StageManager] All stages re-indexed and saved to stages/ folder');
+    } catch(e) {
+      console.warn('[StageManager] Batch stage file update error:', e);
+    }
+
+    // Refresh UI
+    this.renderStageList();
+    this.closeEditStageListModal();
+
+    // If current level index is within range, reload current level so changes reflect
+    if (!this.game.isCustomPlay) {
+      this.game.currentLevelIdx = Math.min(this.game.currentLevelIdx, LEVELS.length - 1);
+      if (this.game.gameState !== GAME_STATE.EDITOR) {
+        this.game.loadLevel(this.game.currentLevelIdx, false);
+      } else if (this.game.editor) {
+        this.game.editor.levelData = JSON.parse(JSON.stringify(LEVELS[this.game.currentLevelIdx]));
+        this.game.editor.updateStatus();
+      }
+    }
+
+    SFX.playTeleport();
+    if (this.game && this.game.particles) {
+      this.game.particles.spawnFloatingText(400, 180, "✅ 맵 목록 및 순서가 성공적으로 적용되었습니다!", "#00ff88");
     }
   }
 }

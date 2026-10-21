@@ -355,7 +355,6 @@ class GameEngine {
       this.setSpeed(this.gameSpeed === 0 ? 1 : 0);
     });
     bindBtn('btn-speed-05', () => { SFX.playClick(); this.setSpeed(0.5); });
-    bindBtn('btn-speed-07', () => { SFX.playClick(); this.setSpeed(0.7); });
     bindBtn('btn-speed-1', () => { SFX.playClick(); this.setSpeed(1); });
     bindBtn('btn-speed-2', () => { SFX.playClick(); this.setSpeed(2); });
 
@@ -608,7 +607,7 @@ class GameEngine {
     if (spd === 0) {
       SFX.stopAllContinuousBeams();
     }
-    ['btn-pause', 'btn-speed-05', 'btn-speed-07', 'btn-speed-1', 'btn-speed-2'].forEach(id => {
+    ['btn-pause', 'btn-speed-05', 'btn-speed-1', 'btn-speed-2'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.classList.remove('active');
     });
@@ -618,9 +617,6 @@ class GameEngine {
     } else if (spd === 0.5) {
       const s05 = document.getElementById('btn-speed-05');
       if (s05) s05.classList.add('active');
-    } else if (spd === 0.7) {
-      const s07 = document.getElementById('btn-speed-07');
-      if (s07) s07.classList.add('active');
     } else if (spd === 1) {
       const s1 = document.getElementById('btn-speed-1');
       if (s1) s1.classList.add('active');
@@ -1448,9 +1444,10 @@ class GameEngine {
       }
       this.particles.update();
     } else if (this.gameState === GAME_STATE.PLAYING && this.gameSpeed > 0) {
-      // Fixed 60Hz delta-time accumulator physics loop for consistent 100% full speed across all devices
+      // Fixed 60Hz delta-time accumulator physics loop (baseline 0.8x, relative 0.5x, 1x, 2x)
       if (!this.accumulator) this.accumulator = 0;
-      this.accumulator += delta * this.gameSpeed;
+      const BASE_SPEED_SCALE = 0.8;
+      this.accumulator += delta * (this.gameSpeed * BASE_SPEED_SCALE);
       const fixedStep = 1000 / 60; // 16.666ms
       let steps = 0;
       while (this.accumulator >= fixedStep && steps < 8) {

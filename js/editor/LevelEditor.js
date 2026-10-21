@@ -34,6 +34,8 @@ class LevelEditor {
     this.dragStart = { x: 0, y: 0 };
     this.dragCurrent = { x: 0, y: 0 };
     this.elementMoveOffset = { x: 0, y: 0 };
+    this.polyDraftPoints = [];
+    this.polyMousePos = null;
   }
 
   init(game, initialData = null) {
@@ -60,6 +62,8 @@ class LevelEditor {
     this.redoStack = [];
     this.solverOverlay = null;
     this.lastVerdict = null;
+    this.polyDraftPoints = [];
+    this.polyMousePos = null;
     
     this.bindEvents();
     this.bindKeyboard();
@@ -794,6 +798,10 @@ class LevelEditor {
       }
     }
     this.selectedTool = tool;
+    if (tool !== 'polygonRock') {
+      this.polyDraftPoints = [];
+      this.polyMousePos = null;
+    }
     document.querySelectorAll('.btn-tool[data-tool]').forEach(b => {
       b.classList.toggle('active', b.dataset.tool === tool);
     });
@@ -823,6 +831,10 @@ class LevelEditor {
     if (newW === oldW) return;
 
     el.w = newW;
+    if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+      const ratio = newW / oldW;
+      el.points.forEach(p => { p.x = el.x + (p.x - el.x) * ratio; });
+    }
     this.saveHistory();
     this.syncTerrain();
     this.updateStatus();
@@ -844,6 +856,10 @@ class LevelEditor {
     if (el.profile && el.profile.length > 0) {
       const ratio = newH / oldH;
       el.profile = el.profile.map(p => Math.max(6, Math.round(p * ratio)));
+    }
+    if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+      const ratio = newH / oldH;
+      el.points.forEach(p => { p.y = el.y + (p.y - el.y) * ratio; });
     }
     this.saveHistory();
     this.syncTerrain();
@@ -1007,6 +1023,9 @@ class LevelEditor {
         }
       } else if (el.type === 'steelPlatform') {
         if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [🛡️ 거울광택 크롬 스틸 발판]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | <span style="color:#00f3ff;">[💡 채굴/파괴 불침 영구 크롬 합금 | 단축키 M: 암석 전환]</span>`;
+      } else if (el.type === 'polygonRock') {
+        const ptCount = (el.points || []).length;
+        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [🔷 다각형 암석 (${ptCount}각형)]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 테마: ${pal.name} | <span style="color:#00ff88;">[💡 드래그하여 이동, Delete: 삭제, ↔/↕ 버튼: 크기 조절]</span>`;
       } else if (el.type === 'platform') {
         if (info) info.innerHTML = `<span style="color:#00ff88; font-weight:700;">선택: [🪨 기본 플랫폼]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | <span style="color:#ffb700;">[💡 채굴 가능한 일반 발판 | 단축키 M: 크롬 스틸 전환]</span>`;
       } else {
@@ -1030,7 +1049,15 @@ class LevelEditor {
       if (this.lintResult) extra += ` | ${this.lintResult.ok ? '🧪' : '⛔'} ${this.lintResult.summary}${this.showLint ? '' : ' (마커 숨김 H)'}`;
       const v = this.levelData.verification;
       if (v) extra += v.solvable ? ` | ✅ 검증 ${v.band ? v.band.toUpperCase() : ''} ${v.score != null ? v.score + 'pt' : ''} (${v.requiredSkills}스킬)` : ' | ❌ 솔버 미해결';
-      if (info) info.innerText = `도구: ${this.selectedTool.toUpperCase()} | 오브젝트: ${count}개 | 🚪 스폰:(${this.levelData.spawnX},${this.levelData.spawnY}) 🌀 웜홀:(${this.levelData.gateX},${this.levelData.gateY})${dnaInfo}${extra}`;
+      if (this.selectedTool === 'polygonRock') {
+        const ptCount = (this.polyDraftPoints || []).length;
+        const msg = ptCount === 0 
+          ? '캔버스를 클릭하여 꼭짓점을 찍으세요' 
+          : `${ptCount}개 꼭짓점 연결 중... [시작점을 다시 클릭하거나 Enter: 암석 완성 / Esc: 취소]`;
+        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">🔷 다각형 암석 툴:</span> ${msg}`;
+      } else {
+        if (info) info.innerText = `도구: ${this.selectedTool.toUpperCase()} | 오브젝트: ${count}개 | 🚪 스폰:(${this.levelData.spawnX},${this.levelData.spawnY}) 🌀 웜홀:(${this.levelData.gateX},${this.levelData.gateY})${dnaInfo}${extra}`;
+      }
       if (selectedControls) selectedControls.style.display = 'none';
     }
   }
@@ -1131,7 +1158,22 @@ class LevelEditor {
     switch (key) {
       case 'Delete':
       case 'Backspace': stop(); this.deleteSelectedElement(); return;
-      case 'Escape': stop(); this.selectedElementIndex = -1; this.selectedSpecial = null; this.setTool('select'); return;
+      case 'Enter':
+        if (this.selectedTool === 'polygonRock' && this.polyDraftPoints && this.polyDraftPoints.length >= 3) {
+          stop();
+          this._finalizePolygonRock();
+          return;
+        }
+        break;
+      case 'Escape':
+        if (this.selectedTool === 'polygonRock' && this.polyDraftPoints && this.polyDraftPoints.length > 0) {
+          stop();
+          this.polyDraftPoints = [];
+          this.updateStatus();
+          this._toast('다각형 암석 작도 취소');
+          return;
+        }
+        stop(); this.selectedElementIndex = -1; this.selectedSpecial = null; this.setTool('select'); return;
       case 'ArrowLeft': stop(); this.nudgeSelected(-1, 0, e.shiftKey); return;
       case 'ArrowRight': stop(); this.nudgeSelected(1, 0, e.shiftKey); return;
       case 'ArrowUp': stop(); this.nudgeSelected(0, -1, e.shiftKey); return;
@@ -1146,6 +1188,8 @@ class LevelEditor {
       case '8': stop(); this.setTool('triangleSlope'); return;
       case '9': stop(); this.setTool('steelPlatform'); return;
       case '0': stop(); this.setTool('movingPlatform'); return;
+      case 'p':
+      case 'P': stop(); this.setTool('polygonRock'); return;
       case 'j':
       case 'J': stop(); this.setTool('jumpPad'); return;
       case 'b':
@@ -1274,8 +1318,15 @@ class LevelEditor {
     }
     if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
     const el = this.levelData.elements[this.selectedElementIndex];
+    const prevX = el.x;
+    const prevY = el.y;
     el.x = Math.max(0, Math.min(800 - el.w, el.x + dx * step));
     el.y = Math.max(0, Math.min(450 - el.h, el.y + dy * step));
+    if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+      const sx = el.x - prevX;
+      const sy = el.y - prevY;
+      el.points.forEach(p => { p.x += sx; p.y += sy; });
+    }
     this.saveHistory(); this.syncTerrain(); this.updateStatus();
   }
 
@@ -1285,6 +1336,11 @@ class LevelEditor {
     const copy = JSON.parse(JSON.stringify(src));
     copy.x = Math.max(0, Math.min(800 - copy.w, copy.x + this.snapSize * 2));
     copy.y = Math.max(0, Math.min(450 - copy.h, copy.y + this.snapSize * 2));
+    if (copy.type === 'polygonRock' && Array.isArray(copy.points)) {
+      const sx = copy.x - src.x;
+      const sy = copy.y - src.y;
+      copy.points.forEach(p => { p.x += sx; p.y += sy; });
+    }
     this.levelData.elements.push(copy);
     this.selectedElementIndex = this.levelData.elements.length - 1;
     this.selectedSpecial = null;
@@ -1297,6 +1353,9 @@ class LevelEditor {
     (this.levelData.elements || []).forEach(el => {
       el.x = W - el.x - el.w;
       if (Array.isArray(el.profile)) el.profile = el.profile.slice().reverse();
+      if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+        el.points.forEach(p => { p.x = W - p.x; });
+      }
     });
     this.levelData.spawnX = W - this.levelData.spawnX;
     this.levelData.gateX = W - this.levelData.gateX;
@@ -1591,6 +1650,30 @@ class LevelEditor {
       this.saveHistory();
       this.updateStatus();
       SFX.playClick();
+    } else if (this.selectedTool === 'polygonRock') {
+      const px = this.snap ? this.snapCoord(x) : Math.round(x);
+      const py = this.snap ? this.snapCoord(y) : Math.round(y);
+      if (!this.polyDraftPoints) this.polyDraftPoints = [];
+
+      // Check if clicking near starting vertex to close (needs >= 3 points)
+      if (this.polyDraftPoints.length >= 3) {
+        const p0 = this.polyDraftPoints[0];
+        const dist = Math.hypot(px - p0.x, py - p0.y);
+        if (dist <= 16) {
+          this._finalizePolygonRock();
+          return;
+        }
+      }
+
+      // Append vertex if not duplicate of last point
+      const last = this.polyDraftPoints[this.polyDraftPoints.length - 1];
+      if (!last || (last.x !== px || last.y !== py)) {
+        this.polyDraftPoints.push({ x: px, y: py });
+        this.polyMousePos = { x: px, y: py };
+        if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
+        this.updateStatus();
+      }
+      return;
     } else {
       this.isDrawing = true;
       this.dragStart = { x: sx, y: sy };
@@ -1600,6 +1683,12 @@ class LevelEditor {
 
   handlePointerMove(x, y) {
     this.hoverPos = { x: this.snapCoord(x), y: this.snapCoord(y) };
+
+    if (this.selectedTool === 'polygonRock') {
+      const px = this.snap ? this.snapCoord(x) : Math.round(x);
+      const py = this.snap ? this.snapCoord(y) : Math.round(y);
+      this.polyMousePos = { x: px, y: py };
+    }
 
     if (this.isMovingSpawn) {
       const curPointerX = this.snapCoord(x);
@@ -1698,6 +1787,10 @@ class LevelEditor {
             const ratio = targetH / oldH;
             el.profile = el.profile.map(p => Math.max(6, Math.round(p * ratio)));
           }
+          if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+            const ratio = targetH / oldH;
+            el.points.forEach(p => { p.y = el.y + (p.y - el.y) * ratio; });
+          }
           this.syncTerrain();
           this.updateStatus();
         }
@@ -1712,7 +1805,12 @@ class LevelEditor {
         const minW = (el.type === 'steelBarrier' || el.type === 'rockWall') ? this.snapSize : this.snapSize * 2;
         const targetW = Math.max(minW, Math.min(800 - el.x, targetRight - el.x));
         if (targetW !== el.w) {
+          const oldW = el.w;
           el.w = targetW;
+          if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+            const ratio = targetW / oldW;
+            el.points.forEach(p => { p.x = el.x + (p.x - el.x) * ratio; });
+          }
           this.syncTerrain();
           this.updateStatus();
         }
@@ -1726,8 +1824,15 @@ class LevelEditor {
       const curPointerY = this.snapCoord(y);
       const deltaX = curPointerX - this.moveStartPointer.x;
       const deltaY = curPointerY - this.moveStartPointer.y;
-      el.x = Math.max(0, Math.min(800 - el.w, this.snapCoord(this.moveStartElementPos.x + deltaX)));
-      el.y = Math.max(0, Math.min(450 - el.h, this.snapCoord(this.moveStartElementPos.y + deltaY)));
+      const targetX = Math.max(0, Math.min(800 - el.w, this.snapCoord(this.moveStartElementPos.x + deltaX)));
+      const targetY = Math.max(0, Math.min(450 - el.h, this.snapCoord(this.moveStartElementPos.y + deltaY)));
+      const shiftX = targetX - el.x;
+      const shiftY = targetY - el.y;
+      el.x = targetX;
+      el.y = targetY;
+      if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+        el.points.forEach(p => { p.x += shiftX; p.y += shiftY; });
+      }
       this.syncTerrain();
       this.updateStatus();
       return;
@@ -2005,15 +2110,78 @@ class LevelEditor {
     }
   }
 
+  _finalizePolygonRock() {
+    if (!this.polyDraftPoints || this.polyDraftPoints.length < 3) {
+      this._toast('최소 3개 이상의 꼭짓점이 필요합니다.', '#ffaa00');
+      return;
+    }
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    this.polyDraftPoints.forEach(p => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+    const w = Math.max(10, maxX - minX);
+    const h = Math.max(10, maxY - minY);
+
+    const newRock = {
+      type: 'polygonRock',
+      points: this.polyDraftPoints.map(p => ({ x: p.x, y: p.y })),
+      x: minX,
+      y: minY,
+      w: w,
+      h: h,
+      palette: this.levelData.terrainTheme || 'cyan'
+    };
+
+    this.levelData.elements.push(newRock);
+    this.selectedElementIndex = this.levelData.elements.length - 1;
+    this.selectedSpecial = null;
+    this.polyDraftPoints = [];
+    this.saveHistory();
+    this.syncTerrain();
+    this.updateStatus();
+    if (typeof SFX !== 'undefined' && SFX.playBuild) SFX.playBuild();
+    this._toast('🔷 다각형 암석 생성 완료!');
+  }
+
   findElementAt(x, y, pad = 5) {
     for (let i = this.levelData.elements.length - 1; i >= 0; i--) {
       const el = this.levelData.elements[i];
+      if (el.type === 'polygonRock' && Array.isArray(el.points) && el.points.length >= 3) {
+        const p = pad;
+        if (x >= el.x - p && x <= el.x + el.w + p && y >= el.y - p && y <= el.y + el.h + p) {
+          // Ray casting point-in-polygon test
+          let inside = false;
+          for (let pi = 0, pj = el.points.length - 1; pi < el.points.length; pj = pi++) {
+            const xi = el.points[pi].x, yi = el.points[pi].y;
+            const xj = el.points[pj].x, yj = el.points[pj].y;
+            const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+          }
+          if (inside) return i;
+          // Also proximity to polygon perimeter edges
+          for (let pi = 0, pj = el.points.length - 1; pi < el.points.length; pj = pi++) {
+            if (this._distToSegment({ x, y }, el.points[pj], el.points[pi]) <= pad + 3) return i;
+          }
+        }
+        continue;
+      }
       const p = Math.max(pad, (el.h < 18 || el.w < 18) ? 7 : pad);
       if (x >= el.x - p && x <= el.x + el.w + p && y >= el.y - p && y <= el.y + el.h + p) {
         return i;
       }
     }
     return -1;
+  }
+
+  _distToSegment(p, v, w) {
+    const l2 = (w.x - v.x) * (w.x - v.x) + (w.y - v.y) * (w.y - v.y);
+    if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+    let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
   }
 
   render(ctx) {
@@ -2058,6 +2226,33 @@ class LevelEditor {
     // 2. Selected element bounding box & resize handles
     if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
       const el = this.levelData.elements[this.selectedElementIndex];
+
+      // Special outline for polygonRock
+      if (el.type === 'polygonRock' && Array.isArray(el.points) && el.points.length >= 3) {
+        ctx.save();
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00f3ff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(el.points[0].x, el.points[0].y);
+        for (let i = 1; i < el.points.length; i++) ctx.lineTo(el.points[i].x, el.points[i].y);
+        ctx.closePath();
+        ctx.stroke();
+
+        // draw vertex handles
+        el.points.forEach((pt) => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#00f3ff';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
       ctx.strokeStyle = (el.type === 'triangleSlope') ? '#00ff88' : ((el.type === 'jumpPad') ? '#ffaa00' : ((el.type === 'diagonalBeam') ? '#a8c2e0' : '#00f3ff'));
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 4]);
@@ -2341,6 +2536,87 @@ class LevelEditor {
         hoverGhost.render(ctx, true, true, this.game ? this.game.terrain : null);
         ctx.restore();
       }
+    }
+
+    // 3.45 Polygon Rock Drafting Preview
+    if (this.selectedTool === 'polygonRock' && this.polyDraftPoints && this.polyDraftPoints.length > 0) {
+      ctx.save();
+      const pts = this.polyDraftPoints;
+
+      // Semi-transparent fill preview
+      if (pts.length >= 2 && this.polyMousePos) {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.lineTo(this.polyMousePos.x, this.polyMousePos.y);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0, 243, 255, 0.15)';
+        ctx.fill();
+      }
+
+      // Drawn connected line segments
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = '#00f3ff';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+
+      // Rubber-band dashed line from last point to mouse
+      if (this.polyMousePos) {
+        const last = pts[pts.length - 1];
+        ctx.beginPath();
+        ctx.moveTo(last.x, last.y);
+        ctx.lineTo(this.polyMousePos.x, this.polyMousePos.y);
+        ctx.strokeStyle = '#ffb700';
+        ctx.setLineDash([5, 3]);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw each placed vertex
+      pts.forEach((p, idx) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, idx === 0 ? 6 : 4, 0, Math.PI * 2);
+        ctx.fillStyle = idx === 0 ? '#00ff88' : '#00f3ff';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+
+      // If >= 3 points, start point pulses and displays closure prompt
+      if (pts.length >= 3) {
+        const p0 = pts[0];
+        const isHoverClose = this.polyMousePos && Math.hypot(this.polyMousePos.x - p0.x, this.polyMousePos.y - p0.y) <= 18;
+        ctx.beginPath();
+        ctx.arc(p0.x, p0.y, isHoverClose ? 14 : 10, 0, Math.PI * 2);
+        ctx.strokeStyle = isHoverClose ? '#00ff88' : '#ffb700';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.font = 'bold 11px Orbitron, sans-serif';
+        ctx.fillStyle = isHoverClose ? '#00ff88' : '#ffb700';
+        ctx.shadowColor = '#000000';
+        ctx.shadowBlur = 4;
+        ctx.fillText(isHoverClose ? '✔ 클릭하여 암석 완성!' : '시작점 (닫기)', p0.x + 12, p0.y - 8);
+      }
+      ctx.restore();
+    } else if (this.selectedTool === 'polygonRock' && (!this.polyDraftPoints || this.polyDraftPoints.length === 0) && this.hoverPos) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(this.hoverPos.x, this.hoverPos.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#00f3ff';
+      ctx.fill();
+      ctx.font = 'bold 10px Orbitron, sans-serif';
+      ctx.fillStyle = '#00f3ff';
+      ctx.fillText('첫 번째 점 클릭', this.hoverPos.x + 8, this.hoverPos.y - 6);
+      ctx.restore();
     }
 
     // [NEW] 3.5 린트 마커

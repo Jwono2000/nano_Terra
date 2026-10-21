@@ -304,13 +304,187 @@ class TerrainEngine {
     this.ctx.fillStyle = pal.top;
     this.ctx.fillRect(x, y, w, 1.2);
 
-    this.ctx.strokeStyle = pal.vein;
-    for (let sx = x + 32; sx < x + w; sx += 32) {
+    // Modular Grid Texturing: Repeat both horizontally (every 32px) and vertically (every 20px) without distortion
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rect(x, y, w, h);
+    this.ctx.clip();
+
+    // Horizontal strata lines every 20px down the height
+    for (let sy = y + 20; sy < y + h; sy += 20) {
+      this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      this.ctx.lineWidth = 1.2;
       this.ctx.beginPath();
-      this.ctx.moveTo(sx, y + 1.5);
-      this.ctx.lineTo(sx, y + h - 1.5);
+      this.ctx.moveTo(x, sy);
+      this.ctx.lineTo(x + w, sy);
+      this.ctx.stroke();
+
+      this.ctx.strokeStyle = pal.vein;
+      this.ctx.lineWidth = 0.8;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, sy + 1);
+      this.ctx.lineTo(x + w, sy + 1);
       this.ctx.stroke();
     }
+
+    // Vertical seam joints (staggered bricks every 32px)
+    let rowIdx = 0;
+    for (let sy = y; sy < y + h; sy += 20) {
+      const offsetX = (rowIdx % 2 === 1) ? 16 : 0;
+      for (let sx = x + 32 + offsetX; sx < x + w; sx += 32) {
+        this.ctx.strokeStyle = pal.vein;
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(sx, sy + 1);
+        this.ctx.lineTo(sx, Math.min(y + h - 1, sy + 20));
+        this.ctx.stroke();
+      }
+      rowIdx++;
+    }
+    this.ctx.restore();
+  }
+
+  // --- 1.5 Custom Polygon Rock (Click points to close loop & form solid natural rock) ---
+  drawPolygonRock(points, paletteKey = 'cyan') {
+    if (!points || points.length < 3) return;
+    const pal = this.getPalette(paletteKey, 'cyan');
+
+    // 1. Calculate bounding box
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const p of points) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+    minX = Math.max(0, Math.floor(minX));
+    maxX = Math.min(this.width - 1, Math.ceil(maxX));
+    minY = Math.max(0, Math.floor(minY));
+    maxY = Math.min(this.height - 1, Math.ceil(maxY));
+    const w = maxX - minX;
+    const h = maxY - minY;
+    if (w <= 0 || h <= 0) return;
+
+    // 2. Scanline Polygon Rasterization into this.grid (1 = natural destructible rock)
+    const n = points.length;
+    for (let py = minY; py <= maxY; py++) {
+      const nodeX = [];
+      const scanY = py + 0.5;
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        const p1 = points[i];
+        const p2 = points[j];
+        if ((p1.y < scanY && p2.y >= scanY) || (p2.y < scanY && p1.y >= scanY)) {
+          const interX = p1.x + (scanY - p1.y) / (p2.y - p1.y) * (p2.x - p1.x);
+          nodeX.push(interX);
+        }
+      }
+      nodeX.sort((a, b) => a - b);
+      for (let i = 0; i < nodeX.length; i += 2) {
+        if (i + 1 < nodeX.length) {
+          const startX = Math.max(0, Math.ceil(nodeX[i]));
+          const endX = Math.min(this.width - 1, Math.floor(nodeX[i + 1]));
+          for (let px = startX; px <= endX; px++) {
+            this.grid[py * this.width + px] = 1;
+          }
+        }
+      }
+    }
+
+    // 3. Render Rich Natural Rock Graphics onto Canvas
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < n; i++) {
+      this.ctx.lineTo(points[i].x, points[i].y);
+    }
+    this.ctx.closePath();
+
+    // Drop Shadow
+    this.ctx.shadowColor = pal.shadow || 'rgba(0, 0, 0, 0.9)';
+    this.ctx.shadowBlur = 14;
+    this.ctx.shadowOffsetY = 6;
+    this.ctx.fillStyle = pal.base;
+    this.ctx.fill();
+    this.ctx.restore();
+
+    // Fill interior with layered rock texture (modular strata tiling, non-distorted!)
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < n; i++) {
+      this.ctx.lineTo(points[i].x, points[i].y);
+    }
+    this.ctx.closePath();
+    this.ctx.clip();
+
+    // Base rock color
+    this.ctx.fillStyle = pal.base;
+    this.ctx.fillRect(minX, minY, w, h);
+
+    if (this.pattern) {
+      this.ctx.fillStyle = this.pattern;
+      this.ctx.fillRect(minX, minY, w, h);
+      this.ctx.fillStyle = pal.overlay;
+      this.ctx.fillRect(minX, minY, w, h);
+    }
+
+    // Modular Sedimentary Rock Strata (tiled every 22px vertically so no vertical stretch!)
+    for (let sy = minY; sy <= maxY; sy += 22) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      this.ctx.fillRect(minX, sy, w, 2.5);
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      this.ctx.fillRect(minX, sy + 2.5, w, 1);
+    }
+
+    // Vertical mineral fissures & cracks (tiled every 30px horizontally)
+    for (let fx = minX + 15; fx <= maxX; fx += 30) {
+      this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.beginPath();
+      this.ctx.moveTo(fx, minY);
+      for (let cy = minY; cy <= maxY; cy += 16) {
+        const offset = Math.sin(cy * 0.12 + fx * 0.05) * 3;
+        this.ctx.lineTo(fx + offset, cy + 16);
+      }
+      this.ctx.stroke();
+
+      this.ctx.strokeStyle = pal.vein || 'rgba(0, 243, 255, 0.2)';
+      this.ctx.lineWidth = 1.0;
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+
+    // Outer rock outline border
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < n; i++) {
+      this.ctx.lineTo(points[i].x, points[i].y);
+    }
+    this.ctx.closePath();
+    this.ctx.strokeStyle = pal.border || 'rgba(0, 243, 255, 0.4)';
+    this.ctx.lineWidth = 1.8;
+    this.ctx.stroke();
+
+    // Upper lighted surface highlights
+    for (let i = 0; i < n; i++) {
+      const p1 = points[i];
+      const p2 = points[(i + 1) % n];
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      // If edge moves rightward and isn't a sheer under-hang, highlight top
+      if (Math.abs(dx) > 3) {
+        this.ctx.strokeStyle = pal.top || '#ffffff';
+        this.ctx.lineWidth = 1.8;
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.stroke();
+      }
+    }
+    this.ctx.restore();
   }
 
   drawCraggyRockFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'cyan') {
@@ -886,31 +1060,53 @@ class TerrainEngine {
 
     this.ctx.save();
     this.ctx.globalCompositeOperation = 'source-over';
-    this.ctx.fillStyle = '#1b2330';
+    this.ctx.fillStyle = '#141c26';
     this.ctx.fillRect(x, y, w, h);
 
     this.ctx.beginPath();
     this.ctx.rect(x, y, w, h);
     this.ctx.clip();
 
-    const stripeW = 8;
-    for (let sx = -h; sx < w + h; sx += stripeW * 2) {
+    // Uniform 45° Hazard Stripes: Exactly dx = dy (angle never distorts regardless of height)
+    const stripePitch = 20;
+    const stripeW = 10;
+    for (let d = -w - stripePitch; d < h + stripePitch; d += stripePitch) {
       this.ctx.fillStyle = '#ffb700';
       this.ctx.beginPath();
-      this.ctx.moveTo(x + sx, y);
-      this.ctx.lineTo(x + sx + stripeW, y);
-      this.ctx.lineTo(x + sx + stripeW - h, y + h);
-      this.ctx.lineTo(x + sx - h, y + h);
+      this.ctx.moveTo(x, y + d);
+      this.ctx.lineTo(x + w, y + d + w);
+      this.ctx.lineTo(x + w, y + d + w + stripeW);
+      this.ctx.lineTo(x, y + d + stripeW);
       this.ctx.closePath();
       this.ctx.fill();
     }
+
+    // Modular Horizontal Steel Girders & Rivet Seams every 32px vertically (tiles without distortion)
+    const moduleH = 32;
+    for (let sy = y + moduleH; sy < y + h; sy += moduleH) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      this.ctx.fillRect(x, sy - 1, w, 2);
+      this.ctx.fillStyle = 'rgba(255, 183, 0, 0.5)';
+      this.ctx.fillRect(x, sy + 1, w, 1);
+
+      // Rivet bolts on the beam
+      for (let rx = x + 5; rx < x + w; rx += 14) {
+        this.ctx.fillStyle = '#0b1118';
+        this.ctx.beginPath();
+        this.ctx.arc(rx, sy, 1.8, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(rx - 0.5, sy - 1, 1, 1);
+      }
+    }
+
     this.ctx.restore();
 
     this.ctx.save();
     this.ctx.globalCompositeOperation = 'source-over';
     this.ctx.strokeStyle = '#ffb700';
     this.ctx.lineWidth = 1.5;
-    this.ctx.strokeRect(x, y, w, h);
+    this.ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     this.ctx.restore();
   }
 
@@ -967,27 +1163,57 @@ class TerrainEngine {
     this.ctx.save();
     this.ctx.globalCompositeOperation = 'source-over';
 
-    // 1. Polished Mirror Chrome Multi-Stop Gradient Body
-    const chromeGrad = this.ctx.createLinearGradient(x, y, x, y + h);
+    // 1. Polished Mirror Chrome Top Cap & Lower Girder Body
+    const topCapH = Math.min(h, 18);
+    const chromeGrad = this.ctx.createLinearGradient(x, y, x, y + topCapH);
     chromeGrad.addColorStop(0.00, '#ffffff'); // Mirror top specular glare
-    chromeGrad.addColorStop(0.12, '#e6f3ff'); // Silver sky reflection
-    chromeGrad.addColorStop(0.35, '#8daec9'); // Chrome mid tone
-    chromeGrad.addColorStop(0.48, '#ffffff'); // Horizon glare highlight
-    chromeGrad.addColorStop(0.52, '#384d63'); // Ground shadow contrast boundary
-    chromeGrad.addColorStop(0.80, '#1c2836'); // Deep metallic steel core
-    chromeGrad.addColorStop(0.95, '#5e7d9b'); // Under-edge reflected light
-    chromeGrad.addColorStop(1.00, '#101720'); // Bottom drop shadow rim
+    chromeGrad.addColorStop(0.15, '#e6f3ff'); // Silver sky reflection
+    chromeGrad.addColorStop(0.40, '#8daec9'); // Chrome mid tone
+    chromeGrad.addColorStop(0.55, '#ffffff'); // Horizon glare highlight
+    chromeGrad.addColorStop(0.70, '#384d63'); // Ground shadow contrast boundary
+    chromeGrad.addColorStop(1.00, '#1c2836'); // Deep metallic steel core
     this.ctx.fillStyle = chromeGrad;
-    this.ctx.fillRect(x, y, w, h);
+    this.ctx.fillRect(x, y, w, topCapH);
 
-    // 2. 45° Specular Glare Streaks (Shining metallic reflection sweeps across entire width)
+    // If thicker than 18px, fill lower section with industrial steel girder plates
+    if (h > topCapH) {
+      this.ctx.fillStyle = '#172230';
+      this.ctx.fillRect(x, y + topCapH, w, h - topCapH);
+
+      // Repeating horizontal plate seams every 24px vertically
+      for (let sy = y + topCapH + 24; sy < y + h; sy += 24) {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        this.ctx.fillRect(x, sy - 1, w, 2);
+        this.ctx.fillStyle = 'rgba(141, 174, 201, 0.4)';
+        this.ctx.fillRect(x, sy + 1, w, 1);
+
+        // Rivets on girder seams
+        for (let rx = x + 8; rx < x + w; rx += 24) {
+          this.ctx.fillStyle = '#0a1017';
+          this.ctx.beginPath();
+          this.ctx.arc(rx, sy, 1.8, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.fillStyle = '#ffffff';
+          this.ctx.fillRect(rx - 0.5, sy - 1, 1, 1);
+        }
+      }
+
+      // Vertical girder ribs every 36px horizontally
+      for (let sx = x + 36; sx < x + w; sx += 36) {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(sx - 1, y + topCapH, 2, h - topCapH);
+        this.ctx.fillStyle = 'rgba(141, 174, 201, 0.25)';
+        this.ctx.fillRect(sx + 1, y + topCapH, 1, h - topCapH);
+      }
+    }
+
+    // 2. 45° Specular Glare Streaks across top cap
     this.ctx.save();
     this.ctx.beginPath();
-    this.ctx.rect(x + 1, y + 1, w - 2, h - 2);
+    this.ctx.rect(x + 1, y + 1, w - 2, topCapH - 2);
     this.ctx.clip();
 
-    // Draw multiple diagonal reflection bars across chrome body
-    for (let sx = -h * 2; sx < w + h * 2; sx += 55) {
+    for (let sx = -topCapH * 2; sx < w + topCapH * 2; sx += 55) {
       const barGrad = this.ctx.createLinearGradient(x + sx, y, x + sx + 24, y);
       barGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.0)');
       barGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.65)');
@@ -996,30 +1222,18 @@ class TerrainEngine {
       this.ctx.beginPath();
       this.ctx.moveTo(x + sx, y);
       this.ctx.lineTo(x + sx + 22, y);
-      this.ctx.lineTo(x + sx + 22 + h, y + h);
-      this.ctx.lineTo(x + sx + h, y + h);
+      this.ctx.lineTo(x + sx + 22 + topCapH, y + topCapH);
+      this.ctx.lineTo(x + sx + topCapH, y + topCapH);
       this.ctx.closePath();
       this.ctx.fill();
     }
-
-    // Horizon specular glare line (classic high-gloss chrome hallmark)
-    const horizGrad = this.ctx.createLinearGradient(x, y + h * 0.48, x + w, y + h * 0.48);
-    horizGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-    horizGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
-    horizGrad.addColorStop(1, 'rgba(255, 255, 255, 0.4)');
-    this.ctx.strokeStyle = horizGrad;
-    this.ctx.lineWidth = 1.0;
-    this.ctx.beginPath();
-    this.ctx.moveTo(x + 1, y + Math.floor(h * 0.48));
-    this.ctx.lineTo(x + w - 1, y + Math.floor(h * 0.48));
-    this.ctx.stroke();
+    this.ctx.restore();
 
     // Top walking surface hairline micro-grip track (1px mirror silver accent)
     this.ctx.fillStyle = '#ffffff';
     this.ctx.fillRect(x + 2, y + 1, w - 4, 1.2);
     this.ctx.fillStyle = 'rgba(0, 243, 255, 0.6)';
-    this.ctx.fillRect(x + 4, y + 2, w - 8, 1);
-    this.ctx.restore();
+    this.ctx.fillRect(x + 2, y + 2.2, w - 4, 0.8);
 
     // 3. Beveled Chrome Perimeter Border
     this.ctx.strokeStyle = '#ffffff';

@@ -451,6 +451,7 @@ class NanoUnit {
       this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
       this.fallDistance = 0;
       this.vy = 0;
+      this.vx = 0; // 명확한 원칙: 일반 보행 낙하 시 불필요한 잔여 관성을 제거하여 균일한 수직 낙하 보장
       return;
     }
 
@@ -501,7 +502,7 @@ class NanoUnit {
             // 발판과 마주보고 걷고 있었다면 밀리는 방향(좌측)으로 몸을 돌림
             if (this.dir > 0) {
               this.dir = -1;
-              this.vx = -1.25;
+              this.vx = 0;
             }
             this.x = Math.min(this.x, leftEdge - 2);
             // 벽 사이에 끼여 압사(Squash)되는지 안전 검사
@@ -515,7 +516,7 @@ class NanoUnit {
           // 발판 후미(우측면)로 뒤따라 걸어가다 부딪히는 경우 벽 반사
           if (this.dir > 0 && this.x < p.x + p.w && this.x > p.x + p.w - 6) {
             this.dir = -1;
-            this.vx = -1.25;
+            this.vx = 0;
             this.x = p.x + p.w + 2;
             return;
           }
@@ -526,7 +527,7 @@ class NanoUnit {
           const isApproachingFromOutside = (this.dir > 0 && this.x < p.x) || (this.dir < 0 && this.x > p.x + p.w);
           if (isApproachingFromOutside && p.containsPoint(nextSideX, this.y - 8)) {
             this.dir = -this.dir;
-            this.vx = this.dir * 1.25;
+            this.vx = 0;
             this.x += this.dir * 2;
             return;
           }
@@ -539,7 +540,7 @@ class NanoUnit {
       if (u.id !== this.id && u.state === STATE.BLOCKING_SHIELD) {
         if (Math.abs(this.x - u.x) < 18 && Math.abs(this.y - u.y) < 18) {
           this.dir = (this.x < u.x) ? -1 : 1;
-          this.vx = this.dir * 1.25;
+          this.vx = 0;
           this.x += this.dir * 2;
           return;
         }
@@ -553,11 +554,11 @@ class NanoUnit {
     }
 
     // 1) 머리/가슴 높이(cy = -20 ~ -9): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
-    //    계단(3)은 머리/가슴 높이에서 절대 벽으로 감지하지 않음 (계단 밑 및 역방향 완전 통과 보장)
-    //    (참고: h = 1~8px 단차/경사로는 아래 2단계 오르막 등반에서 처리되므로 cy는 -9 이하만 검사)
+    //    캐릭터 전면 바운딩 반경(약 7px)을 고려하여 벽 충돌을 감지하므로 벽 속으로 파고들지 않고 자연스럽게 턴어라운드!
+    const frontMargin = 7.0;
     let isHighWallAhead = false;
     for (let cy = -20; cy <= -9; cy += 3) {
-      const checkX = nextX + this.dir * 1;
+      const checkX = nextX + this.dir * frontMargin;
       const checkY = this.y + cy;
       if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : (terrain.isSolid(checkX, checkY) && !terrain.isStructure(checkX, checkY))) {
         isHighWallAhead = true;
@@ -600,11 +601,14 @@ class NanoUnit {
 
     // 3) 등반하지 못한 경우: 진짜 자연 벽/강철벽 충돌 판정
     const isBlockedByHardWall = isHighWallAhead || 
-      (terrain.isNaturalSolid ? (terrain.isNaturalSolid(nextX, this.y - 2) || terrain.isNaturalSolid(nextX, this.y)) : false);
+      (terrain.isNaturalSolid ? (terrain.isNaturalSolid(nextX + this.dir * frontMargin, this.y - 2) || terrain.isNaturalSolid(nextX + this.dir * frontMargin, this.y)) : false);
 
     if (isBlockedByHardWall) {
       if (this.hasPlasmaCutter) {
         if (terrain.isSteel(nextX + this.dir * 4, this.y - 10)) {
+          while ((terrain.isNaturalSolid ? terrain.isNaturalSolid(this.x + this.dir * 7, this.y - 10) : terrain.isSolid(this.x + this.dir * 7, this.y - 10)) && !terrain.isSolid(this.x - this.dir * 2, this.y - 10)) {
+            this.x -= this.dir * 0.5;
+          }
           this.dir = -this.dir;
           this.vx = this.dir * 1.25;
           this.hasPlasmaCutter = false;
@@ -628,6 +632,10 @@ class NanoUnit {
           this.x += this.dir * 1;
         }
       } else {
+        // 벽 속 파고듦 방지: 전방 신체가 벽 표면에 접촉했으면 벽 바깥쪽으로 정돈 후 턴어라운드
+        while ((terrain.isNaturalSolid ? terrain.isNaturalSolid(this.x + this.dir * 7, this.y - 10) : terrain.isSolid(this.x + this.dir * 7, this.y - 10)) && !terrain.isSolid(this.x - this.dir * 2, this.y - 10)) {
+          this.x -= this.dir * 0.5;
+        }
         this.dir = -this.dir;
         this.vx = this.dir * 1.25;
       }

@@ -1553,6 +1553,38 @@ class TerrainEngine {
     this.ctx.restore();
   }
 
+  getDiagonalBeamAt(x, y, margin = 8) {
+    if (!this.steelBeams || this.steelBeams.length === 0) return null;
+    for (const bm of this.steelBeams) {
+      const t = Math.max(8, bm.thickness || 16);
+      const halfT = Math.floor(t / 2);
+
+      // Check horizontal span with 4px margin
+      if (x >= bm.x - 4 && x <= bm.x + bm.w + 4) {
+        const dx = Math.max(0, Math.min(bm.w, x - bm.x));
+        const centerFrac = (bm.dir === 'downRight') ? (dx / bm.w) : ((bm.w - dx) / bm.w);
+        const cy = bm.y + Math.floor(bm.h * centerFrac);
+        // Top-rail surface where unit feet slide
+        const topY = cy - halfT;
+
+        // Check vertical contact within margin
+        if (y >= topY - margin && y <= topY + margin + 6) {
+          const slopeDir = (bm.dir === 'downRight') ? 1 : -1;
+          const isBottomEnd = (slopeDir > 0) ? (x >= bm.x + bm.w - 3) : (x <= bm.x + 3);
+          const isTopEnd = (slopeDir > 0) ? (x <= bm.x + 3) : (x >= bm.x + bm.w - 3);
+          return {
+            beam: bm,
+            topY,
+            slopeDir,
+            isBottomEnd,
+            isTopEnd
+          };
+        }
+      }
+    }
+    return null;
+  }
+
   carveCircle(cx, cy, radius, particles) {
     cx = Math.floor(cx); cy = Math.floor(cy);
     const r2 = radius * radius;

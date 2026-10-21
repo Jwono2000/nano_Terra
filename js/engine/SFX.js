@@ -233,8 +233,8 @@ const SFX = {
       setTimeout(() => this.playTone(880, 'triangle', 0.22, 0.16), 80);
       setTimeout(() => this.playTone(1320, 'sine', 0.35, 0.14), 160);
     } catch (e) { }
-  },
   playShield() { this.playTone(440, 'sine', 0.25, 0.18); },
+  playSlide() { this.playTone(880, 'sine', 0.12, 0.14, 0.001); },
   
   playTeleport() {
     if (!this.enabled || !this.ctx) return;

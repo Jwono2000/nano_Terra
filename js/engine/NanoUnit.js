@@ -10,6 +10,7 @@ const STATE = {
   BOMBING_COUNTDOWN: 'BOMBING_COUNTDOWN',
   BUILDING_3D_PRINT: 'BUILDING_3D_PRINT',
   BLOCKING_SHIELD: 'BLOCKING_SHIELD',
+  BEAM_SLIDING: 'BEAM_SLIDING',
   EXITING: 'EXITING',
   DEAD: 'DEAD'
 };
@@ -209,6 +210,9 @@ class NanoUnit {
       case STATE.BLOCKING_SHIELD:
         this.updateBlockingShield(particles, speedScale);
         break;
+      case STATE.BEAM_SLIDING:
+        this.updateBeamSliding(terrain, particles, speedScale);
+        break;
     }
   }
 
@@ -343,6 +347,29 @@ class NanoUnit {
       }
     }
 
+    // 1.8. Diagonal Steel Beam Ramp Catch (사선빔 착지 시 경사 미끄러짐 스케이트 진입)
+    if (terrain.getDiagonalBeamAt && this.vy >= 0) {
+      const beamContact = terrain.getDiagonalBeamAt(this.x, this.y, 8);
+      if (beamContact && !beamContact.isBottomEnd) {
+        this.state = STATE.BEAM_SLIDING;
+        this.dir = beamContact.slopeDir;
+        this.vx = this.dir * 2.65;
+        this.y = beamContact.topY;
+        this.vy = 0;
+        this.fallDistance = 0;
+        this.ridingPlatform = null;
+        this.lastDismountedPlatform = null;
+        this.dismountCooldown = 0;
+        if (particles) {
+          particles.spawnBurst(this.x, this.y, '#00f3ff', 8, 1.8);
+        }
+        if (typeof SFX !== 'undefined' && SFX.playSlide) {
+          SFX.playSlide();
+        }
+        return;
+      }
+    }
+
     // 2. Static Terrain Landing Check (고정 지형 착지 판정)
     if (terrain.isSolid(this.x, this.y + 1)) {
       while (terrain.isSolid(this.x, this.y) && this.y > 0) {
@@ -371,6 +398,26 @@ class NanoUnit {
       this.die(particles, 'splat');
       particles.spawnBurst(Math.max(10, Math.min(790, this.x)), 425, '#ff2255', 18, 3);
       return;
+    }
+
+    // 0. 사선빔 탑승 및 미끄러짐 스케이트 진입 검사
+    if (terrain.getDiagonalBeamAt) {
+      const beamContact = terrain.getDiagonalBeamAt(this.x, this.y, 8) || 
+                          terrain.getDiagonalBeamAt(this.x + this.dir * 3, this.y, 8);
+      if (beamContact && !beamContact.isBottomEnd) {
+        this.state = STATE.BEAM_SLIDING;
+        this.dir = beamContact.slopeDir;
+        this.vx = this.dir * 2.65;
+        this.y = beamContact.topY;
+        this.fallDistance = 0;
+        this.ridingPlatform = null;
+        this.lastDismountedPlatform = null;
+        this.dismountCooldown = 0;
+        if (typeof SFX !== 'undefined' && SFX.playSlide) {
+          SFX.playSlide();
+        }
+        return;
+      }
     }
 
     let foundGround = false;
@@ -553,11 +600,11 @@ class NanoUnit {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
     }
 
-    // 1) 머리/가슴 높이(cy = -20 ~ -9): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
-    //    캐릭터 전면 바운딩 반경(약 7px)을 고려하여 벽 충돌을 감지하므로 벽 속으로 파고들지 않고 자연스럽게 턴어라운드!
+    // 1) 머리/가슴/허벅지 높이(cy = -20 ~ -5): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
+    //    바닥 지면(this.y)은 수직 벽이 아니므로 제외하여, 레이저 관통 터널 등에서 지면 미세 굴곡으로 인한 오인식 턴어라운드 원천 차단!
     const frontMargin = 7.0;
     let isHighWallAhead = false;
-    for (let cy = -20; cy <= -9; cy += 3) {
+    for (let cy = -20; cy <= -5; cy += 3) {
       const checkX = nextX + this.dir * frontMargin;
       const checkY = this.y + cy;
       if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : (terrain.isSolid(checkX, checkY) && !terrain.isStructure(checkX, checkY))) {
@@ -600,8 +647,9 @@ class NanoUnit {
     }
 
     // 3) 등반하지 못한 경우: 진짜 자연 벽/강철벽 충돌 판정
+    //    지면(this.y)은 벽이 아니므로 판정에서 제외하고, 무릎 위 벽(isHighWallAhead) 또는 정강이 이상 높이(this.y - 3)의 벽만 충돌 판정
     const isBlockedByHardWall = isHighWallAhead || 
-      (terrain.isNaturalSolid ? (terrain.isNaturalSolid(nextX + this.dir * frontMargin, this.y - 2) || terrain.isNaturalSolid(nextX + this.dir * frontMargin, this.y)) : false);
+      (terrain.isNaturalSolid ? terrain.isNaturalSolid(nextX + this.dir * frontMargin, this.y - 3) : false);
 
     if (isBlockedByHardWall) {
       if (this.hasPlasmaCutter) {
@@ -729,15 +777,15 @@ class NanoUnit {
     SFX.startContinuousBeam('laser_' + this.id, 'laser');
 
     if (this.cutSteps % 2 === 0) {
-      const cutW = 36;
-      const cutH = 28;
-      const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
-      terrain.carveRect(cutX, this.cutStartY - 26, cutW, cutH, particles);
+      const cutW = 42;
+      const cutH = 29; // From cutStartY - 28 down to cutStartY, keeping cutStartY + 1 as planar floor
+      const cutX = this.dir > 0 ? this.x - 8 : this.x - (cutW - 8);
+      terrain.carveRect(cutX, this.cutStartY - 28, cutW, cutH, particles);
 
       // Smooth continuous forward advancement
       this.x += this.dir * 1.35 * speedScale;
       if (Math.random() < 0.45) {
-        particles.spawnBurst(this.x + this.dir * 18, this.cutStartY - 14, '#00f3ff', 2, 1.2);
+        particles.spawnBurst(this.x + this.dir * 20, this.cutStartY - 14, '#00f3ff', 2, 1.2);
       }
     }
     this.cutSteps++;
@@ -753,11 +801,11 @@ class NanoUnit {
       return;
     }
 
-    // Check if there is still solid rock at the front tip of the laser beam
+    // Check if there is still ANY solid rock ahead in the entire forward corridor (dist 4 to 38)
     let isSolidAhead = false;
-    for (let dist = 28; dist <= 34; dist += 2) {
+    for (let dist = 4; dist <= 38; dist += 2) {
       const checkX = this.x + this.dir * dist;
-      for (let cy = -24; cy <= -2; cy += 4) {
+      for (let cy = -26; cy <= 0; cy += 3) {
         if (terrain.isSolid(checkX, this.cutStartY + cy)) {
           isSolidAhead = true;
           break;
@@ -784,20 +832,83 @@ class NanoUnit {
         return;
       }
 
-      // Breached single wall! Follow-through for 14 steps to let unit's body step cleanly outside
-      if (this.exitSteps > 14 && this.cutSteps > 14) {
+      // Breached wall! Follow-through for 12 steps to let unit's body step cleanly outside
+      if (this.exitSteps > 12 && this.cutSteps > 10) {
         this.stopSounds();
-        const cutW = 38;
-        const cutH = 28;
-        const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
-        terrain.carveRect(cutX, this.cutStartY - 26, cutW, cutH, particles);
+        const cutW = 44;
+        const cutH = 29;
+        const cutX = this.dir > 0 ? this.x - 8 : this.x - (cutW - 8);
+        terrain.carveRect(cutX, this.cutStartY - 28, cutW, cutH, particles);
 
         this.state = STATE.WALKING;
         this.y = this.cutStartY;
         this.cutSteps = 0;
         this.cutStartY = 0;
         this.exitSteps = 0;
-        particles.spawnBurst(this.x, this.y - 12, '#00ff88', 18, 2.5);
+        if (particles) {
+          particles.spawnBurst(this.x, this.y - 12, '#00ff88', 18, 2.5);
+        }
+      }
+    }
+  }
+
+  updateBeamSliding(terrain, particles, speedScale) {
+    if (this.y >= 425 || this.x < -30 || this.x > 830) {
+      this.die(particles, 'splat');
+      if (particles) particles.spawnBurst(Math.max(10, Math.min(790, this.x)), 425, '#ff2255', 18, 3);
+      return;
+    }
+
+    const slideSpeed = 2.65 * speedScale;
+    const nextX = this.x + this.dir * slideSpeed;
+    const beamContact = terrain.getDiagonalBeamAt ? terrain.getDiagonalBeamAt(nextX, this.y, 14) : null;
+
+    if (beamContact && !beamContact.isBottomEnd) {
+      this.x = nextX;
+      this.y = beamContact.topY;
+
+      // Dynamic friction skate sparks trailing behind the sliding blade
+      if (particles && Math.random() < 0.65) {
+        particles.spawnBurst(this.x - this.dir * 4, this.y + 0.5, '#00f3ff', 2, 1.4);
+        if (Math.random() < 0.3) {
+          particles.spawnBurst(this.x - this.dir * 6, this.y, '#ffffff', 1, 1.0);
+        }
+      }
+    } else {
+      // Reached or slid past the bottom end of the diagonal beam!
+      this.x = nextX;
+      if (beamContact) {
+        this.y = beamContact.topY;
+      }
+
+      // Check if there is solid ground directly beneath feet at the ramp exit
+      const hasGroundBelow = terrain.isSolid(this.x, this.y + 1) || 
+                             terrain.isSolid(this.x, this.y + 3) ||
+                             terrain.isSolid(this.x, this.y + 6);
+
+      if (hasGroundBelow) {
+        for (let dy = 0; dy <= 6; dy++) {
+          if (terrain.isSolid(this.x, this.y + dy)) {
+            this.y = this.y + dy - 1;
+            break;
+          }
+        }
+        this.state = STATE.WALKING;
+        this.vx = this.dir * 1.25;
+        this.vy = 0;
+        this.fallDistance = 0;
+        if (particles) {
+          particles.spawnBurst(this.x, this.y, '#00ff88', 8, 1.6);
+        }
+      } else {
+        // Launch smoothly off the end into falling/floating with forward ramp momentum!
+        this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
+        this.vx = this.dir * 1.6;
+        this.vy = 0.8;
+        this.fallDistance = 0;
+        if (particles) {
+          particles.spawnBurst(this.x, this.y, '#00f3ff', 8, 2.2);
+        }
       }
     }
   }
@@ -1089,6 +1200,9 @@ class NanoUnit {
     } else if (this.state === STATE.BLOCKING_SHIELD) {
       executingIcon = '🛡️';
       executingColor = '#00ff88';
+    } else if (this.state === STATE.BEAM_SLIDING) {
+      executingIcon = '⛸️';
+      executingColor = '#00f3ff';
     } else if (this.state === STATE.FLOATING || (this.state === STATE.FALLING && this.hasAntiGrav)) {
       executingIcon = '🚀';
       executingColor = '#00ff88';
@@ -1267,6 +1381,11 @@ class NanoUnit {
         }
         ctx.restore();
 
+        ctx.restore();
+        return;
+
+      } else if (this.state === STATE.BEAM_SLIDING) {
+        this.renderSkatingPose(ctx);
         ctx.restore();
         return;
 
@@ -1485,6 +1604,11 @@ class NanoUnit {
   }
 
   renderHDChibiAstronaut(ctx) {
+    if (this.state === STATE.BEAM_SLIDING) {
+      this.renderSkatingPose(ctx);
+      return;
+    }
+
     const time = this.animFrame * 0.22;
     const isWalking = (this.state === STATE.WALKING);
     const stride = isWalking ? Math.sin(time) : 0;
@@ -1531,6 +1655,176 @@ class NanoUnit {
     ctx.fillRect(frontFootX - 1, frontFootY, 5, 4.5);
     ctx.fillStyle = '#00f3ff';
     ctx.fillRect(frontFootX - 1, frontFootY + 3.5, 5, 1.2);
+  }
+
+  renderSkatingPose(ctx) {
+    ctx.save();
+
+    // Subtle high-speed aerodynamic wind vibration
+    const vibration = Math.sin(this.animFrame * 0.8) * 0.4;
+    ctx.translate(0, vibration);
+
+    // 1. Back leg LIFTED HIGH in the air behind the body (one-foot speed skate pose)
+    ctx.save();
+    // Back thigh (crimson shadow)
+    ctx.strokeStyle = '#680a18';
+    ctx.lineWidth = 4.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-2, -11);
+    ctx.lineTo(-9, -14);
+    ctx.stroke();
+
+    // Back calf (raised upward into the air)
+    ctx.strokeStyle = '#8a0d20';
+    ctx.lineWidth = 3.6;
+    ctx.beginPath();
+    ctx.moveTo(-9, -14);
+    ctx.lineTo(-16, -16.5);
+    ctx.stroke();
+
+    // Raised back boot (floating high above ground)
+    ctx.fillStyle = '#e62244';
+    ctx.strokeStyle = '#3a0812';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.roundRect(-19, -18.5, 6, 4, 1.5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Cyan sole accent on raised boot
+    ctx.fillStyle = '#00f3ff';
+    ctx.fillRect(-19, -15.5, 6, 1.2);
+    ctx.restore();
+
+    // 2. Trailing arm (reaching backward-upward for balance)
+    ctx.save();
+    ctx.strokeStyle = '#680a18';
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-2, -15);
+    ctx.lineTo(-11, -19);
+    ctx.stroke();
+    // Glove
+    ctx.fillStyle = '#00f3ff';
+    ctx.beginPath();
+    ctx.arc(-11, -19, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3. Torso (aerodynamic forward lean, tilted ~15 degrees down the slope)
+    ctx.save();
+    ctx.rotate(0.26);
+
+    // Backpack / life-support thruster unit
+    ctx.fillStyle = '#220308';
+    ctx.strokeStyle = '#00f3ff';
+    ctx.lineWidth = 1.0;
+    ctx.fillRect(-8.5, -20, 4, 9);
+    ctx.strokeRect(-8.5, -20, 4, 9);
+    // Micro thruster flame trail
+    ctx.fillStyle = 'rgba(0, 243, 255, 0.6)';
+    ctx.beginPath();
+    ctx.moveTo(-8.5, -17);
+    ctx.lineTo(-12 - Math.random() * 3, -15.5);
+    ctx.lineTo(-8.5, -14);
+    ctx.fill();
+
+    // Crimson torso suit
+    ctx.fillStyle = '#e62244';
+    ctx.strokeStyle = '#3a0812';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(-5.5, -19, 11, 8.5, 2.5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Chest reactor core
+    ctx.fillStyle = '#00f3ff';
+    ctx.shadowColor = '#00f3ff';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(1.5, -15, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Helmet & visor
+    ctx.fillStyle = '#e62244';
+    ctx.strokeStyle = '#3a0812';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(2, -24, 7.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Cyan visor (focused down the slope)
+    ctx.fillStyle = '#00f3ff';
+    ctx.shadowColor = '#00f3ff';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.roundRect(1, -27, 7.5, 6, 2.5);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Visor highlight
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(4, -26, 3, 1.5);
+    ctx.restore();
+
+    // 4. Leading arm (reaching forward for balance)
+    ctx.save();
+    ctx.strokeStyle = '#9e0c25';
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(3, -13);
+    ctx.lineTo(10, -11);
+    ctx.stroke();
+    // Glove
+    ctx.fillStyle = '#00f3ff';
+    ctx.beginPath();
+    ctx.arc(10, -11, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 5. Front supporting leg (planted firmly on the rail, gliding forward)
+    ctx.save();
+    ctx.strokeStyle = '#9e0c25';
+    ctx.lineWidth = 4.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, -9);
+    ctx.lineTo(2, -4.5);
+    ctx.stroke();
+
+    // Supporting front boot
+    ctx.fillStyle = '#e62244';
+    ctx.strokeStyle = '#3a0812';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.roundRect(-1.5, -4.5, 7, 4.5, 1.5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Glowing cyan friction skate blade runner
+    ctx.shadowColor = '#00f3ff';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-3, -0.6, 9.5, 1.2);
+    ctx.fillStyle = '#00f3ff';
+    ctx.fillRect(-4, 0.4, 11, 1.0);
+    ctx.shadowBlur = 0;
+
+    // Blade sparks shooting backward from runner
+    const sparkPhase = (this.animFrame % 6);
+    ctx.fillStyle = (sparkPhase < 3) ? '#ffffff' : '#00f3ff';
+    ctx.beginPath();
+    ctx.arc(-5 - sparkPhase * 1.5, 0.5, 1.0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
   }
 }
 

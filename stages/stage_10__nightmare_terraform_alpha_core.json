@@ -1,0 +1,92 @@
+﻿{
+  "id": 10,
+  "title": "[NIGHTMARE] TERRAFORM ALPHA CORE",
+  "bgImg": "assets/bg_level_4.jpg",
+  "terrainTheme": "purple",
+  "desc": "10구역: [최종 결전] 행성 중심 테라포밍 알파 코어입니다. 9종 나노 스킬을 종합 운용하여 30기 나노봇을 전원 무사 구출하고 테라포밍 미션을 최종 완수하십시오!",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 270,
+  "skills": {
+    "climb": 0,
+    "float": 0,
+    "bash": 0,
+    "mine": 0,
+    "drill": 0,
+    "bomb": 2,
+    "build": 0,
+    "block": 0,
+    "portal": 0
+  },
+  "spawnX": 80,
+  "spawnY": 120,
+  "gateX": 660,
+  "gateY": 260,
+  "solutionDna": [
+    "FLOAT",
+    "BASH",
+    "DRILL",
+    "BLOCK",
+    "BUILD",
+    "PORTAL"
+  ],
+  "difficultyScore": 180,
+  "elements": [
+    {
+      "type": "craggyRock",
+      "x": 90,
+      "y": 220,
+      "w": 430,
+      "h": 20,
+      "palette": "red",
+      "profile": [
+        17,
+        19,
+        19,
+        15,
+        25,
+        23,
+        19,
+        25,
+        15,
+        23,
+        17
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 490,
+      "y": 150,
+      "w": 30,
+      "h": 70,
+      "palette": "purple"
+    },
+    {
+      "type": "craggyRock",
+      "x": 410,
+      "y": 290,
+      "w": 280,
+      "h": 20,
+      "palette": "red",
+      "profile": [
+        26,
+        17,
+        18,
+        21,
+        20,
+        26,
+        23,
+        25
+      ]
+    },
+    {
+      "type": "platform",
+      "x": 50,
+      "y": 160,
+      "w": 110,
+      "h": 20,
+      "palette": "red"
+    }
+  ],
+  "isOverridden": false}

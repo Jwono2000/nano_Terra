@@ -1,0 +1,72 @@
+﻿{
+  "id": 2,
+  "title": "[NORMAL] MAGMA CREVASSE",
+  "bgImg": "assets/bg_level_2.jpg",
+  "terrainTheme": "red",
+  "desc": "2구역: 화산 균열 지대입니다. 붉은 현무암과 마그마 암벽이 펼쳐집니다. 레이저(Bash)로 중앙 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill) 또는 대각 굴착(Mine)으로 뚫어 탈출하십시오!<br><span style='color: #ffb700;'>※ 강철 격벽은 파괴 불가!</span>",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 20,
+  "timeLimit": 200,
+  "skills": {
+    "climb": 0,
+    "float": 0,
+    "bash": 1,
+    "mine": 2,
+    "drill": 1,
+    "bomb": 1,
+    "build": 0,
+    "block": 1,
+    "portal": 0
+  },
+  "spawnX": 80,
+  "spawnY": 130,
+  "gateX": 720,
+  "gateY": 254,
+  "solutionDna": [
+    "FLOAT",
+    "BASH",
+    "DRILL"
+  ],
+  "difficultyScore": 60,
+  "elements": [
+    {
+      "type": "volcanicBasalt",
+      "x": 40,
+      "y": 190,
+      "w": 480,
+      "h": 24,
+      "palette": "red",
+      "profile": [
+        16,
+        28,
+        42,
+        38,
+        14,
+        12
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 500,
+      "y": 110,
+      "w": 20,
+      "h": 80
+    },
+    {
+      "type": "volcanicBasalt",
+      "x": 380,
+      "y": 280,
+      "w": 380,
+      "h": 30,
+      "palette": "red",
+      "profile": [
+        26,
+        34,
+        40,
+        28,
+        22
+      ]
+    }
+  ],
+  "isOverridden": false}

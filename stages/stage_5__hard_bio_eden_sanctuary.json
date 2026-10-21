@@ -1,0 +1,58 @@
+﻿{
+  "id": 5,
+  "title": "[HARD] BIO-EDEN SANCTUARY",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "green",
+  "desc": "5구역: 외계 바이오 에덴 성역입니다. 다단 녹색 테라스와 암벽을 방어막(Block)으로 나노봇의 진로를 반전시키고 흡착 등반(Climb)을 활용해 웜홀로 집결시키십시오.",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 0,
+    "float": 15,
+    "bash": 0,
+    "mine": 1,
+    "drill": 1,
+    "bomb": 0,
+    "build": 0,
+    "block": 1,
+    "portal": 0
+  },
+  "spawnX": 90,
+  "spawnY": 90,
+  "gateX": 670,
+  "gateY": 240,
+  "solutionDna": [
+    "BLOCK",
+    "BUILD",
+    "BASH",
+    "CLIMB"
+  ],
+  "difficultyScore": 95,
+  "elements": [
+    {
+      "type": "craggyRock",
+      "x": 70,
+      "y": 130,
+      "w": 380,
+      "h": 40,
+      "palette": "green",
+      "profile": [
+        27,
+        44,
+        60,
+        36,
+        31
+      ]
+    },
+    {
+      "type": "platform",
+      "x": 320,
+      "y": 280,
+      "w": 390,
+      "h": 40,
+      "palette": "green"
+    }
+  ],
+  "isOverridden": true}

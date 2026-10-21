@@ -1,0 +1,86 @@
+﻿{
+  "id": 9,
+  "title": "[NIGHTMARE] PLASMA VOID RIFT",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "cyan",
+  "desc": "9구역: 플라즈마 에너지 심연입니다. 높고 좁은 수직 낭떠러지 구조입니다. 역추진(Float)과 방어막(Block), 3D 계단을 적재적소에 배치하여 낭떠러지 추락을 방지하십시오.",
+  "totalUnits": 10,
+  "needPercent": 90,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 0,
+    "float": 0,
+    "bash": 0,
+    "mine": 0,
+    "drill": 0,
+    "bomb": 0,
+    "build": 0,
+    "block": 0,
+    "portal": 2
+  },
+  "spawnX": 90,
+  "spawnY": 100,
+  "gateX": 730,
+  "gateY": 280,
+  "solutionDna": [
+    "BLOCK",
+    "DRILL",
+    "FLOAT",
+    "BASH",
+    "BUILD"
+  ],
+  "difficultyScore": 150,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 50,
+      "y": 160,
+      "w": 150,
+      "h": 20,
+      "palette": "cyan"
+    },
+    {
+      "type": "craggyRock",
+      "x": 160,
+      "y": 230,
+      "w": 340,
+      "h": 24,
+      "palette": "cyan",
+      "profile": [
+        18,
+        30,
+        36,
+        20
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 400,
+      "y": 150,
+      "w": 100,
+      "h": 80
+    },
+    {
+      "type": "rockWall",
+      "x": 440,
+      "y": 310,
+      "w": 330,
+      "h": 40,
+      "palette": "cyan"
+    },
+    {
+      "type": "craggyRock",
+      "x": 440,
+      "y": 290,
+      "w": 20,
+      "h": 20,
+      "palette": "cyan",
+      "profile": [
+        23,
+        25,
+        20
+      ]
+    }
+  ],
+  "isOverridden": false}

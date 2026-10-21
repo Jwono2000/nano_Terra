@@ -277,6 +277,7 @@ class NanoUnit {
               this.state = STATE.WALKING;
               this.fallDistance = 0;
               this.vy = 0;
+              this.vx = 0;
               this.y = p.y;
               this.ridingPlatform = p;
               this.hasAntiGrav = false;
@@ -307,6 +308,7 @@ class NanoUnit {
             // If unit is in cooldown, safely land and walk on the pad surface instead of falling through into the abyss!
             this.state = STATE.WALKING;
             this.vy = 0;
+            this.vx = 0;
             this.ridingPlatform = null;
             this.lastDismountedPlatform = null;
             return;
@@ -357,6 +359,7 @@ class NanoUnit {
         this.dismountCooldown = 0;
         this.fallDistance = 0;
         this.vy = 0;
+        this.vx = 0;
         this.hasAntiGrav = false;
       }
     }

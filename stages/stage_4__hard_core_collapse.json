@@ -1,0 +1,64 @@
+﻿{
+  "id": 4,
+  "title": "[HARD] CORE COLLAPSE",
+  "bgImg": "assets/bg_level_4.jpg",
+  "terrainTheme": "brown",
+  "desc": "4구역: 심층 황무지 코어 발전소입니다. 1층 드릴 관통 -> 2층 레이저 절삭 -> 계단 생성으로 25기 나노봇 전원을 손실 없이 구출하십시오!",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 10,
+    "float": 0,
+    "bash": 0,
+    "mine": 0,
+    "drill": 0,
+    "bomb": 0,
+    "build": 0,
+    "block": 1,
+    "portal": 0
+  },
+  "spawnX": 160,
+  "spawnY": 200,
+  "gateX": 590,
+  "gateY": 210,
+  "solutionDna": [
+    "DRILL",
+    "FLOAT",
+    "BASH",
+    "BUILD"
+  ],
+  "difficultyScore": 85,
+  "elements": [
+    {
+      "type": "craggyRock",
+      "x": 140,
+      "y": 250,
+      "w": 480,
+      "h": 40,
+      "palette": "brown",
+      "profile": [
+        27,
+        40,
+        67,
+        32
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 330,
+      "y": 180,
+      "w": 30,
+      "h": 70
+    },
+    {
+      "type": "rockWall",
+      "x": 360,
+      "y": 180,
+      "w": 90,
+      "h": 70,
+      "palette": "brown"
+    }
+  ],
+  "isOverridden": true}

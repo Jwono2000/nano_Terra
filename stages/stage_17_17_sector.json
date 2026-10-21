@@ -5,8 +5,8 @@
   "terrainTheme": "cyan",
   "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
   "totalUnits": 15,
-  "needPercent": 75,
-  "spawnRate": 40,
+  "needPercent": 80,
+  "spawnRate": 80,
   "timeLimit": 240,
   "skills": {
     "climb": 1,
@@ -15,8 +15,8 @@
     "mine": 1,
     "drill": 2,
     "bomb": 2,
-    "build": 15,
-    "block": 3,
+    "build": 2,
+    "block": 2,
     "portal": 0
   },
   "spawnX": 190,
@@ -79,7 +79,7 @@
       "type": "steelBarrier",
       "x": 90,
       "y": 340,
-      "w": 260,
+      "w": 240,
       "h": 10,
       "palette": "cyan"
     },
@@ -122,9 +122,31 @@
       "w": 20,
       "h": 200,
       "palette": "cyan"
+    },
+    {
+      "type": "movingPlatform",
+      "x": 350,
+      "y": 210,
+      "w": 60,
+      "h": 10,
+      "axis": "vertical",
+      "range": 140,
+      "speed": 0.75,
+      "pauseTicks": 30,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 110,
+      "y": 340,
+      "w": 240,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
     }
   ],
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50}
+  "difficultyScore": 50,
+  "isOverridden": true}

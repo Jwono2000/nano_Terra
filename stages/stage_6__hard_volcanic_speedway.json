@@ -1,0 +1,73 @@
+﻿{
+  "id": 6,
+  "title": "[HARD] VOLCANIC SPEEDWAY",
+  "bgImg": "assets/bg_level_2.jpg",
+  "terrainTheme": "red",
+  "desc": "6구역: 마그마 고속 회랑입니다. 낙하 지점 아래의 용암 바닥을 조심하십시오! 역추진(Float)으로 감속 낙하 후 연속 드릴(Drill)로 2개 층을 신속히 관통하십시오.",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 220,
+  "skills": {
+    "climb": 0,
+    "float": 2,
+    "bash": 2,
+    "mine": 2,
+    "drill": 1,
+    "bomb": 1,
+    "build": 0,
+    "block": 1,
+    "portal": 0
+  },
+  "spawnX": 90,
+  "spawnY": 80,
+  "gateX": 640,
+  "gateY": 250,
+  "solutionDna": [
+    "FLOAT",
+    "DRILL",
+    "DRILL",
+    "BASH"
+  ],
+  "difficultyScore": 105,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 40,
+      "y": 120,
+      "w": 180,
+      "h": 20,
+      "palette": "red"
+    },
+    {
+      "type": "volcanicBasalt",
+      "x": 450,
+      "y": 290,
+      "w": 230,
+      "h": 40,
+      "palette": "red",
+      "profile": [
+        30,
+        29,
+        32,
+        37,
+        39
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 180,
+      "y": 170,
+      "w": 280,
+      "h": 140,
+      "palette": "red",
+      "profile": [
+        107,
+        122,
+        172,
+        145,
+        154
+      ]
+    }
+  ],
+  "isOverridden": true}

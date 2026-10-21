@@ -19,270 +19,288 @@
   class GatewayRenderer {
 
     /**
-     * 입구: [QUANTUM DEPLOYMENT GATEWAY] (양자 나노봇 투하 관문)
-     * @param {CanvasRenderingContext2D} ctx
-     * @param {number} x 투하 중심 X좌표
-     * @param {number} y 투하 중심 Y좌표 (나노봇 출현 지점)
-     * @param {number} time 애니메이션 타임스탬프
-     * @param {boolean} isSelected 에디터 선택 상태 여부
+     * 메카닉 게이트웨이 공통 통합 렌더러 (스폰 & 웜홀 공통 메카닉 아키텍처)
+     * - 고정밀 28px 베벨 티타늄 링 섀시
+     * - 8점 정밀 메카닉 리벳 볼트
+     * - 4방향 유압 마그네틱 클램프 & 통풍 인디케이터
+     * - 회전식 6-티스 자계 가속기 스테이터 & 텔레메트리 링
+     * - 이중 위상 반전 양자 조리개 & 중심 핫스팟
+     * - 컬러 테마 & 방향성 입자 플럭스만 완벽히 대칭 차별화
      */
-    static renderSpawn(ctx, x, y, time = 0, isSelected = false) {
+    static renderMechanicalGateway(ctx, x, y, time = 0, isSelected = false, type = 'spawn') {
+      const isSpawn = (type === 'spawn');
       x = Math.round(x);
       y = Math.round(y);
+
+      // 테마별 컬러 정의 (동일 메카닉 구조, 컬러만 완벽 대칭 차별화)
+      const theme = isSpawn ? {
+        primary: '#00f3ff',       // 네온 시안
+        secondary: '#0088ff',     // 일렉트릭 블루
+        glow: 'rgba(0, 243, 255, 0.65)',
+        ambient: 'rgba(0, 243, 255, 0.18)',
+        darkBase: '#0d1522',
+        darkPlate: '#141e2e',
+        darkRim: '#1e2d42',
+        badge: 'IN // SPAWN',
+        editorTitle: `🚪 SPAWN (${x}, ${y})`
+      } : {
+        primary: '#bf00ff',       // 퀀텀 바이올렛
+        secondary: '#ff00aa',     // 네온 마젠타
+        glow: 'rgba(191, 0, 255, 0.65)',
+        ambient: 'rgba(191, 0, 255, 0.18)',
+        darkBase: '#160c24',
+        darkPlate: '#221438',
+        darkRim: '#321d50',
+        badge: 'OUT // WORMHOLE',
+        editorTitle: `🌀 GATE (${x}, ${y})`
+      };
+
       ctx.save();
+      ctx.translate(x, y);
 
-      // ── 1. 하방 전개 홀로그램 에너지 콘 (Downward Holographic Beam) ──
-      const beamGrad = ctx.createLinearGradient(x, y - 8, x, y + 26);
-      beamGrad.addColorStop(0, 'rgba(0, 243, 255, 0.35)');
-      beamGrad.addColorStop(0.4, 'rgba(0, 243, 255, 0.15)');
-      beamGrad.addColorStop(1, 'rgba(0, 243, 255, 0.0)');
-
+      // ── 1. 앰비언트 양자 필드 글로우 (Ambient Energy Halo) ──
+      const glowPulse = 1.0 + Math.sin(time * 3) * 0.12;
+      const ambGrad = ctx.createRadialGradient(0, 0, 6, 0, 0, 38 * glowPulse);
+      ambGrad.addColorStop(0, theme.ambient);
+      ambGrad.addColorStop(0.7, theme.ambient.replace('0.18', '0.06'));
+      ambGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = ambGrad;
       ctx.beginPath();
-      ctx.moveTo(x - 14, y - 8);
-      ctx.lineTo(x - 22, y + 26);
-      ctx.lineTo(x + 22, y + 26);
-      ctx.lineTo(x + 14, y - 8);
-      ctx.closePath();
-      ctx.fillStyle = beamGrad;
+      ctx.arc(0, 0, 38 * glowPulse, 0, Math.PI * 2);
       ctx.fill();
 
-      // 하향 에너지 스캔라인 (Laser Grid Scanline)
-      const scanPhase = ((time * 35) % 32);
-      const scanY = (y - 7) + scanPhase;
-      const scanHalfW = 14 + (scanPhase / 32) * 7;
-      ctx.strokeStyle = 'rgba(0, 243, 255, 0.75)';
-      ctx.lineWidth = 1.5;
+      // ── 2. 외곽 티타늄 메카닉 프레임 링 (Outer Armored Stator Ring) ──
+      // 베벨 메인 하우징 링
+      ctx.lineWidth = 5;
+      const ringGrad = ctx.createLinearGradient(-26, -26, 26, 26);
+      ringGrad.addColorStop(0, theme.darkRim);
+      ringGrad.addColorStop(0.5, theme.darkPlate);
+      ringGrad.addColorStop(1, theme.darkBase);
+      ctx.strokeStyle = ringGrad;
       ctx.beginPath();
-      ctx.moveTo(x - scanHalfW, scanY);
-      ctx.lineTo(x + scanHalfW, scanY);
+      ctx.arc(0, 0, 26, 0, Math.PI * 2);
       ctx.stroke();
 
-      // 하향 유도 화살표 (Downward Flux Chevrons)
-      const arrowAlpha1 = Math.max(0, Math.sin(time * 4) * 0.7 + 0.3);
-      const arrowAlpha2 = Math.max(0, Math.cos(time * 4) * 0.7 + 0.3);
-      ctx.fillStyle = `rgba(0, 243, 255, ${arrowAlpha1 * 0.8})`;
-      ctx.font = 'bold 8px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('▼', x, y + 7);
-      ctx.fillStyle = `rgba(0, 243, 255, ${arrowAlpha2 * 0.8})`;
-      ctx.fillText('▼', x, y + 17);
-
-      // ── 2. 중장갑 티타늄 상부 캐노피 (Armored Canopy Hood) ──
-      // 베벨 육각형 하우징
+      // 섀시 외곽 라인 & 내부 네온 림
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = theme.primary;
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 4;
       ctx.beginPath();
-      ctx.moveTo(x - 22, y - 10);
-      ctx.lineTo(x - 22, y - 26);
-      ctx.lineTo(x - 14, y - 34);
-      ctx.lineTo(x + 14, y - 34);
-      ctx.lineTo(x + 22, y - 26);
-      ctx.lineTo(x + 22, y - 10);
-      ctx.lineTo(x + 16, y - 6);
-      ctx.lineTo(x - 16, y - 6);
-      ctx.closePath();
-
-      const hoodGrad = ctx.createLinearGradient(x, y - 34, x, y - 6);
-      hoodGrad.addColorStop(0, '#101524');
-      hoodGrad.addColorStop(0.5, '#1e283d');
-      hoodGrad.addColorStop(1, '#141a29');
-      ctx.fillStyle = hoodGrad;
-      ctx.fill();
-
-      ctx.strokeStyle = '#00f3ff';
-      ctx.lineWidth = 2;
-      ctx.shadowColor = 'rgba(0, 243, 255, 0.6)';
-      ctx.shadowBlur = 6;
+      ctx.arc(0, 0, 28.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, 23.5, 0, Math.PI * 2);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // 상단 경고 띠 (Caution Stripe Bar)
-      ctx.fillStyle = '#ffb700';
-      ctx.fillRect(x - 10, y - 32, 20, 3);
-      ctx.fillStyle = '#000000';
-      for (let bx = -9; bx < 9; bx += 4) {
-        ctx.fillRect(x + bx, y - 32, 2, 3);
+      // 8점 메카닉 리벳 볼트 (45도 간격)
+      ctx.fillStyle = '#64748b';
+      for (let i = 0; i < 8; i++) {
+        const ang = (i * Math.PI) / 4;
+        const rx = Math.cos(ang) * 26;
+        const ry = Math.sin(ang) * 26;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 1.2, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // ── 3. 좌우 양자 방출 파일런 노드 (Quantum Emitter Pylons) ──
-      const pylonAlpha = Math.sin(time * 6) > 0 ? '#00f3ff' : '#00ffaa';
-      // 좌측 파일런
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(x - 26, y - 24, 5, 12);
-      ctx.strokeStyle = pylonAlpha;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x - 26, y - 24, 5, 12);
-      ctx.fillStyle = pylonAlpha;
-      ctx.fillRect(x - 25, y - 21, 3, 6);
+      // ── 3. 4방향 유압 마그네틱 클램프 브래킷 (4-Axis Magnetic Clamps) ──
+      const clampAngles = [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5];
+      for (const ang of clampAngles) {
+        ctx.save();
+        ctx.rotate(ang);
 
-      // 우측 파일런
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(x + 21, y - 24, 5, 12);
-      ctx.strokeStyle = pylonAlpha;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x + 21, y - 24, 5, 12);
-      ctx.fillStyle = pylonAlpha;
-      ctx.fillRect(x + 22, y - 21, 3, 6);
+        // 클램프 중장갑 바디 (외곽 돌출 블록)
+        ctx.fillStyle = theme.darkPlate;
+        ctx.fillRect(23, -5, 8, 10);
+        ctx.strokeStyle = theme.darkRim;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(23, -5, 8, 10);
 
-      // ── 4. 중심 투하 아퍼처 & 플라즈마 코어 (Central Aperture Iris) ──
-      const corePulse = 1.0 + Math.sin(time * 5) * 0.18;
+        // 정밀 네온 인디케이터 노치
+        ctx.fillStyle = theme.primary;
+        ctx.fillRect(25, -2, 4, 4);
+
+        // 미세 주의 스트라이프 (Hazard Accent)
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillRect(29, -4, 1.5, 8);
+
+        ctx.restore();
+      }
+
+      // ── 4. 회전식 내부 가속기 스테이터 & 텔레메트리 링 (Rotating Inner Stator) ──
+      ctx.save();
+      const rotSpeed = isSpawn ? (time * 0.75) : (-time * 0.75);
+      ctx.rotate(rotSpeed);
+
+      // 대시 텔레메트리 링
+      ctx.strokeStyle = theme.primary;
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([5, 4]);
       ctx.beginPath();
-      ctx.arc(x, y - 16, 7 * corePulse, 0, Math.PI * 2);
-      const coreGrad = ctx.createRadialGradient(x, y - 16, 1, x, y - 16, 7 * corePulse);
+      ctx.arc(0, 0, 20, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 6개 내부 포커싱 메카닉 에미터 티스 (Inward Magnetic Teeth)
+      for (let i = 0; i < 6; i++) {
+        const fangAngle = (i * Math.PI) / 3;
+        ctx.save();
+        ctx.rotate(fangAngle);
+        ctx.fillStyle = theme.primary;
+        ctx.beginPath();
+        ctx.moveTo(19, -2);
+        ctx.lineTo(15, 0);
+        ctx.lineTo(19, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // ── 5. 양자 조리개 & 중심 특이점 코어 (Quantum Aperture Core) ──
+      const corePulse = 1.0 + Math.sin(time * 5) * 0.15;
+      const coreR = Math.max(8, 13 * corePulse);
+
+      // 내부 회전 반전 듀얼 링 (Counter-phase inner energy flux)
+      ctx.save();
+      ctx.rotate(-rotSpeed * 1.5);
+      ctx.strokeStyle = theme.secondary;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // 중심 방사 플라즈마 그라데이션
+      const coreGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, coreR);
       coreGrad.addColorStop(0, '#ffffff');
-      coreGrad.addColorStop(0.5, '#00f3ff');
-      coreGrad.addColorStop(1, 'rgba(0, 243, 255, 0.0)');
+      coreGrad.addColorStop(0.35, theme.primary);
+      coreGrad.addColorStop(0.75, theme.secondary);
+      coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, coreR, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.lineWidth = 1;
+      // 중심 초백색 핫스팟
+      ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(x, y - 16, 3, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.arc(0, 0, 4.5 * corePulse, 0, Math.PI * 2);
+      ctx.fill();
 
-      // ── 5. 홀로그램 상태 라벨 ──
-      ctx.font = '900 9px Orbitron, sans-serif';
+      // ── 6. 방향성 에너지 플럭스 효과 (Directional Particle Flux) ──
+      if (isSpawn) {
+        // [SPAWN] 투하/방출 플럭스: 아래쪽 전개 빔 & 하향 에너지 셰브론
+        ctx.save();
+        const beamAlpha = 0.35 + Math.sin(time * 4) * 0.15;
+        const beamGrad = ctx.createLinearGradient(0, 15, 0, 36);
+        beamGrad.addColorStop(0, `rgba(0, 243, 255, ${beamAlpha})`);
+        beamGrad.addColorStop(1, 'rgba(0, 243, 255, 0.0)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(-10, 15);
+        ctx.lineTo(-16, 36);
+        ctx.lineTo(16, 36);
+        ctx.lineTo(10, 15);
+        ctx.closePath();
+        ctx.fill();
+
+        // 하향 에너지 펄스 셰브론
+        const arrowPhase = (time * 30) % 18;
+        const arrowY = 16 + arrowPhase;
+        const arrowAlpha = Math.max(0, 1 - (arrowPhase / 18));
+        ctx.fillStyle = `rgba(255, 255, 255, ${arrowAlpha * 0.9})`;
+        ctx.font = 'bold 8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('▼', 0, arrowY);
+        ctx.restore();
+
+      } else {
+        // [WORMHOLE] 회수/흡입 플럭스: 중심 흡입 나선 파티클
+        ctx.save();
+        for (let p = 0; p < 4; p++) {
+          const pPhase = (time * 2.2 + (p * Math.PI / 2)) % (Math.PI * 2);
+          const pDist = 22 - (pPhase / (Math.PI * 2)) * 18;
+          const px = Math.cos(pPhase * 2) * pDist;
+          const py = Math.sin(pPhase * 2) * pDist;
+          const pAlpha = (pDist / 22);
+          ctx.fillStyle = (p % 2 === 0) ? `rgba(255, 255, 255, ${pAlpha})` : `rgba(255, 0, 170, ${pAlpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // ── 7. 미니멀 메카닉 사이버 HUD 배지 (Tactical Hologram Badge) ──
+      ctx.save();
+      ctx.font = 'bold 8.5px Orbitron, monospace, sans-serif';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillStyle = '#00f3ff';
-      ctx.shadowColor = 'rgba(0, 243, 255, 0.7)';
-      ctx.shadowBlur = 4;
-      ctx.fillText('DEPLOY // SPAWN', x, y - 37);
-      ctx.shadowBlur = 0;
+      ctx.textBaseline = 'middle';
 
-      // ── 6. 에디터 선택 상자 (Selected Indicator) ──
+      const badgeText = theme.badge;
+      const textMetrics = ctx.measureText(badgeText);
+      const badgeW = Math.max(48, textMetrics.width + 10);
+      const badgeH = 12;
+      const badgeY = -36;
+
+      // 반투명 다크 전술 플레이트
+      ctx.fillStyle = 'rgba(10, 16, 26, 0.85)';
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(-badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH);
+      }
+
+      // 네온 프레임
+      ctx.strokeStyle = isSelected ? '#ffaa00' : theme.primary;
+      ctx.lineWidth = 1;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(-badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, 2);
+        ctx.stroke();
+      } else {
+        ctx.strokeRect(-badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH);
+      }
+
+      // 텍스트 글로우
+      ctx.shadowColor = theme.primary;
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = isSelected ? '#ffcc00' : theme.primary;
+      ctx.fillText(badgeText, 0, badgeY);
+      ctx.restore();
+
+      // ── 8. 에디터 선택 인디케이터 (Editor Selected Box) ──
       if (isSelected) {
-        ctx.strokeStyle = '#00f3ff';
-        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.strokeStyle = isSelected ? '#ffaa00' : theme.primary;
+        ctx.lineWidth = 1.8;
         ctx.setLineDash([4, 3]);
-        ctx.strokeRect(x - 28, y - 48, 56, 76);
+        ctx.strokeRect(-32, -32, 64, 64);
         ctx.setLineDash([]);
-        ctx.fillStyle = '#00f3ff';
-        ctx.font = 'bold 11px Orbitron, sans-serif';
-        ctx.fillText(`🚪 SPAWN (${x}, ${y})`, x, y - 52);
+        ctx.font = 'bold 10px Orbitron, sans-serif';
+        ctx.fillStyle = '#ffaa00';
+        ctx.textAlign = 'center';
+        ctx.fillText(theme.editorTitle, 0, -46);
+        ctx.restore();
       }
 
       ctx.restore();
     }
 
-    /**
-     * 출구: [QUANTUM EXTRACTION WORMHOLE] (양자 나노봇 회수 웜홀)
-     * @param {CanvasRenderingContext2D} ctx
-     * @param {number} x 웜홀 중심 X좌표
-     * @param {number} y 웜홀 중심 Y좌표
-     * @param {number} time 애니메이션 타임스탬프
-     * @param {boolean} isSelected 에디터 선택 상태 여부
-     */
+    static renderSpawn(ctx, x, y, time = 0, isSelected = false) {
+      this.renderMechanicalGateway(ctx, x, y, time, isSelected, 'spawn');
+    }
+
     static renderGate(ctx, x, y, time = 0, isSelected = false) {
-      x = Math.round(x);
-      y = Math.round(y);
-      ctx.save();
-      ctx.translate(x, y);
-
-      // ── 1. 외곽 티타늄 가속기 링 & 구속 코일 4기 (Outer Stator Housing) ──
-      ctx.strokeStyle = 'rgba(28, 20, 44, 0.85)';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(0, 0, 27, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // 4방향 자기장 구속 코일 블록 (0°, 90°, 180°, 270°)
-      const coilAngles = [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5];
-      for (const ang of coilAngles) {
-        ctx.save();
-        ctx.rotate(ang);
-        ctx.fillStyle = '#161026';
-        ctx.fillRect(24, -4, 6, 8);
-        ctx.strokeStyle = '#bf00ff';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(24, -4, 6, 8);
-        ctx.fillStyle = '#00f3ff';
-        ctx.fillRect(25, -2, 4, 4);
-        ctx.restore();
-      }
-
-      // ── 2. 시계방향 회전 외곽 가속기 링 (Clockwise Accelerator) ──
-      ctx.save();
-      ctx.rotate(time * 0.85);
-      ctx.strokeStyle = 'rgba(191, 0, 255, 0.55)';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([8, 6]);
-      ctx.beginPath();
-      ctx.arc(0, 0, 24, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // ── 3. 반시계방향 초고속 이중 나선 타원 (Counter-Rotating Quantum Ellipses) ──
-      ctx.save();
-      ctx.rotate(-time * 1.5);
-      for (let i = 0; i < 4; i++) {
-        const radX = 19 - i * 3.5;
-        const radY = 11 - i * 2;
-        const tilt = (i * Math.PI) / 4;
-        ctx.strokeStyle = (i % 2 === 0) ? '#bf00ff' : '#00f3ff';
-        ctx.lineWidth = 2.2;
-        ctx.shadowColor = (i % 2 === 0) ? 'rgba(191, 0, 255, 0.8)' : 'rgba(0, 243, 255, 0.8)';
-        ctx.shadowBlur = 5;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, Math.max(3, radX), Math.max(2, radY), tilt, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      ctx.shadowBlur = 0;
-      ctx.restore();
-
-      // ── 4. 흡입형 사건의 지평선 특이점 (Inward Gravitational Singularity) ──
-      const coreScale = 1.0 + Math.sin(time * 3) * 0.22;
-      const vortexGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, 12 * coreScale);
-      vortexGrad.addColorStop(0, '#ffffff');
-      vortexGrad.addColorStop(0.35, '#00f3ff');
-      vortexGrad.addColorStop(0.7, '#bf00ff');
-      vortexGrad.addColorStop(1, 'rgba(191, 0, 255, 0.0)');
-
-      ctx.beginPath();
-      ctx.arc(0, 0, 12 * coreScale, 0, Math.PI * 2);
-      ctx.fillStyle = vortexGrad;
-      ctx.fill();
-
-      // 중심 초백색 에너지 코어
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(0, 0, 4.5 * coreScale, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 회수 흡입 나선 파티클 (Inward Spiral Flux Dots)
-      for (let p = 0; p < 4; p++) {
-        const pPhase = (time * 1.8 + (p * Math.PI / 2)) % (Math.PI * 2);
-        const pDist = 20 - (pPhase / (Math.PI * 2)) * 16;
-        const px = Math.cos(pPhase * 2) * pDist;
-        const py = Math.sin(pPhase * 2) * pDist;
-        ctx.fillStyle = (p % 2 === 0) ? '#00f3ff' : '#ffffff';
-        ctx.beginPath();
-        ctx.arc(px, py, 1.4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // ── 5. 홀로그램 상태 라벨 ──
-      ctx.font = '900 9px Orbitron, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillStyle = '#bf00ff';
-      ctx.shadowColor = 'rgba(191, 0, 255, 0.7)';
-      ctx.shadowBlur = 5;
-      ctx.fillText('EXTRACT // GATE', 0, -32);
-      ctx.shadowBlur = 0;
-
-      // ── 6. 에디터 선택 상자 (Selected Indicator) ──
-      if (isSelected) {
-        ctx.strokeStyle = '#bf00ff';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 3]);
-        ctx.strokeRect(-32, -32, 64, 64);
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#00f3ff';
-        ctx.font = 'bold 11px Orbitron, sans-serif';
-        ctx.fillText(`🌀 GATE (${x}, ${y})`, 0, -42);
-      }
-
-      ctx.restore();
+      this.renderMechanicalGateway(ctx, x, y, time, isSelected, 'gate');
     }
   }
 

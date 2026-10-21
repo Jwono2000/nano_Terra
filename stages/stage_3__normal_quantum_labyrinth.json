@@ -1,0 +1,101 @@
+﻿{
+  "id": 3,
+  "title": "[NORMAL] QUANTUM LABYRINTH",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "desc": "3구역: 양자 크리스탈 유적지입니다. 신비로운 보랏빛 유적 지형입니다. 1층에서 2층으로 하강 -> 강철벽 앞에서 바닥 드릴(Drill) -> 3층 암벽 레이저(Bash) 관통으로 웜홀에 도달하십시오.",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 1,
+    "mine": 2,
+    "drill": 1,
+    "bomb": 1,
+    "build": 1,
+    "block": 1,
+    "portal": 1
+  },
+  "spawnX": 90,
+  "spawnY": 50,
+  "gateX": 720,
+  "gateY": 254,
+  "solutionDna": [
+    "DRILL",
+    "BASH",
+    "BUILD"
+  ],
+  "difficultyScore": 75,
+  "elements": [
+    {
+      "type": "quantumCrystal",
+      "x": 40,
+      "y": 110,
+      "w": 140,
+      "h": 20,
+      "palette": "purple",
+      "profile": [
+        18,
+        22,
+        18
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 100,
+      "y": 190,
+      "w": 320,
+      "h": 100,
+      "palette": "purple",
+      "profile": [
+        60,
+        89,
+        150,
+        69
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 400,
+      "y": 90,
+      "w": 20,
+      "h": 100
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 260,
+      "y": 280,
+      "w": 500,
+      "h": 30,
+      "palette": "purple",
+      "profile": [
+        18,
+        28,
+        36,
+        32,
+        22
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 260,
+      "y": 280,
+      "w": 500,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 40,
+      "y": 110,
+      "w": 140,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    }
+  ],
+  "isOverridden": false}

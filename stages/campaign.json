@@ -90,15 +90,15 @@
     "spawnRate": 20,
     "timeLimit": 200,
     "skills": {
-      "climb": 1,
-      "float": 1,
+      "climb": 0,
+      "float": 0,
       "bash": 1,
-      "mine": 1,
+      "mine": 2,
       "drill": 1,
       "bomb": 1,
-      "build": 1,
+      "build": 0,
       "block": 1,
-      "portal": 1
+      "portal": 0
     },
     "spawnX": 80,
     "spawnY": 130,
@@ -157,9 +157,9 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "3구역: 양자 크리스탈 유적지입니다. 신비로운 보랏빛 유적 지형입니다. 1층에서 2층으로 하강 -> 강철벽 앞에서 바닥 드릴(Drill) -> 3층 암벽 레이저(Bash) 관통으로 웜홀에 도달하십시오.",
-    "totalUnits": 15,
+    "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 30,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
       "climb": 1,
@@ -231,6 +231,24 @@
           32,
           22
         ]
+      },
+      {
+        "type": "steelPlatform",
+        "x": 260,
+        "y": 280,
+        "w": 500,
+        "h": 10,
+        "palette": "purple",
+        "isSteel": true
+      },
+      {
+        "type": "steelPlatform",
+        "x": 40,
+        "y": 110,
+        "w": 140,
+        "h": 10,
+        "palette": "purple",
+        "isSteel": true
       }
     ]
   },
@@ -242,18 +260,18 @@
     "desc": "4구역: 심층 황무지 코어 발전소입니다. 1층 드릴 관통 -> 2층 레이저 절삭 -> 계단 생성으로 25기 나노봇 전원을 손실 없이 구출하십시오!",
     "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 50,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
-      "climb": 12,
-      "float": 1,
-      "bash": 1,
-      "mine": 1,
-      "drill": 1,
-      "bomb": 1,
-      "build": 1,
+      "climb": 10,
+      "float": 0,
+      "bash": 0,
+      "mine": 0,
+      "drill": 0,
+      "bomb": 0,
+      "build": 0,
       "block": 1,
-      "portal": 1
+      "portal": 0
     },
     "spawnX": 160,
     "spawnY": 200,
@@ -306,17 +324,17 @@
     "desc": "5구역: 외계 바이오 에덴 성역입니다. 다단 녹색 테라스와 암벽을 방어막(Block)으로 나노봇의 진로를 반전시키고 흡착 등반(Climb)을 활용해 웜홀로 집결시키십시오.",
     "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 50,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
-      "climb": 1,
+      "climb": 0,
       "float": 15,
-      "bash": 1,
+      "bash": 0,
       "mine": 1,
       "drill": 1,
-      "bomb": 1,
-      "build": 1,
-      "block": 2,
+      "bomb": 0,
+      "build": 0,
+      "block": 1,
       "portal": 0
     },
     "spawnX": 90,
@@ -362,18 +380,18 @@
     "bgImg": "assets/bg_level_2.jpg",
     "terrainTheme": "red",
     "desc": "6구역: 마그마 고속 회랑입니다. 낙하 지점 아래의 용암 바닥을 조심하십시오! 역추진(Float)으로 감속 낙하 후 연속 드릴(Drill)로 2개 층을 신속히 관통하십시오.",
-    "totalUnits": 15,
-    "needPercent": 85,
-    "spawnRate": 20,
+    "totalUnits": 10,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 220,
     "skills": {
-      "climb": 1,
-      "float": 1,
-      "bash": 6,
-      "mine": 1,
+      "climb": 0,
+      "float": 2,
+      "bash": 2,
+      "mine": 2,
       "drill": 1,
       "bomb": 1,
-      "build": 1,
+      "build": 0,
       "block": 1,
       "portal": 0
     },
@@ -435,9 +453,9 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "7구역: 하이페리온 양자 요새입니다. 공중에 떠 있는 다중 섬 지형입니다. 3D 계단(Build)으로 절벽을 잇거나 차원 포탈(Portal)을 생성해 강철벽을 우회하십시오.",
-    "totalUnits": 15,
-    "needPercent": 85,
-    "spawnRate": 30,
+    "totalUnits": 10,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
       "climb": 1,
@@ -512,18 +530,18 @@
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "brown",
     "desc": "8구역: 소행성 지하 채굴 기지입니다. 단단한 황무지 암반층과 복합 격벽이 있습니다. 코어 폭파(Bomb)와 융해 드릴(Drill)을 결합하여 심층 탈출로를 뚫으십시오.",
-    "totalUnits": 15,
-    "needPercent": 85,
-    "spawnRate": 25,
+    "totalUnits": 10,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
-      "climb": 1,
-      "float": 1,
-      "bash": 1,
+      "climb": 0,
+      "float": 0,
+      "bash": 0,
       "mine": 1,
       "drill": 1,
       "bomb": 1,
-      "build": 3,
+      "build": 0,
       "block": 1,
       "portal": 0
     },
@@ -570,9 +588,9 @@
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "cyan",
     "desc": "9구역: 플라즈마 에너지 심연입니다. 높고 좁은 수직 낭떠러지 구조입니다. 역추진(Float)과 방어막(Block), 3D 계단을 적재적소에 배치하여 낭떠러지 추락을 방지하십시오.",
-    "totalUnits": 15,
+    "totalUnits": 10,
     "needPercent": 90,
-    "spawnRate": 35,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
       "climb": 0,
@@ -583,7 +601,7 @@
       "bomb": 0,
       "build": 0,
       "block": 0,
-      "portal": 1
+      "portal": 2
     },
     "spawnX": 90,
     "spawnY": 100,
@@ -656,9 +674,9 @@
     "bgImg": "assets/bg_level_4.jpg",
     "terrainTheme": "purple",
     "desc": "10구역: [최종 결전] 행성 중심 테라포밍 알파 코어입니다. 9종 나노 스킬을 종합 운용하여 30기 나노봇을 전원 무사 구출하고 테라포밍 미션을 최종 완수하십시오!",
-    "totalUnits": 15,
-    "needPercent": 90,
-    "spawnRate": 25,
+    "totalUnits": 10,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 270,
     "skills": {
       "climb": 0,
@@ -748,15 +766,15 @@
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "cyan",
     "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
-    "totalUnits": 15,
+    "totalUnits": 10,
     "needPercent": 70,
-    "spawnRate": 25,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
-      "climb": 1,
+      "climb": 0,
       "float": 0,
-      "bash": 1,
-      "mine": 0,
+      "bash": 2,
+      "mine": 1,
       "drill": 1,
       "bomb": 2,
       "build": 1,
@@ -844,19 +862,19 @@
     "terrainTheme": "red",
     "desc": "12구역: 지휘관 전술 커스텀 구역입니다.",
     "totalUnits": 15,
-    "needPercent": 70,
-    "spawnRate": 25,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
-      "climb": 2,
-      "float": 2,
+      "climb": 1,
+      "float": 1,
       "bash": 2,
       "mine": 2,
       "drill": 2,
       "bomb": 1,
       "build": 3,
       "block": 2,
-      "portal": 1
+      "portal": 0
     },
     "spawnX": 80,
     "spawnY": 50,
@@ -915,8 +933,8 @@
     "terrainTheme": "red",
     "desc": "13구역: 마그마 균열 지대입니다. 강철벽 앞 바닥을 드릴로 천공하여 하층으로 진입하십시오.",
     "totalUnits": 15,
-    "needPercent": 70,
-    "spawnRate": 22,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 210,
     "skills": {
       "climb": 4,
@@ -926,7 +944,8 @@
       "bomb": 2,
       "build": 6,
       "block": 3,
-      "portal": 1
+      "portal": 0,
+      "mine": 4
     },
     "spawnX": 80,
     "spawnY": 50,
@@ -1016,10 +1035,10 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "14구역: 170px 고도 낙하 및 이중 암벽 지대입니다. 역추진과 연속 레이저로 관통하십시오.",
-    "totalUnits": 18,
+    "totalUnits": 15,
     "needPercent": 80,
-    "spawnRate": 25,
-    "timeLimit": 180,
+    "spawnRate": 80,
+    "timeLimit": 200,
     "skills": {
       "climb": 3,
       "float": 4,
@@ -1028,7 +1047,8 @@
       "bomb": 2,
       "build": 4,
       "block": 2,
-      "portal": 1
+      "portal": 0,
+      "mine": 4
     },
     "spawnX": 80,
     "spawnY": 50,
@@ -1119,10 +1139,10 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "15구역: 역방향 퍼즐 설계 기반 160px 치명적 낙차 및 강철 격벽 우회 구역. BASH → DRILL → FLOAT → BLOCK → BUILD 5단 연계로 웜홀을 개척하십시오.",
-    "totalUnits": 10,
+    "totalUnits": 15,
     "needPercent": 80,
-    "spawnRate": 25,
-    "timeLimit": 134,
+    "spawnRate": 80,
+    "timeLimit": 180,
     "skills": {
       "climb": 1,
       "float": 9,
@@ -1136,8 +1156,8 @@
     },
     "spawnX": 75,
     "spawnY": 45,
-    "gateX": 705,
-    "gateY": 266,
+    "gateX": 700,
+    "gateY": 240,
     "solutionDna": [
       "BASH",
       "DRILL",
@@ -1148,26 +1168,19 @@
     "difficultyScore": 183,
     "elements": [
       {
-        "type": "steelBarrier",
-        "x": 20,
-        "y": 15,
-        "w": 15,
-        "h": 75
-      },
-      {
         "type": "platform",
         "x": 30,
         "y": 80,
-        "w": 225,
-        "h": 22,
+        "w": 230,
+        "h": 20,
         "palette": "purple"
       },
       {
         "type": "rockWall",
-        "x": 135,
-        "y": 15,
-        "w": 35,
-        "h": 68,
+        "x": 130,
+        "y": 40,
+        "w": 40,
+        "h": 40,
         "palette": "purple"
       },
       {
@@ -1175,14 +1188,14 @@
         "x": 240,
         "y": 10,
         "w": 20,
-        "h": 85
+        "h": 90
       },
       {
         "type": "steelBarrier",
-        "x": 380,
-        "y": 20,
+        "x": 430,
+        "y": 100,
         "w": 20,
-        "h": 85
+        "h": 90
       },
       {
         "type": "platform",
@@ -1194,10 +1207,10 @@
       },
       {
         "type": "steelBarrier",
-        "x": 175,
-        "y": 85,
-        "w": 15,
-        "h": 65
+        "x": 180,
+        "y": 100,
+        "w": 10,
+        "h": 60
       },
       {
         "type": "quantumCrystal",
@@ -1214,10 +1227,10 @@
       },
       {
         "type": "quantumCrystal",
-        "x": 245,
-        "y": 300,
-        "w": 235,
-        "h": 24,
+        "x": 250,
+        "y": 310,
+        "w": 240,
+        "h": 20,
         "palette": "purple",
         "profile": [
           20,
@@ -1230,210 +1243,80 @@
       {
         "type": "steelBarrier",
         "x": 240,
-        "y": 235,
-        "w": 15,
-        "h": 75
+        "y": 250,
+        "w": 20,
+        "h": 70
       },
       {
         "type": "platform",
-        "x": 512,
-        "y": 276,
-        "w": 235,
-        "h": 22,
+        "x": 510,
+        "y": 290,
+        "w": 250,
+        "h": 20,
         "palette": "purple"
       },
       {
         "type": "steelBarrier",
-        "x": 745,
-        "y": 205,
-        "w": 15,
+        "x": 740,
+        "y": 210,
+        "w": 20,
         "h": 80
+      },
+      {
+        "type": "steelPlatform",
+        "x": 260,
+        "y": 310,
+        "w": 230,
+        "h": 10,
+        "palette": "purple",
+        "isSteel": true
+      },
+      {
+        "type": "steelPlatform",
+        "x": 510,
+        "y": 280,
+        "w": 230,
+        "h": 10,
+        "palette": "purple",
+        "isSteel": true
+      },
+      {
+        "type": "steelPlatform",
+        "x": 360,
+        "y": 190,
+        "w": 90,
+        "h": 10,
+        "palette": "purple",
+        "isSteel": true
+      },
+      {
+        "type": "steelBarrier",
+        "x": 20,
+        "y": 40,
+        "w": 10,
+        "h": 60,
+        "palette": "purple"
       }
     ]
   },
   {
     "id": 16,
     "title": "[HARD] QUANTUM (HARD)",
-    "desc": "[ZIGZAG] 100% 클리어 검증 구역. (난이도: HARD, 점수: 173pt, 솔루션: BUILD → DRILL → BASH → FLOAT)",
-    "bgImg": "assets/bg_level_8.jpg",
-    "terrainTheme": "purple",
-    "totalUnits": 15,
-    "needPercent": 75,
-    "spawnRate": 30,
-    "timeLimit": 122,
-    "skills": {
-      "climb": 2,
-      "float": 2,
-      "bash": 1,
-      "mine": 1,
-      "drill": 0,
-      "bomb": 1,
-      "build": 5,
-      "block": 2,
-      "portal": 0
-    },
-    "spawnX": 120,
-    "spawnY": 110,
-    "gateX": 440,
-    "gateY": 300,
-    "elements": [
-      {
-        "type": "quantumCrystal",
-        "x": 60,
-        "y": 150,
-        "w": 220,
-        "h": 30,
-        "palette": "purple",
-        "profile": [
-          29,
-          22,
-          15,
-          20,
-          17,
-          18
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 60,
-        "y": 80,
-        "w": 20,
-        "h": 70
-      },
-      {
-        "type": "steelBarrier",
-        "x": 260,
-        "y": 100,
-        "w": 20,
-        "h": 70
-      },
-      {
-        "type": "platform",
-        "x": 420,
-        "y": 110,
-        "w": 130,
-        "h": 20,
-        "palette": "purple",
-        "profile": [
-          16,
-          29,
-          33,
-          29,
-          31
-        ]
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 260,
-        "y": 220,
-        "w": 190,
-        "h": 20,
-        "palette": "purple",
-        "profile": [
-          13,
-          19,
-          17,
-          15
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 400,
-        "y": 70,
-        "w": 20,
-        "h": 100
-      },
-      {
-        "type": "rockWall",
-        "x": 350,
-        "y": 110,
-        "w": 50,
-        "h": 60,
-        "palette": "purple"
-      },
-      {
-        "type": "platform",
-        "x": 530,
-        "y": 220,
-        "w": 130,
-        "h": 20,
-        "palette": "purple",
-        "profile": [
-          31,
-          27,
-          25,
-          20
-        ]
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 370,
-        "y": 350,
-        "w": 290,
-        "h": 30,
-        "palette": "purple",
-        "profile": [
-          51,
-          27,
-          27,
-          36,
-          51,
-          24
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 640,
-        "y": 280,
-        "w": 20,
-        "h": 70
-      }
-    ],
-    "solutionDna": [
-      "BUILD",
-      "DRILL",
-      "BASH",
-      "FLOAT"
-    ],
-    "difficultyScore": 173,
-    "difficultyFactors": {
-      "actionsScore": 32,
-      "uniqueSkillsScore": 28,
-      "steelScore": 35,
-      "decoyScore": 16,
-      "dangerDropScore": 10,
-      "comboScore": 36,
-      "scarcityScore": 16
-    },
-    "layoutType": "zigzag",
-    "_meta": {
-      "seed": 1193937555,
-      "archetype": "zigzag",
-      "difficulty": "HARD",
-      "elementCount": 16,
-      "attempt": 5,
-      "simVerified": true,
-      "rescuedRatio": "4/5"
-    }
-  },
-  {
-    "id": 17,
-    "title": "17구역 SECTOR",
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "cyan",
     "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
     "totalUnits": 15,
-    "needPercent": 75,
-    "spawnRate": 40,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
       "climb": 1,
       "float": 1,
       "bash": 2,
-      "mine": 1,
+      "mine": 2,
       "drill": 2,
       "bomb": 2,
-      "build": 15,
+      "build": 20,
       "block": 3,
       "portal": 0
     },
@@ -1540,6 +1423,176 @@
         "w": 20,
         "h": 200,
         "palette": "cyan"
+      },
+      {
+        "type": "steelPlatform",
+        "x": 90,
+        "y": 340,
+        "w": 260,
+        "h": 10,
+        "palette": "cyan",
+        "isSteel": true
+      },
+      {
+        "type": "steelPlatform",
+        "x": 410,
+        "y": 340,
+        "w": 270,
+        "h": 10,
+        "palette": "cyan",
+        "isSteel": true
+      }
+    ],
+    "solutionDna": [
+      "CUSTOM"
+    ],
+    "difficultyScore": 50
+  },
+  {
+    "id": 17,
+    "title": "17구역 SECTOR",
+    "bgImg": "assets/bg_level_1.jpg",
+    "terrainTheme": "cyan",
+    "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+    "totalUnits": 15,
+    "needPercent": 80,
+    "spawnRate": 80,
+    "timeLimit": 240,
+    "skills": {
+      "climb": 1,
+      "float": 1,
+      "bash": 2,
+      "mine": 1,
+      "drill": 2,
+      "bomb": 2,
+      "build": 2,
+      "block": 2,
+      "portal": 0
+    },
+    "spawnX": 190,
+    "spawnY": 170,
+    "gateX": 600,
+    "gateY": 170,
+    "elements": [
+      {
+        "type": "platform",
+        "x": 100,
+        "y": 220,
+        "w": 230,
+        "h": 130,
+        "palette": "cyan"
+      },
+      {
+        "type": "platform",
+        "x": 430,
+        "y": 220,
+        "w": 240,
+        "h": 140,
+        "palette": "cyan"
+      },
+      {
+        "type": "volcanicBasalt",
+        "x": 0,
+        "y": 350,
+        "w": 800,
+        "h": 60,
+        "palette": "cyan",
+        "profile": [
+          67,
+          23,
+          59,
+          23,
+          49,
+          36,
+          60,
+          31,
+          53,
+          47,
+          49,
+          42,
+          77,
+          42,
+          78,
+          47,
+          77,
+          30,
+          59,
+          23,
+          55,
+          49,
+          60,
+          25,
+          65
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 90,
+        "y": 340,
+        "w": 240,
+        "h": 10,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 330,
+        "y": 90,
+        "w": 20,
+        "h": 220,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 90,
+        "y": 140,
+        "w": 20,
+        "h": 210,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 410,
+        "y": 210,
+        "w": 20,
+        "h": 130,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 410,
+        "y": 340,
+        "w": 250,
+        "h": 10,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 660,
+        "y": 150,
+        "w": 20,
+        "h": 200,
+        "palette": "cyan"
+      },
+      {
+        "type": "movingPlatform",
+        "x": 350,
+        "y": 210,
+        "w": 60,
+        "h": 10,
+        "axis": "vertical",
+        "range": 140,
+        "speed": 0.75,
+        "pauseTicks": 30,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelPlatform",
+        "x": 110,
+        "y": 340,
+        "w": 240,
+        "h": 10,
+        "palette": "cyan",
+        "isSteel": true
       }
     ],
     "solutionDna": [
@@ -1554,18 +1607,18 @@
     "terrainTheme": "cyan",
     "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
     "totalUnits": 15,
-    "needPercent": 70,
-    "spawnRate": 35,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 240,
     "skills": {
-      "climb": 1,
+      "climb": 2,
       "float": 5,
       "bash": 2,
-      "mine": 6,
-      "drill": 6,
+      "mine": 2,
+      "drill": 2,
       "bomb": 2,
       "build": 30,
-      "block": 7,
+      "block": 2,
       "portal": 0
     },
     "spawnX": 190,
@@ -1741,9 +1794,9 @@
       },
       {
         "type": "triangleSlope",
-        "x": 310,
+        "x": 330,
         "y": 290,
-        "w": 130,
+        "w": 110,
         "h": 60,
         "palette": "cyan",
         "direction": "up-right",

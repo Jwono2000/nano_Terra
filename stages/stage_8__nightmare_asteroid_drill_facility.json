@@ -1,0 +1,58 @@
+﻿{
+  "id": 8,
+  "title": "[NIGHTMARE] ASTEROID DRILL FACILITY",
+  "bgImg": "assets/bg_level_4.jpg",
+  "terrainTheme": "brown",
+  "desc": "8구역: 소행성 지하 채굴 기지입니다. 단단한 황무지 암반층과 복합 격벽이 있습니다. 코어 폭파(Bomb)와 융해 드릴(Drill)을 결합하여 심층 탈출로를 뚫으십시오.",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 0,
+    "float": 0,
+    "bash": 0,
+    "mine": 1,
+    "drill": 1,
+    "bomb": 1,
+    "build": 0,
+    "block": 1,
+    "portal": 0
+  },
+  "spawnX": 400,
+  "spawnY": 200,
+  "gateX": 210,
+  "gateY": 260,
+  "solutionDna": [
+    "DRILL",
+    "BOMB",
+    "BASH",
+    "BUILD"
+  ],
+  "difficultyScore": 135,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 370,
+      "y": 230,
+      "w": 120,
+      "h": 20,
+      "palette": "brown"
+    },
+    {
+      "type": "craggyRock",
+      "x": 180,
+      "y": 290,
+      "w": 460,
+      "h": 40,
+      "palette": "brown",
+      "profile": [
+        31,
+        51,
+        71,
+        47,
+        27
+      ]
+    }
+  ],
+  "isOverridden": false}

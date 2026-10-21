@@ -1,0 +1,77 @@
+﻿{
+  "id": 7,
+  "title": "[HARD] HYPERION CITADEL",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "desc": "7구역: 하이페리온 양자 요새입니다. 공중에 떠 있는 다중 섬 지형입니다. 3D 계단(Build)으로 절벽을 잇거나 차원 포탈(Portal)을 생성해 강철벽을 우회하십시오.",
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 1,
+    "mine": 1,
+    "drill": 1,
+    "bomb": 1,
+    "build": 10,
+    "block": 4,
+    "portal": 0
+  },
+  "spawnX": 130,
+  "spawnY": 160,
+  "gateX": 670,
+  "gateY": 170,
+  "solutionDna": [
+    "BUILD",
+    "PORTAL",
+    "BASH",
+    "BUILD"
+  ],
+  "difficultyScore": 120,
+  "elements": [
+    {
+      "type": "quantumCrystal",
+      "x": 70,
+      "y": 200,
+      "w": 160,
+      "h": 22,
+      "palette": "purple",
+      "profile": [
+        14,
+        22,
+        28,
+        16
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 190,
+      "y": 250,
+      "w": 400,
+      "h": 24,
+      "palette": "purple",
+      "profile": [
+        16,
+        26,
+        36,
+        20
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 470,
+      "y": 200,
+      "w": 230,
+      "h": 24,
+      "palette": "purple",
+      "profile": [
+        14,
+        24,
+        30,
+        18
+      ]
+    }
+  ],
+  "isOverridden": false}

@@ -293,6 +293,7 @@ class LevelEditor {
     const bindJumpDir = (id, dir) => {
       const btn = document.getElementById(id);
       if (btn) btn.onclick = () => {
+        this.lastJumpPadDir = dir;
         if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
           const el = this.levelData.elements[this.selectedElementIndex];
           if (el.type === 'jumpPad') {
@@ -876,6 +877,7 @@ class LevelEditor {
     if (newP === oldP) return;
 
     el.power = newP;
+    this.lastJumpPadPower = newP;
     this.saveHistory();
     this.updateStatus();
     SFX.playClick();
@@ -1181,9 +1183,10 @@ class LevelEditor {
             return;
           } else if (el.type === 'jumpPad') {
             stop();
-            const dirs = ['up', 'up-right', 'up-left', 'right'];
+            const dirs = ['up', 'up-right', 'right', 'up-left', 'left'];
             const curIdx = dirs.indexOf(el.dir || 'up');
             el.dir = dirs[(curIdx + 1) % dirs.length];
+            this.lastJumpPadDir = el.dir;
             this.saveHistory();
             this.updateStatus();
             this._toast(`점프패드 각도: ${el.dir}`);
@@ -1596,6 +1599,8 @@ class LevelEditor {
   }
 
   handlePointerMove(x, y) {
+    this.hoverPos = { x: this.snapCoord(x), y: this.snapCoord(y) };
+
     if (this.isMovingSpawn) {
       const curPointerX = this.snapCoord(x);
       const curPointerY = this.snapCoord(y);
@@ -1857,6 +1862,42 @@ class LevelEditor {
         SFX.playBuild();
         this._toast(`⚡ 무빙발판 배치: 범위 ${rangeVal}px (${axis === 'horizontal' ? '↔ 좌우' : '↕ 상하'})`);
         return;
+      } else if (this.selectedTool === 'jumpPad') {
+        const w = 40;
+        const h = 10;
+        let x0, y0;
+
+        if (rawW < 14 && rawH < 14) {
+          x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+          y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+        } else {
+          const minX = Math.min(this.dragStart.x, this.dragCurrent.x);
+          const minY = Math.min(this.dragStart.y, this.dragCurrent.y);
+          x0 = this.snap ? this.snapCoord(minX) : Math.round(minX);
+          y0 = this.snap ? this.snapCoord(minY) : Math.round(minY);
+        }
+        x0 = Math.max(0, Math.min(800 - w, x0));
+        y0 = Math.max(0, Math.min(450 - h, y0));
+
+        const newEl = {
+          type: 'jumpPad',
+          x: x0,
+          y: y0,
+          w: w,
+          h: h,
+          dir: this.lastJumpPadDir || 'up',
+          power: typeof this.lastJumpPadPower === 'number' ? this.lastJumpPadPower : 9.5,
+          palette: this.levelData.terrainTheme || 'cyan'
+        };
+        this.levelData.elements.push(newEl);
+        this.selectedElementIndex = this.levelData.elements.length - 1;
+        this.selectedSpecial = null;
+        this.saveHistory();
+        this.syncTerrain();
+        this.updateStatus();
+        SFX.playBuild();
+        this._toast(`🚀 점프패드 배치 완료 [${newEl.dir} / ${newEl.power}G]`);
+        return;
       }
 
       let x0, y0, w, h;
@@ -2009,7 +2050,7 @@ class LevelEditor {
           previewPlat.render(ctx, true, isSelected);
         } else if (el.type === 'jumpPad' && typeof JumpPad !== 'undefined') {
           const previewPad = new JumpPad(el);
-          previewPad.render(ctx, true, isSelected);
+          previewPad.render(ctx, true, isSelected, this.game ? this.game.terrain : null);
         }
       });
     }
@@ -2231,6 +2272,35 @@ class LevelEditor {
         const midY = (y0 + endY) / 2 + h / 2 - 12;
         ctx.fillText(`⚡ [${isVert ? '↕ 상하' : '↔ 좌우'}] 이동범위: ${rangeVal}px`, midX, midY);
         ctx.restore();
+      } else if (this.selectedTool === 'jumpPad') {
+        const w = 40;
+        const h = 10;
+        const rawW = Math.abs(this.dragCurrent.x - this.dragStart.x);
+        const rawH = Math.abs(this.dragCurrent.y - this.dragStart.y);
+        let x0, y0;
+        if (rawW < 14 && rawH < 14) {
+          x0 = this.snap ? this.snapCoord(this.dragStart.x - w / 2) : Math.round(this.dragStart.x - w / 2);
+          y0 = this.snap ? this.snapCoord(this.dragStart.y - h / 2) : Math.round(this.dragStart.y - h / 2);
+        } else {
+          const minX = Math.min(this.dragStart.x, this.dragCurrent.x);
+          const minY = Math.min(this.dragStart.y, this.dragCurrent.y);
+          x0 = this.snap ? this.snapCoord(minX) : Math.round(minX);
+          y0 = this.snap ? this.snapCoord(minY) : Math.round(minY);
+        }
+        x0 = Math.max(0, Math.min(800 - w, x0));
+        y0 = Math.max(0, Math.min(450 - h, y0));
+
+        if (typeof JumpPad !== 'undefined') {
+          const ghostPad = new JumpPad({
+            x: x0,
+            y: y0,
+            w: w,
+            h: h,
+            dir: this.lastJumpPadDir || 'up',
+            power: typeof this.lastJumpPadPower === 'number' ? this.lastJumpPadPower : 9.5
+          });
+          ghostPad.render(ctx, true, true, this.game ? this.game.terrain : null);
+        }
       } else {
         const x0 = Math.min(this.dragStart.x, this.dragCurrent.x);
         const y0 = Math.min(this.dragStart.y, this.dragCurrent.y);
@@ -2248,6 +2318,28 @@ class LevelEditor {
         ctx.fillStyle = 'rgba(255, 183, 0, 0.2)';
         ctx.fillRect(x0, y0, w, h);
         ctx.setLineDash([]);
+      }
+    }
+
+    // 3.4 Hover placement preview for jumpPad (마우스 이동 시 배치 궤적 실시간 사전 가이드)
+    if (!this.isDrawing && !this.isMovingElement && this.selectedTool === 'jumpPad' && this.selectedElementIndex < 0 && this.hoverPos) {
+      if (typeof JumpPad !== 'undefined') {
+        const w = 40;
+        const h = 10;
+        const x0 = Math.max(0, Math.min(800 - w, this.hoverPos.x - w / 2));
+        const y0 = Math.max(0, Math.min(450 - h, this.hoverPos.y - h / 2));
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        const hoverGhost = new JumpPad({
+          x: x0,
+          y: y0,
+          w: w,
+          h: h,
+          dir: this.lastJumpPadDir || 'up',
+          power: typeof this.lastJumpPadPower === 'number' ? this.lastJumpPadPower : 9.5
+        });
+        hoverGhost.render(ctx, true, true, this.game ? this.game.terrain : null);
+        ctx.restore();
       }
     }
 

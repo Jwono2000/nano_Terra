@@ -70,31 +70,33 @@ class JumpPad {
 
     // Lift unit cleanly above pad surface so physics immediately takes over
     unit.y = this.y - 8;
+    const launchCenterX = this.x + this.w / 2;
 
     if (this.angle === 'up-right') {
       unit.vy = -this.power * 0.88;
       unit.dir = 1;
       unit.vx = 3.6;
-      unit.x += 6;
+      unit.x = launchCenterX + 4;
     } else if (this.angle === 'up-left') {
       unit.vy = -this.power * 0.88;
       unit.dir = -1;
       unit.vx = -3.6;
-      unit.x -= 6;
+      unit.x = launchCenterX - 4;
     } else if (this.angle === 'right' || this.angle === 'forward') {
       unit.vy = -this.power * 0.65;
       unit.dir = 1;
       unit.vx = 4.8;
-      unit.x += 6;
+      unit.x = launchCenterX + 4;
     } else if (this.angle === 'left') {
       unit.vy = -this.power * 0.65;
       unit.dir = -1;
       unit.vx = -4.8;
-      unit.x -= 6;
+      unit.x = launchCenterX - 4;
     } else {
-      // 'up' - purely vertical boost, maintain slight forward momentum if walking
+      // 'up' - purely vertical 90 degree boost
       unit.vy = -this.power;
-      unit.vx = (unit.dir || 1) * 0.8;
+      unit.vx = 0;
+      unit.x = launchCenterX;
     }
 
     if (particles) {
@@ -108,7 +110,111 @@ class JumpPad {
     return true;
   }
 
-  render(ctx, isEditor = false, isSelected = false) {
+  /**
+   * Calculate precise frame-by-frame trajectory coordinates matching NanoUnit physics simulation.
+   * @param {Object} [terrain=null] - Level terrain with isSolid(x, y) check
+   * @param {number} [maxSteps=160] - Maximum simulation frames
+   * @returns {Array<{x: number, y: number, isApex: boolean, isLanding: boolean, hitGround?: boolean, hitAbyss?: boolean}>}
+   */
+  calculateTrajectory(terrain = null, maxSteps = 160) {
+    const points = [];
+    const launchCenterX = this.x + this.w / 2;
+    let x = launchCenterX;
+    let y = this.y - 8;
+    let vx = 0;
+    let vy = 0;
+    const power = typeof this.power === 'number' ? this.power : 9.5;
+    const angle = this.angle || this.dir || 'up';
+
+    if (angle === 'up-right') {
+      vy = -power * 0.88;
+      vx = 3.6;
+      x = launchCenterX + 4;
+    } else if (angle === 'up-left') {
+      vy = -power * 0.88;
+      vx = -3.6;
+      x = launchCenterX - 4;
+    } else if (angle === 'right' || angle === 'forward') {
+      vy = -power * 0.65;
+      vx = 4.8;
+      x = launchCenterX + 4;
+    } else if (angle === 'left') {
+      vy = -power * 0.65;
+      vx = -4.8;
+      x = launchCenterX - 4;
+    } else {
+      // 'up' - 90-degree vertical launch
+      vy = -power;
+      vx = 0;
+      x = launchCenterX;
+    }
+
+    points.push({ x, y, isApex: false, isLanding: false });
+    let apexFound = false;
+
+    for (let f = 0; f < maxSteps; f++) {
+      const prevVy = vy;
+      if (vy < 0) {
+        vy += 0.22;
+        if (terrain && (terrain.isSolid(x, y - 18) || terrain.isSolid(x, y - 14))) {
+          vy = 0; // Bonk head on ceiling
+        }
+      } else {
+        vy = Math.min(3.6, vy + 0.15);
+      }
+
+      if (!apexFound && prevVy < 0 && vy >= 0) {
+        apexFound = true;
+        if (points.length > 0) points[points.length - 1].isApex = true;
+      }
+
+      if (Math.abs(vx) > 0.05) {
+        const nextX = x + vx;
+        if (terrain && terrain.isSolid(nextX, y - 10)) {
+          vx = -vx * 0.4; // Lateral wall bounce
+        } else {
+          x = nextX;
+        }
+        vx *= 0.985;
+      }
+
+      const prevY = y;
+      y += vy;
+
+      // Bottom Screen Void / Abyss Kill Zone
+      if (y >= 425) {
+        points.push({ x, y: 425, isApex: false, isLanding: true, hitAbyss: true });
+        break;
+      }
+
+      // Jump Pad Re-landing Check (e.g. vertical jump falling back onto launcher)
+      if (vy >= 0 && Math.abs(x - launchCenterX) <= this.w / 2 + 4 && prevY <= this.y + 6 && y >= this.y - 4) {
+        points.push({ x: launchCenterX, y: this.y, isApex: false, isLanding: true, hitGround: true, hitPad: true });
+        break;
+      }
+
+      // Static Terrain Landing (only when falling downwards)
+      if (vy >= 0 && terrain && terrain.isSolid(x, y + 1)) {
+        while (terrain.isSolid(x, y) && y > 0) {
+          y--;
+        }
+        points.push({ x, y, isApex: false, isLanding: true, hitGround: true });
+        break;
+      }
+
+      // Fallback if no terrain: stop when crossing pad's y level while falling
+      if (!terrain && vy >= 0 && y >= this.y) {
+        points.push({ x, y: this.y, isApex: false, isLanding: true, hitGround: true });
+        break;
+      }
+
+      points.push({ x, y, isApex: false, isLanding: false });
+    }
+
+    return points;
+  }
+
+  render(ctx, isEditor = false, isSelected = false, terrain = null) {
     const x = this.x;
     const y = this.y;
     const w = this.w;
@@ -277,30 +383,123 @@ class JumpPad {
     ctx.fillText(cipherText, arrowX, y - 7);
     ctx.restore();
 
-    // 6. Editor Bounding & Trajectory Guide
+    // 6. Editor Bounding & Accurate Physics Trajectory Guide
     if (isEditor) {
       ctx.save();
-      ctx.strokeStyle = isSelected ? '#ffaa00' : 'rgba(255, 170, 0, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 3]);
 
-      // Jump trajectory arc preview matching configured angle
-      const peakY = Math.max(10, y - (this.power * this.power * 2.2));
-      ctx.beginPath();
-      ctx.moveTo(arrowX, y);
-      if (this.angle === 'right' || this.angle === 'forward') {
-        ctx.quadraticCurveTo(arrowX + 45, peakY + 15, arrowX + 80, y);
-      } else if (this.angle === 'left') {
-        ctx.quadraticCurveTo(arrowX - 45, peakY + 15, arrowX - 80, y);
-      } else if (this.angle === 'up-right') {
-        ctx.quadraticCurveTo(arrowX + 35, peakY, arrowX + 70, y - (this.power * 4));
-      } else if (this.angle === 'up-left') {
-        ctx.quadraticCurveTo(arrowX - 35, peakY, arrowX - 70, y - (this.power * 4));
-      } else {
-        // 'up'
-        ctx.lineTo(arrowX, peakY);
+      const points = this.calculateTrajectory(terrain);
+      if (points && points.length > 1) {
+        // Draw glow aura when selected
+        if (isSelected) {
+          ctx.strokeStyle = 'rgba(255, 170, 0, 0.22)';
+          ctx.lineWidth = 4.0;
+          ctx.beginPath();
+          points.forEach((pt, i) => {
+            if (i === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+          });
+          ctx.stroke();
+        }
+
+        // Main dotted/dashed trajectory line
+        ctx.strokeStyle = isSelected ? '#ffaa00' : 'rgba(255, 170, 0, 0.55)';
+        ctx.lineWidth = isSelected ? 2.0 : 1.4;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        points.forEach((pt, i) => {
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Flight direction chevrons along path
+        const chevronIndices = [Math.floor(points.length * 0.33), Math.floor(points.length * 0.66)];
+        chevronIndices.forEach(idx => {
+          if (idx > 0 && idx < points.length) {
+            const p1 = points[idx - 1];
+            const p2 = points[idx];
+            const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+            ctx.save();
+            ctx.translate(p2.x, p2.y);
+            ctx.rotate(ang);
+            ctx.fillStyle = isSelected ? '#ffcc00' : 'rgba(255, 170, 0, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(3.5, 0);
+            ctx.lineTo(-2.5, -2.5);
+            ctx.lineTo(-1.2, 0);
+            ctx.lineTo(-2.5, 2.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        });
+
+        // Apex Beacon (Highest Clearance Point)
+        const apexPt = points.find(p => p.isApex);
+        if (apexPt) {
+          ctx.fillStyle = '#00f3ff';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(apexPt.x, apexPt.y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          if (isSelected) {
+            const deltaH = Math.round(this.y - apexPt.y);
+            ctx.font = 'bold 8px Orbitron, monospace, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#00f3ff';
+            ctx.shadowColor = '#00f3ff';
+            ctx.shadowBlur = 4;
+            ctx.fillText(`▲ ${deltaH}px`, apexPt.x, apexPt.y - 6);
+            ctx.shadowBlur = 0;
+          }
+        }
+
+        // Landing / Impact Target Reticle
+        const lastPt = points[points.length - 1];
+        if (lastPt && lastPt.isLanding) {
+          if (lastPt.hitAbyss) {
+            // Fall into void warning
+            ctx.fillStyle = '#ff3344';
+            ctx.font = 'bold 8.5px Orbitron, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`⚠ 추락 위험 (${Math.round(lastPt.x)}px)`, lastPt.x, 420);
+          } else {
+            // Landing target on terrain or baseline
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(lastPt.x, lastPt.y, 5, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = '#00ff88';
+            ctx.beginPath();
+            ctx.arc(lastPt.x, lastPt.y, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Downward landing pointer
+            ctx.beginPath();
+            ctx.moveTo(lastPt.x, lastPt.y - 10);
+            ctx.lineTo(lastPt.x - 3, lastPt.y - 5);
+            ctx.lineTo(lastPt.x + 3, lastPt.y - 5);
+            ctx.closePath();
+            ctx.fill();
+
+            if (isSelected) {
+              ctx.font = 'bold 8px Orbitron, monospace, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillStyle = '#00ff88';
+              ctx.shadowColor = '#00ff88';
+              ctx.shadowBlur = 4;
+              ctx.fillText(`🎯 착지 (${Math.round(lastPt.x)}, ${Math.round(lastPt.y)})`, lastPt.x, lastPt.y + 13);
+              ctx.shadowBlur = 0;
+            }
+          }
+        }
       }
-      ctx.stroke();
 
       if (isSelected) {
         ctx.setLineDash([]);

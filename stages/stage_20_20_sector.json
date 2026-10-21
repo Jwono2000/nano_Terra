@@ -1,0 +1,47 @@
+﻿{
+  "id": 20,
+  "title": "20구역 SECTOR",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "cyan",
+  "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+  "totalUnits": 15,
+  "needPercent": 70,
+  "spawnRate": 20,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 4,
+    "float": 4,
+    "bash": 4,
+    "mine": 4,
+    "drill": 4,
+    "bomb": 2,
+    "build": 6,
+    "block": 3,
+    "portal": 1
+  },
+  "spawnX": 90,
+  "spawnY": 60,
+  "gateX": 710,
+  "gateY": 340,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 40,
+      "y": 120,
+      "w": 150,
+      "h": 20,
+      "palette": "cyan"
+    },
+    {
+      "type": "platform",
+      "x": 520,
+      "y": 360,
+      "w": 240,
+      "h": 20,
+      "palette": "cyan"
+    }
+  ],
+  "solutionDna": [
+    "CUSTOM"
+  ],
+  "difficultyScore": 50}

@@ -1,0 +1,234 @@
+﻿{
+  "id": 21,
+  "title": "[HARD] QUANTUM (HARD)",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+  "totalUnits": 15,
+  "needPercent": 80,
+  "spawnRate": 80,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 3,
+    "float": 3,
+    "bash": 2,
+    "mine": 2,
+    "drill": 3,
+    "bomb": 3,
+    "build": 7,
+    "block": 3,
+    "portal": 0
+  },
+  "spawnX": 160,
+  "spawnY": 70,
+  "gateX": 600,
+  "gateY": 290,
+  "elements": [
+    {
+      "type": "quantumCrystal",
+      "x": 90,
+      "y": 140,
+      "w": 200,
+      "h": 20,
+      "palette": "purple",
+      "profile": [
+        16,
+        24,
+        16,
+        14
+      ]
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 280,
+      "y": 220,
+      "w": 350,
+      "h": 10,
+      "palette": "purple",
+      "profile": [
+        9,
+        13,
+        7,
+        8,
+        13
+      ]
+    },
+    {
+      "type": "steelBarrier",
+      "x": 270,
+      "y": 90,
+      "w": 20,
+      "h": 50,
+      "palette": "purple"
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 360,
+      "y": 100,
+      "w": 270,
+      "h": 20,
+      "palette": "purple",
+      "profile": [
+        18,
+        28,
+        18,
+        16,
+        26,
+        18
+      ]
+    },
+    {
+      "type": "triangleSlope",
+      "x": 160,
+      "y": 290,
+      "w": 180,
+      "h": 70,
+      "palette": "purple",
+      "direction": "up-left",
+      "isSteel": false
+    },
+    {
+      "type": "steelBarrier",
+      "x": 80,
+      "y": 110,
+      "w": 20,
+      "h": 260,
+      "palette": "purple"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 440,
+      "y": 220,
+      "w": 110,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 440,
+      "y": 100,
+      "w": 110,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "movingPlatform",
+      "x": 100,
+      "y": 210,
+      "w": 60,
+      "h": 10,
+      "axis": "vertical",
+      "range": 80,
+      "speed": 0.75,
+      "pauseTicks": 30,
+      "palette": "cyan"
+    },
+    {
+      "type": "platform",
+      "x": 100,
+      "y": 290,
+      "w": 60,
+      "h": 70,
+      "palette": "purple"
+    },
+    {
+      "type": "movingPlatform",
+      "x": 630,
+      "y": 100,
+      "w": 100,
+      "h": 10,
+      "axis": "vertical",
+      "range": 260,
+      "speed": 0.75,
+      "pauseTicks": 30,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 730,
+      "y": 100,
+      "w": 20,
+      "h": 270,
+      "palette": "purple"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 100,
+      "y": 140,
+      "w": 60,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 100,
+      "y": 290,
+      "w": 60,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 100,
+      "y": 360,
+      "w": 630,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "quantumCrystal",
+      "x": 0,
+      "y": 370,
+      "w": 800,
+      "h": 40,
+      "palette": "purple",
+      "profile": [
+        30,
+        56,
+        27,
+        29,
+        51,
+        34,
+        24,
+        50,
+        31,
+        26,
+        52,
+        25,
+        28,
+        56,
+        30,
+        31,
+        52,
+        29,
+        30,
+        52,
+        31,
+        28,
+        53,
+        31,
+        30,
+        56
+      ]
+    },
+    {
+      "type": "jumpPad",
+      "x": 420,
+      "y": 360,
+      "w": 40,
+      "h": 10,
+      "dir": "right",
+      "power": 9.5,
+      "palette": "purple"
+    }
+  ],
+  "solutionDna": [
+    "CUSTOM"
+  ],
+  "difficultyScore": 50,
+  "isOverridden": true}

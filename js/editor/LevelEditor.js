@@ -36,6 +36,7 @@ class LevelEditor {
     this.elementMoveOffset = { x: 0, y: 0 };
     this.polyDraftPoints = [];
     this.polyMousePos = null;
+    this.isMappingMode = false;
   }
 
   init(game, initialData = null) {
@@ -328,6 +329,11 @@ class LevelEditor {
     const btnSelDel = document.getElementById('btn-selected-delete');
     if (btnSelDel) {
       btnSelDel.onclick = () => this.deleteSelectedElement();
+    }
+
+    const btnMappingChange = document.getElementById('btn-mapping-change');
+    if (btnMappingChange) {
+      btnMappingChange.onclick = () => this.toggleMappingMode();
     }
 
     // AI Procedural Generator Modal Buttons
@@ -790,13 +796,177 @@ class LevelEditor {
     }
   }
 
+  toggleMappingMode() {
+    if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) {
+      this._toast('⚠️ 먼저 수정할 요소를 👆 선택 도구로 클릭해주세요.');
+      return;
+    }
+    this.isMappingMode = !this.isMappingMode;
+    this.updateMappingModeUI();
+    if (this.isMappingMode) {
+      this._toast('🔄 [맵핑 수정 모드] 상단 도구창에서 변경할 재질/지형 도구(화산암, 양자암, 암석, 플랫폼 등)를 클릭하세요.');
+    }
+    SFX.playClick();
+  }
+
+  updateMappingModeUI() {
+    const btn = document.getElementById('btn-mapping-change');
+    if (btn) {
+      if (this.isMappingMode) {
+        btn.classList.add('active');
+        btn.style.background = 'rgba(0, 255, 136, 0.35)';
+        btn.style.borderColor = '#00ff88';
+        btn.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.8)';
+        btn.innerText = '🔄 맵핑 중...';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.borderColor = '#00ff88';
+        btn.style.boxShadow = '';
+        btn.innerText = '🔄 맵핑수정';
+      }
+    }
+    this.updateStatus();
+  }
+
+  convertSelectedElementToTool(tool) {
+    if (this.selectedElementIndex < 0 || this.selectedElementIndex >= this.levelData.elements.length) return;
+    const el = this.levelData.elements[this.selectedElementIndex];
+
+    const toolNames = {
+      platform: '🟦 기본 플랫폼',
+      craggyRock: '🪨 천연 암석',
+      polygonRock: '📐 다각형 암석',
+      volcanicBasalt: '🌋 화산암(마그마 현무암)',
+      quantumCrystal: '🔮 양자암(크리스탈)',
+      rockWall: '⛰️ 파괴 가능 암벽',
+      steelBarrier: '🚧 파괴 불가 강철벽',
+      steelPlatform: '⬛ 크롬 스틸 발판',
+      triangleSlope: '📐 삼각형 경사로',
+      diagonalBeam: '🥢 대각선 강철 빔',
+      movingPlatform: '⚡ 무빙 발판',
+      jumpPad: '🚀 척력 점프 패드'
+    };
+
+    const targetName = toolNames[tool] || tool;
+
+    // 1) 다각형 암석 (polygonRock)의 재질 변환: 기존 점(geometry)을 온전히 보존하면서 재질 및 텍스처 변경
+    if (el.type === 'polygonRock' && Array.isArray(el.points)) {
+      if (tool === 'volcanicBasalt') {
+        el.material = 'volcanicBasalt';
+        el.palette = 'red';
+        el.isSteel = false;
+        this._toast(`🌋 다각형 암석이 [${targetName}]으로 변환되었습니다!`);
+      } else if (tool === 'quantumCrystal') {
+        el.material = 'quantumCrystal';
+        el.palette = 'purple';
+        el.isSteel = false;
+        this._toast(`🔮 다각형 암석이 [${targetName}]으로 변환되었습니다!`);
+      } else if (tool === 'craggyRock' || tool === 'rock') {
+        el.material = 'rock';
+        el.palette = el.palette || 'cyan';
+        el.isSteel = false;
+        this._toast(`🪨 다각형 암석이 [${targetName}]으로 변환되었습니다!`);
+      } else if (tool === 'platform') {
+        el.material = 'platform';
+        el.isSteel = false;
+        this._toast(`🟦 다각형 암석이 [${targetName}]으로 변환되었습니다!`);
+      } else if (tool === 'rockWall') {
+        el.material = 'rockWall';
+        el.isSteel = false;
+        this._toast(`⛰️ 다각형 암석이 [${targetName}]으로 변환되었습니다!`);
+      } else if (tool === 'steelBarrier' || tool === 'steelPlatform') {
+        el.material = 'steel';
+        el.isSteel = true;
+        this._toast(`🛡️ 다각형 암석이 [${targetName}]으로 변환되었습니다!`);
+      } else {
+        this._toast(`⚠️ 다각형 지형은 지형 재질(화산암, 양자암, 암석, 플랫폼, 암벽, 강철 등)로 변경 가능합니다.`);
+        return;
+      }
+    } else {
+      // 2) 일반 사각형 및 기타 요소의 재질/유형 변환: 위치와 크기(x, y, w, h)를 보존하면서 변경
+      if (tool === 'polygonRock') {
+        el.type = 'polygonRock';
+        el.material = 'rock';
+        el.isSteel = false;
+        el.points = [
+          { x: el.x, y: el.y },
+          { x: el.x + el.w, y: el.y },
+          { x: el.x + el.w, y: el.y + el.h },
+          { x: el.x, y: el.y + el.h }
+        ];
+        this._toast(`📐 사각형 요소가 [다각형 암석]으로 변환되었습니다 (꼭짓점 수정 가능)!`);
+      } else {
+        el.type = tool;
+        if (tool === 'volcanicBasalt') {
+          el.palette = 'red';
+          el.isSteel = false;
+          if (!el.profile) el.profile = [16, 28, 40, 14];
+        } else if (tool === 'quantumCrystal') {
+          el.palette = 'purple';
+          el.isSteel = false;
+          if (!el.profile) el.profile = [14, 22, 34, 18];
+        } else if (tool === 'craggyRock') {
+          el.isSteel = false;
+          if (!el.profile) el.profile = [18, 24, 36, 16];
+        } else if (tool === 'platform') {
+          el.isSteel = false;
+        } else if (tool === 'rockWall') {
+          el.isSteel = false;
+        } else if (tool === 'steelBarrier') {
+          el.isSteel = true;
+        } else if (tool === 'steelPlatform') {
+          el.isSteel = true;
+        } else if (tool === 'triangleSlope') {
+          el.direction = el.direction || 'up-right';
+        } else if (tool === 'diagonalBeam') {
+          el.slope = el.slope || 1;
+          el.thickness = el.thickness || 16;
+        } else if (tool === 'movingPlatform') {
+          el.range = el.range || 120;
+          el.axis = el.axis || 'horizontal';
+          el.speed = el.speed || 0.75;
+        } else if (tool === 'jumpPad') {
+          el.power = el.power || 9.5;
+          el.dir = el.dir || 'up';
+        }
+        this._toast(`✨ 요소가 [${targetName}]으로 변환되었습니다!`);
+      }
+    }
+
+    this.saveHistory();
+    this.syncTerrain();
+    this.updateStatus();
+    SFX.playClick();
+  }
+
   setTool(tool) {
+    if (this.isMappingMode && this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
+      if (tool === 'delete') {
+        this.isMappingMode = false;
+        this.updateMappingModeUI();
+        this.deleteSelectedElement();
+        return;
+      }
+      if (tool === 'select') {
+        this.toggleMappingMode();
+        return;
+      }
+      if (tool !== 'spawn' && tool !== 'gate') {
+        this.convertSelectedElementToTool(tool);
+        this.isMappingMode = false;
+        this.updateMappingModeUI();
+        return;
+      }
+    }
+
     if (tool === 'delete') {
       if (this.selectedElementIndex >= 0 && this.selectedElementIndex < this.levelData.elements.length) {
         this.deleteSelectedElement();
         return;
       }
     }
+    this.isMappingMode = false;
     this.selectedTool = tool;
     if (tool !== 'polygonRock') {
       this.polyDraftPoints = [];
@@ -1025,12 +1195,43 @@ class LevelEditor {
         if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [🛡️ 거울광택 크롬 스틸 발판]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | <span style="color:#00f3ff;">[💡 채굴/파괴 불침 영구 크롬 합금 | 단축키 M: 암석 전환]</span>`;
       } else if (el.type === 'polygonRock') {
         const ptCount = (el.points || []).length;
-        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [🔷 다각형 암석 (${ptCount}각형)]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 테마: ${pal.name} | <span style="color:#00ff88;">[💡 드래그하여 이동, Delete: 삭제, ↔/↕ 버튼: 크기 조절]</span>`;
+        const matNames = {
+          volcanicBasalt: '🌋 다각형 화산암',
+          quantumCrystal: '🔮 다각형 양자암',
+          steel: '🛡️ 다각형 크롬 강철',
+          platform: '🟦 다각형 플랫폼',
+          rockWall: '⛰️ 다각형 암벽',
+          rock: '🔷 다각형 암석'
+        };
+        const curMatName = matNames[el.material] || (el.isSteel ? '🛡️ 다각형 크롬 강철' : '🔷 다각형 암석');
+        if (info) info.innerHTML = `<span style="color:#00f3ff; font-weight:700;">선택: [${curMatName} (${ptCount}각형)]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 테마: ${pal.name} | <span style="color:#00ff88;">[💡 🔄 맵핑수정 버튼으로 다른 재질로 변경 가능]</span>`;
       } else if (el.type === 'platform') {
         if (info) info.innerHTML = `<span style="color:#00ff88; font-weight:700;">선택: [🪨 기본 플랫폼]</span> ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | <span style="color:#ffb700;">[💡 채굴 가능한 일반 발판 | 단축키 M: 크롬 스틸 전환]</span>`;
       } else {
         if (info) info.innerText = `선택: [${el.type.toUpperCase()}] ${el.w}×${el.h}px | 위치: (${el.x}, ${el.y}) | 🎨 ${pal.name}`;
       }
+
+      if (this.isMappingMode) {
+        if (info) info.innerHTML = `<span style="color:#00ff88; font-weight:700;">🔄 [맵핑 수정 모드 진행 중]</span> 상단 도구창에서 변경할 재질/지형 도구(🌋 화산암, 🔮 양자암, 🪨 암석, ⛰️ 암벽, 🟦 플랫폼, 🚧 강철벽 등)를 클릭하세요. [종료: 🔄 버튼 재클릭]`;
+      }
+
+      const btnMapping = document.getElementById('btn-mapping-change');
+      if (btnMapping) {
+        if (this.isMappingMode) {
+          btnMapping.classList.add('active');
+          btnMapping.style.background = 'rgba(0, 255, 136, 0.35)';
+          btnMapping.style.borderColor = '#00ff88';
+          btnMapping.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.8)';
+          btnMapping.innerText = '🔄 맵핑 중...';
+        } else {
+          btnMapping.classList.remove('active');
+          btnMapping.style.background = '';
+          btnMapping.style.borderColor = '#00ff88';
+          btnMapping.style.boxShadow = '';
+          btnMapping.innerText = '🔄 맵핑수정';
+        }
+      }
+
       if (selectedControls) selectedControls.style.display = 'flex';
       if (widthVal) widthVal.innerText = `${el.w}px`;
       if (thickVal) thickVal.innerText = `${el.h}px`;
@@ -1040,6 +1241,15 @@ class LevelEditor {
         if (btn) btn.classList.toggle('active', k === palKey);
       });
     } else {
+      this.isMappingMode = false;
+      const btnMapping = document.getElementById('btn-mapping-change');
+      if (btnMapping) {
+        btnMapping.classList.remove('active');
+        btnMapping.style.background = '';
+        btnMapping.style.borderColor = '#00ff88';
+        btnMapping.style.boxShadow = '';
+        btnMapping.innerText = '🔄 맵핑수정';
+      }
       let dnaInfo = '';
       if (this.levelData.solutionDna && this.levelData.solutionDna.length > 0) {
         dnaInfo = ` | 🧬 DNA: [${this.levelData.solutionDna.join('→')}] (${this.levelData.difficultyScore || 0}pt)`;

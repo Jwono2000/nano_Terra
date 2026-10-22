@@ -7,7 +7,7 @@
     "desc": "1구역: 외계 행성 테라포밍 전초기지입니다. 1층에서 2층으로 착지 후 플라즈마 레이저(Bash)로 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill)로 뚫어 탈출하십시오.<br><span style='color: #ffb700;'>※ 노란색 사선 줄무늬의 강철 격벽은 절삭/천공할 수 없습니다!</span>",
     "totalUnits": 10,
     "needPercent": 90,
-    "spawnRate": 100,
+    "spawnRate": 50,
     "timeLimit": 200,
     "skills": {
       "climb": 0,
@@ -87,7 +87,7 @@
     "desc": "2구역: 화산 균열 지대입니다. 붉은 현무암과 마그마 암벽이 펼쳐집니다. 레이저(Bash)로 중앙 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill) 또는 대각 굴착(Mine)으로 뚫어 탈출하십시오!<br><span style='color: #ffb700;'>※ 강철 격벽은 파괴 불가!</span>",
     "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 20,
+    "spawnRate": 50,
     "timeLimit": 200,
     "skills": {
       "climb": 0,
@@ -159,7 +159,7 @@
     "desc": "3구역: 양자 크리스탈 유적지입니다. 신비로운 보랏빛 유적 지형입니다. 1층에서 2층으로 하강 -> 강철벽 앞에서 바닥 드릴(Drill) -> 3층 암벽 레이저(Bash) 관통으로 웜홀에 도달하십시오.",
     "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 80,
+    "spawnRate": 50,
     "timeLimit": 240,
     "skills": {
       "climb": 1,
@@ -382,7 +382,7 @@
     "desc": "6구역: 마그마 고속 회랑입니다. 낙하 지점 아래의 용암 바닥을 조심하십시오! 역추진(Float)으로 감속 낙하 후 연속 드릴(Drill)로 2개 층을 신속히 관통하십시오.",
     "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 80,
+    "spawnRate": 50,
     "timeLimit": 220,
     "skills": {
       "climb": 0,
@@ -444,6 +444,15 @@
           145,
           154
         ]
+      },
+      {
+        "type": "steelPlatform",
+        "x": 180,
+        "y": 170,
+        "w": 170,
+        "h": 10,
+        "palette": "red",
+        "isSteel": true
       }
     ]
   },
@@ -676,7 +685,7 @@
     "desc": "10구역: [최종 결전] 행성 중심 테라포밍 알파 코어입니다. 9종 나노 스킬을 종합 운용하여 30기 나노봇을 전원 무사 구출하고 테라포밍 미션을 최종 완수하십시오!",
     "totalUnits": 10,
     "needPercent": 80,
-    "spawnRate": 80,
+    "spawnRate": 50,
     "timeLimit": 270,
     "skills": {
       "climb": 0,

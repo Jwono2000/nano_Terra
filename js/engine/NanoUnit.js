@@ -620,6 +620,24 @@ class NanoUnit {
         if (terrain.hasOnlyReverseStair && terrain.hasOnlyReverseStair(nextX, targetY, this.dir)) {
           continue;
         }
+
+        // 경사로/다각형 등반 허용 각도 제한:
+        // 대각굴착 각도(40°) + 5° = 약 45° (tan(45°) = 1.0, tan(46.4°) = 1.05)
+        // 전방 4.0px 지점에서 지형 높이가 4.2px 이상 솟아있으면 45도를 초과하는 가파른 경사이므로 등반하지 않고 반전!
+        const isStair = terrain.hasClimbableStair && terrain.hasClimbableStair(nextX, targetY, this.dir);
+        if (!isStair) {
+          const slopeCheckDist = 4.0;
+          const maxAllowedRise = slopeCheckDist * 1.05; // 4.2px (약 46.4° 이내 완만한 경사만 허용)
+          const checkSlopeX = nextX + this.dir * slopeCheckDist;
+          const checkSlopeY = targetY - maxAllowedRise;
+          const isSlopeTooSteep = terrain.isNaturalSolid ? 
+            terrain.isNaturalSolid(checkSlopeX, checkSlopeY) : 
+            terrain.isSolid(checkSlopeX, checkSlopeY);
+          if (isSlopeTooSteep) {
+            continue;
+          }
+        }
+
         // 오르막 경사로/단차 등반 성공!
         this.x = nextX;
         this.y = targetY;

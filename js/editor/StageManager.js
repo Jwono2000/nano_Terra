@@ -20,7 +20,9 @@ class StageDataEngine {
           break;
         case 'polygonRock':
           if (el.points && el.points.length >= 3) {
-            terrain.drawPolygonRock(el.points, pal);
+            const polyMat = el.material || el.subType || (el.isSteel ? 'steel' : 'rock');
+            const polyPal = el.palette || (polyMat === 'volcanicBasalt' ? 'red' : (polyMat === 'quantumCrystal' ? 'purple' : pal));
+            terrain.drawPolygonRock(el.points, polyPal, polyMat, el.isSteel || false);
           }
           break;
         case 'volcanicBasalt':

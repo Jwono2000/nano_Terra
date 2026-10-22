@@ -6,7 +6,7 @@
   "desc": "6구역: 마그마 고속 회랑입니다. 낙하 지점 아래의 용암 바닥을 조심하십시오! 역추진(Float)으로 감속 낙하 후 연속 드릴(Drill)로 2개 층을 신속히 관통하십시오.",
   "totalUnits": 10,
   "needPercent": 80,
-  "spawnRate": 80,
+  "spawnRate": 50,
   "timeLimit": 220,
   "skills": {
     "climb": 0,
@@ -68,6 +68,15 @@
         145,
         154
       ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 180,
+      "y": 170,
+      "w": 170,
+      "h": 10,
+      "palette": "red",
+      "isSteel": true
     }
   ],
   "isOverridden": true}

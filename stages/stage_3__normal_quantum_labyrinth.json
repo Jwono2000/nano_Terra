@@ -6,7 +6,7 @@
   "desc": "3구역: 양자 크리스탈 유적지입니다. 신비로운 보랏빛 유적 지형입니다. 1층에서 2층으로 하강 -> 강철벽 앞에서 바닥 드릴(Drill) -> 3층 암벽 레이저(Bash) 관통으로 웜홀에 도달하십시오.",
   "totalUnits": 10,
   "needPercent": 80,
-  "spawnRate": 80,
+  "spawnRate": 50,
   "timeLimit": 240,
   "skills": {
     "climb": 1,
@@ -98,4 +98,4 @@
       "isSteel": true
     }
   ],
-  "isOverridden": false}
+  "isOverridden": true}

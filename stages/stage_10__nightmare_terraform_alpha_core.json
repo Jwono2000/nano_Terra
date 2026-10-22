@@ -6,7 +6,7 @@
   "desc": "10구역: [최종 결전] 행성 중심 테라포밍 알파 코어입니다. 9종 나노 스킬을 종합 운용하여 30기 나노봇을 전원 무사 구출하고 테라포밍 미션을 최종 완수하십시오!",
   "totalUnits": 10,
   "needPercent": 80,
-  "spawnRate": 80,
+  "spawnRate": 50,
   "timeLimit": 270,
   "skills": {
     "climb": 0,
@@ -89,4 +89,4 @@
       "palette": "red"
     }
   ],
-  "isOverridden": false}
+  "isOverridden": true}

@@ -6,7 +6,7 @@
   "desc": "2구역: 화산 균열 지대입니다. 붉은 현무암과 마그마 암벽이 펼쳐집니다. 레이저(Bash)로 중앙 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill) 또는 대각 굴착(Mine)으로 뚫어 탈출하십시오!<br><span style='color: #ffb700;'>※ 강철 격벽은 파괴 불가!</span>",
   "totalUnits": 10,
   "needPercent": 80,
-  "spawnRate": 20,
+  "spawnRate": 50,
   "timeLimit": 200,
   "skills": {
     "climb": 0,
@@ -69,4 +69,4 @@
       ]
     }
   ],
-  "isOverridden": false}
+  "isOverridden": true}

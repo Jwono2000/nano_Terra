@@ -694,7 +694,7 @@ class LevelEditor {
   }
 
   startTestPlay() {
-    const modals = ['modal-solution-guide', 'modal-editor-props', 'modal-editor-generate', 'modal-stage-manager', 'modal-start', 'modal-save-slot'];
+    const modals = ['modal-solution-guide', 'modal-editor-props', 'modal-editor-generate', 'modal-stage-manager', 'modal-start', 'modal-save-slot', 'modal-nickname', 'modal-ranking'];
     modals.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -710,7 +710,7 @@ class LevelEditor {
   }
 
   startAutoSolveTest() {
-    const modals = ['modal-solution-guide', 'modal-editor-props', 'modal-editor-generate', 'modal-start', 'modal-save-slot'];
+    const modals = ['modal-solution-guide', 'modal-editor-props', 'modal-editor-generate', 'modal-start', 'modal-save-slot', 'modal-nickname', 'modal-ranking'];
     modals.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';

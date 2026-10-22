@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
   <!-- Modular Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=13">
   <style>
     .lint-item.lint-error { color: #ff7b7b; }
     .lint-item.lint-warn  { color: #ffd166; }
@@ -359,6 +359,11 @@
         </div>
       </div>
 
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 6px 0 2px 0; font-size: 11px;">
+        <span style="color: var(--text-dim);">사령관: <strong id="start-commander-name" style="color: var(--neon-cyan); font-family: 'Orbitron', sans-serif;">미등록</strong></span>
+        <button class="btn-tool" id="btn-change-nickname" style="padding: 2px 8px; font-size: 10px; border-color: var(--neon-cyan); color: var(--neon-cyan);" title="사령관 닉네임 변경">✏️ 닉네임 변경</button>
+      </div>
+
       <div style="font-size: 11px; color: var(--neon-gold); font-family: 'Orbitron', sans-serif;" id="start-best-score">
         최고 기록: - pt</div>
 
@@ -369,6 +374,7 @@
         <button class="btn-hud" style="border-color: #ffb700; color: #ffb700;" id="btn-start-open-creator"
           title="완전 빈 맵에서 새로 제작">✨ 맵 크리에이터</button>
         <button class="btn-hud" id="btn-start-stage-select">📁 1~15구역 선택</button>
+        <button class="btn-hud" style="border-color: #ffd700; color: #ffd700;" id="btn-start-open-ranking" title="전체 플레이어 온라인 랭킹 확인">🏆 랭킹 보기</button>
       </div>
     </div>
   </div>
@@ -470,6 +476,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
           <span style="font-size: 11px; color: var(--text-dim);" id="campaign-stage-count-text">총 10개 캠페인 구역 (순차 진행)</span>
           <div style="display: flex; gap: 4px; align-items: center;">
+            <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #ffd700; color: #ffd700; font-weight: bold;"
+              id="btn-open-ranking" title="글로벌 온라인 랭킹 확인">🏆 온라인 랭킹</button>
             <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #ffb700; color: #ffb700; font-weight: bold;"
               id="btn-edit-stage-list" title="캠페인 맵 목록 이름 및 슬롯 순서 일괄 수정">📋 맵 목록수정</button>
             <button class="btn-tool" style="padding: 3px 8px; font-size: 10px; border-color: #00f3ff; color: #00f3ff;"
@@ -784,6 +792,55 @@
     </div>
   </div>
 
+  <!-- Nickname Registration / Change Modal -->
+  <div class="modal-overlay" id="modal-nickname" style="display: none; z-index: 1020;">
+    <div class="modal-card" style="max-width: 380px; text-align: center;">
+      <div class="modal-title" style="color: var(--neon-cyan);">👤 사령관 닉네임 설정</div>
+      <div class="modal-subtitle" style="font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
+        외계 테라포밍 작전 기록과 온라인 랭킹에 등록될 사령관 호출부호(닉네임)를 입력해주세요.
+      </div>
+      <div style="margin-bottom: 12px;">
+        <input type="text" id="input-nickname" maxlength="12" placeholder="사령관 이름 입력 (최대 12자)"
+          style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: rgba(5,15,30,0.85); border: 1px solid var(--neon-cyan); border-radius: 6px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 13px; text-align: center; outline: none;">
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button class="btn-tool" id="btn-nickname-skip" style="font-size: 11px; padding: 6px 14px;">나중에</button>
+        <button class="btn-action" id="btn-nickname-save" style="font-size: 12px; padding: 6px 18px;">저장 (CONFIRM)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online Leaderboard Modal -->
+  <div class="modal-overlay" id="modal-ranking" style="display: none; z-index: 1015;">
+    <div class="modal-card" style="max-width: 620px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(0, 243, 255, 0.2); padding-bottom: 8px; margin-bottom: 8px;">
+        <div class="modal-title" style="color: #ffd700; margin-bottom: 0;">🏆 온라인 랭킹 (LEADERBOARD)</div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="btn-tool" id="btn-ranking-refresh" style="padding: 3px 8px; font-size: 11px;" title="랭킹 새로고침">🔄 새로고침</button>
+          <button class="btn-tool" id="btn-ranking-close" style="padding: 3px 8px; font-size: 11px;">✕</button>
+        </div>
+      </div>
+
+      <!-- Stage Selector Bar -->
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; width: 100%;">
+        <span style="font-size: 11px; color: var(--text-dim); white-space: nowrap;">구역 선택:</span>
+        <select id="ranking-stage-select" style="flex: 1; padding: 5px 8px; background: rgba(5,15,30,0.9); border: 1px solid var(--neon-cyan); border-radius: 4px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 11px; outline: none; cursor: pointer;">
+          <!-- Dynamically populated options -->
+        </select>
+      </div>
+
+      <!-- Leaderboard Content Area -->
+      <div id="ranking-content-area" style="flex: 1; overflow-y: auto; max-height: 52vh; border: 1px solid rgba(0, 243, 255, 0.2); border-radius: 6px; background: rgba(4, 10, 20, 0.7); padding: 4px;">
+        <!-- Injected table or message -->
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; width: 100%; font-size: 10px; color: var(--text-dim);">
+        <span id="ranking-status-text">스테이지별 최고 득점 TOP 10 기록</span>
+        <button class="btn-tool" id="btn-ranking-bottom-close" style="padding: 4px 16px;">닫기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Mobile Portrait Rotate Device Overlay Prompt -->
   <div id="rotate-overlay">
     <div class="rotate-card">
@@ -799,7 +856,7 @@
   <script src="js/engine/TerrainEngine.js?v=11"></script>
   <script src="js/engine/MovingPlatform.js?v=1"></script>
   <script src="js/engine/JumpPad.js?v=1"></script>
-  <script src="js/engine/NanoUnit.js?v=12"></script>
+  <script src="js/engine/NanoUnit.js?v=13"></script>
   <script src="js/engine/GatewayRenderer.js?v=9"></script>
   <script src="js/procedural/MapCore.js?v=7"></script>
   <script src="js/procedural/MapWalker.js?v=7"></script>
@@ -814,9 +871,9 @@
   <script src="js/procedural/AdvancedFeatureArchitect.js?v=1"></script>
   <script src="js/editor/LevelLint.js?v=1"></script>
   <script src="js/procedural/LevelSolver.js?v=1"></script>
-  <script src="js/editor/StageManager.js?v=8"></script>
-  <script src="js/editor/LevelEditor.js?v=9"></script>
-  <script src="js/engine/GameEngine.js?v=13"></script>
+  <script src="js/editor/StageManager.js?v=9"></script>
+  <script src="js/editor/LevelEditor.js?v=10"></script>
+  <script src="js/engine/GameEngine.js?v=14"></script>
   <script src="js/main.js?v=12"></script>
 </body>
 

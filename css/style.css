@@ -1353,3 +1353,58 @@ canvas {
 :-webkit-full-screen .skill-count {
   font-size: clamp(9px, 2vh, 12px);
 }
+
+/* --- Online Ranking Leaderboard & Nickname Modal Styles --- */
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.ranking-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(8, 20, 38, 0.96);
+  padding: 8px 6px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid rgba(0, 243, 255, 0.4);
+  z-index: 2;
+}
+
+.ranking-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.08);
+  vertical-align: middle;
+}
+
+.ranking-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.ranking-table tbody tr:hover {
+  background: rgba(0, 243, 255, 0.08);
+}
+
+.ranking-row-gold {
+  background: rgba(255, 215, 0, 0.12) !important;
+}
+
+.ranking-row-silver {
+  background: rgba(220, 225, 235, 0.09) !important;
+}
+
+.ranking-row-bronze {
+  background: rgba(205, 127, 50, 0.09) !important;
+}
+
+.ranking-row-me {
+  background: rgba(0, 243, 255, 0.14) !important;
+  border-left: 3px solid var(--neon-cyan) !important;
+}
+
+#input-nickname:focus {
+  border-color: #00ff88 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+}
+

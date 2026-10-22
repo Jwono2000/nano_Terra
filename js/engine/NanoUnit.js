@@ -600,11 +600,44 @@ class NanoUnit {
       particles.spawnBurst(this.x - this.dir * 4, this.y - 1, '#00f3ff', 1, 0.8);
     }
 
-    // 1) 머리/가슴/허벅지 높이(cy = -20 ~ -5): 오직 자연 암벽(1)이나 강철(2)만 높은 벽으로 감지!
-    //    바닥 지면(this.y)은 수직 벽이 아니므로 제외하여, 레이저 관통 터널 등에서 지면 미세 굴곡으로 인한 오인식 턴어라운드 원천 차단!
-    const frontMargin = 7.0;
+    // 1) 오르막 단차/경사로 등반(Climbing step / ramp) 우선 시도:
+    //    - 디딜 발판(targetY + 1 또는 targetY)이 solid이고,
+    //    - 머리/가슴 공간(targetY - 1, targetY - 10, targetY - 18)이 비어있으면 경사로/계단으로 정상 등반!
+    //    - 높은 수직벽은 머리/가슴 공간이 막혀 있으므로 등반 루프를 통과하지 못함
+    let climbed = false;
+    for (let h = 1; h <= 8; h++) {
+      const targetY = this.y - h;
+      // 디딜 곳(targetY + 1 또는 targetY)이 solid인지 검사
+      const hasGroundAtStep = terrain.isSolid(nextX, targetY + 1) || terrain.isSolid(nextX, targetY);
+      // 디딘 곳 바로 위(targetY - 1) 및 상체/머리 공간 검사 (수직벽이면 막혀서 통과 불가, 경사로는 통과)
+      const isSpaceAbove = !terrain.isSolid(nextX, targetY - 1) && 
+        (terrain.isNaturalSolid ? !terrain.isNaturalSolid(nextX, targetY - 10) : !terrain.isSolid(nextX, targetY - 10)) &&
+        (terrain.isNaturalSolid ? !terrain.isNaturalSolid(nextX, targetY - 18) : !terrain.isSolid(nextX, targetY - 18));
+
+      if (hasGroundAtStep && isSpaceAbove) {
+        // 디딜 바닥이 계단(3)인 경우:
+        // 오직 반대 방향 계단만 있고 내 방향 계단은 전혀 없는 경우(내리막 계단의 바닥 끝단)만 올라타지 않음!
+        if (terrain.hasOnlyReverseStair && terrain.hasOnlyReverseStair(nextX, targetY, this.dir)) {
+          continue;
+        }
+        // 오르막 경사로/단차 등반 성공!
+        this.x = nextX;
+        this.y = targetY;
+        climbed = true;
+        break;
+      }
+    }
+
+    if (climbed) {
+      return;
+    }
+
+    // 2) 등반하지 못한 경우: 높은 수직벽(가슴/머리 cy = -20 ~ -9) 또는 진행 불가능한 단차(nextX) 충돌 판정
+    //    - 전방 마진 5.0px으로 가슴/머리 높이 벽을 감지하여 수직 강철벽/암벽 속 파고듦 방지
+    //    - 경사면은 가슴/머리 높이가 허공이므로 오인식되지 않음
+    const frontMargin = 5.0;
     let isHighWallAhead = false;
-    for (let cy = -20; cy <= -5; cy += 3) {
+    for (let cy = -20; cy <= -9; cy += 3) {
       const checkX = nextX + this.dir * frontMargin;
       const checkY = this.y + cy;
       if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, checkY) : (terrain.isSolid(checkX, checkY) && !terrain.isStructure(checkX, checkY))) {
@@ -613,43 +646,11 @@ class NanoUnit {
       }
     }
 
-    // 2) 오르막 단차 등반(Climbing step) 우선 시도:
-    //    - 앞에 키 높은 벽(자연 암벽 1, 강철 2)이 없어야 함
-    //    - 레이저를 장착하고 있지 않아야 함
-    let climbed = false;
-    if (!isHighWallAhead && !this.hasPlasmaCutter) {
-      for (let h = 1; h <= 8; h++) {
-        const targetY = this.y - h;
-        // 디딜 곳(targetY + 1 또는 targetY)이 solid인지 검사
-        const hasGroundAtStep = terrain.isSolid(nextX, targetY + 1) || terrain.isSolid(nextX, targetY);
-        // 디딘 곳 바로 위(targetY)와 그 위 공간 검사 (자연 암벽/강철이 아니면 계단이 겹쳐 있어도 통과 허용)
-        const isSpaceAbove = !terrain.isSolid(nextX, targetY - 1) && 
-          (terrain.isNaturalSolid ? !terrain.isNaturalSolid(nextX, targetY - 10) : !terrain.isSolid(nextX, targetY - 10));
+    // 등반할 수 없는 높은 단차(단차 높이 > 8px)가 바로 앞에 있는 경우 검사
+    const isDirectObstacle = terrain.isNaturalSolid ? 
+      (terrain.isNaturalSolid(nextX, this.y - 2) || terrain.isNaturalSolid(nextX, this.y - 4)) : false;
 
-        if (hasGroundAtStep && isSpaceAbove) {
-          // 디딜 바닥이 계단(3)인 경우:
-          // 오직 반대 방향 계단만 있고 내 방향 계단은 전혀 없는 경우(내리막 계단의 바닥 끝단)만 올라타지 않음!
-          // 겹쳐진/교차 계단에 내 방향 계단이 포함되어 있으면 당연히 정상 등반!
-          if (terrain.hasOnlyReverseStair && terrain.hasOnlyReverseStair(nextX, targetY, this.dir)) {
-            continue;
-          }
-          // 오르막 등반 성공!
-          this.x = nextX;
-          this.y = targetY;
-          climbed = true;
-          break;
-        }
-      }
-    }
-
-    if (climbed) {
-      return;
-    }
-
-    // 3) 등반하지 못한 경우: 진짜 자연 벽/강철벽 충돌 판정
-    //    지면(this.y)은 벽이 아니므로 판정에서 제외하고, 무릎 위 벽(isHighWallAhead) 또는 정강이 이상 높이(this.y - 3)의 벽만 충돌 판정
-    const isBlockedByHardWall = isHighWallAhead || 
-      (terrain.isNaturalSolid ? terrain.isNaturalSolid(nextX + this.dir * frontMargin, this.y - 3) : false);
+    const isBlockedByHardWall = isHighWallAhead || isDirectObstacle;
 
     if (isBlockedByHardWall) {
       if (this.hasPlasmaCutter) {

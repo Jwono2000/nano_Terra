@@ -18,6 +18,24 @@ function setSafeHTML(id, html) {
   if (el) el.innerHTML = html;
 }
 
+// ============================================================================
+// --- Online Leaderboard Configuration (Google Apps Script Web App) ---
+// 배포된 Google Apps Script 웹 앱 URL을 아래 상수에 입력하세요.
+// 빈 문자열('')이면 점수 전송 및 온라인 랭킹 조회를 건너뜁니다.
+// ============================================================================
+const SCORE_API_URL = 'https://script.google.com/macros/s/AKfycbxKowLWjmnzYv5c-VN824EIPRO9bFntW2powWUB_DrEiFAkFQg0TRJNz-pcXhNKbxwyog/exec';
+const SCORE_TOKEN = 'nano_terra_secret_token_2026';
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // --- Main Game Controller ---
 class GameEngine {
   constructor() {
@@ -35,7 +53,7 @@ class GameEngine {
     };
     this.hatchImg = new Image();
     this.hatchImg.src = 'assets/dropship_hatch.png';
-    
+
     this.wallTextureImg = new Image();
     this.wallTextureImg.src = 'assets/wall_texture.jpg';
     this.wallTextureImg.onload = () => {
@@ -204,7 +222,7 @@ class GameEngine {
     this.activeCustomData = null;
     SFX.stopAllContinuousBeams();
     const lvl = LEVELS[this.currentLevelIdx];
-    
+
     this.bgImg.src = lvl.bgImg || 'assets/bg_level_1.jpg';
     const ambientEl = document.getElementById('ambient-backdrop');
     if (ambientEl) ambientEl.style.backgroundImage = `url("${this.bgImg.src}")`;
@@ -242,10 +260,11 @@ class GameEngine {
     setSafeHTML('start-desc', lvl.desc || "나노봇 군단을 무사히 웜홀까지 유도하십시오.");
     setSafeText('start-total-units', `${lvl.totalUnits || 15} UNIT`);
     setSafeText('start-time-limit', `${Math.floor(timeLimit / 60).toString().padStart(2, '0')}:${(timeLimit % 60).toString().padStart(2, '0')}`);
-    
+
     const savedBest = localStorage.getItem(`nano_terra_level_${lvl.id || (this.currentLevelIdx + 1)}_best`) || 0;
     const savedRank = localStorage.getItem(`nano_terra_level_${lvl.id || (this.currentLevelIdx + 1)}_rank`) || '-';
     setSafeText('start-best-score', `최고 기록: ${parseInt(savedBest).toLocaleString()} pt (Rank: ${savedRank})`);
+    this.updateNicknameDisplay(localStorage.getItem('nano_terra_nickname') || '');
 
     const modalStart = document.getElementById('modal-start');
     const modalEnd = document.getElementById('modal-end');
@@ -292,8 +311,9 @@ class GameEngine {
 
   restartLevelDirectly() {
     const modals = [
-      'modal-start', 'modal-end', 'modal-stage-manager', 'modal-save-slot', 
-      'modal-solution-guide', 'modal-editor-props', 'modal-editor-generate'
+      'modal-start', 'modal-end', 'modal-stage-manager', 'modal-save-slot',
+      'modal-solution-guide', 'modal-editor-props', 'modal-editor-generate',
+      'modal-nickname', 'modal-ranking'
     ];
     modals.forEach(id => {
       const el = document.getElementById(id);
@@ -396,6 +416,51 @@ class GameEngine {
       this.stageMgr.openModal();
     });
 
+    bindBtn('btn-change-nickname', () => {
+      this.openNicknameModal();
+    });
+
+    bindBtn('btn-nickname-save', () => {
+      this.saveNicknameFromInput();
+    });
+
+    bindBtn('btn-nickname-skip', () => {
+      this.closeNicknameModal();
+    });
+
+    bindBtn('btn-start-open-ranking', () => {
+      this.openRankingModal();
+    });
+
+    bindBtn('btn-ranking-close', () => {
+      this.closeRankingModal();
+    });
+
+    bindBtn('btn-ranking-bottom-close', () => {
+      this.closeRankingModal();
+    });
+
+    bindBtn('btn-ranking-refresh', () => {
+      const sel = document.getElementById('ranking-stage-select');
+      this.openRankingModal(sel ? sel.value : null);
+    });
+
+    const rankStageSel = document.getElementById('ranking-stage-select');
+    if (rankStageSel) {
+      rankStageSel.addEventListener('change', () => {
+        this.renderSelectedStageRanking();
+      });
+    }
+
+    const inputNick = document.getElementById('input-nickname');
+    if (inputNick) {
+      inputNick.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          this.saveNicknameFromInput();
+        }
+      });
+    }
+
     bindBtn('btn-nuke', () => {
       SFX.playExplosion();
       if (navigator.vibrate) navigator.vibrate(50);
@@ -443,10 +508,10 @@ class GameEngine {
 
     const requestFullscreenMode = async () => {
       const docEl = document.documentElement;
-      const rfs = docEl.requestFullscreen || 
-                  docEl.webkitRequestFullscreen || 
-                  docEl.mozRequestFullScreen || 
-                  docEl.msRequestFullscreen;
+      const rfs = docEl.requestFullscreen ||
+        docEl.webkitRequestFullscreen ||
+        docEl.mozRequestFullScreen ||
+        docEl.msRequestFullscreen;
       if (rfs) {
         try {
           if (docEl.requestFullscreen) {
@@ -457,7 +522,7 @@ class GameEngine {
         } catch (fsErr) {
           try {
             if (rfs) await rfs.call(docEl);
-          } catch (fsErr2) {}
+          } catch (fsErr2) { }
         }
       }
       if (screen.orientation && screen.orientation.lock) {
@@ -466,7 +531,7 @@ class GameEngine {
         } catch (oErr) {
           try {
             await screen.orientation.lock('landscape-primary');
-          } catch (oErr2) {}
+          } catch (oErr2) { }
         }
       }
     };
@@ -474,7 +539,7 @@ class GameEngine {
     const exitFullscreenMode = () => {
       const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
       if (efs) {
-        efs.call(document).catch(() => {});
+        efs.call(document).catch(() => { });
       }
     };
 
@@ -518,10 +583,10 @@ class GameEngine {
 
     bindFullscreenBtn('btn-start-mission', async () => {
       // Auto-request fullscreen on mobile devices or small touch screens
-      const isMobile = ('ontouchstart' in window) || 
-                       (navigator.maxTouchPoints > 0) || 
-                       /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || 
-                       (window.innerWidth < 1100);
+      const isMobile = ('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0) ||
+        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+        (window.innerWidth < 1100);
       if (isMobile && !isFullscreenActive()) {
         await requestFullscreenMode();
       }
@@ -600,6 +665,306 @@ class GameEngine {
         }
       }
     });
+
+    this.initNicknameUI();
+  }
+
+  // ==========================================================================
+  // --- Online Leaderboard & Nickname Management ---
+  // ==========================================================================
+
+  initNicknameUI() {
+    const savedNick = (localStorage.getItem('nano_terra_nickname') || '').trim();
+    this.updateNicknameDisplay(savedNick);
+
+    // 첫 실행 시 닉네임 입력받는 작은 UI 표시 (미등록 상태인 경우)
+    if (!savedNick) {
+      setTimeout(() => {
+        this.openNicknameModal();
+      }, 500);
+    }
+  }
+
+  updateNicknameDisplay(nick) {
+    const el = document.getElementById('start-commander-name');
+    if (el) {
+      el.innerText = nick ? nick : '미등록 (설정 필요)';
+      el.style.color = nick ? 'var(--neon-cyan)' : 'var(--text-dim)';
+    }
+  }
+
+  openNicknameModal() {
+    const modal = document.getElementById('modal-nickname');
+    const input = document.getElementById('input-nickname');
+    if (!modal) return;
+    const currentNick = (localStorage.getItem('nano_terra_nickname') || '').trim();
+    if (input) {
+      input.value = currentNick;
+    }
+    modal.style.display = 'flex';
+    if (input) {
+      setTimeout(() => input.focus(), 100);
+    }
+    if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
+  }
+
+  closeNicknameModal() {
+    const modal = document.getElementById('modal-nickname');
+    if (modal) modal.style.display = 'none';
+  }
+
+  saveNicknameFromInput() {
+    const input = document.getElementById('input-nickname');
+    if (!input) return;
+    const nick = input.value.trim();
+    if (!nick) {
+      alert('사령관 닉네임을 1자 이상 입력해주세요.');
+      input.focus();
+      return;
+    }
+    localStorage.setItem('nano_terra_nickname', nick);
+    this.updateNicknameDisplay(nick);
+    this.closeNicknameModal();
+    if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
+    if (this.particles) {
+      this.particles.spawnFloatingText(400, 200, `사령관 호출부호 등록: ${nick}`, '#00ff88');
+    }
+  }
+
+  submitOnlineScore(scoreData) {
+    try {
+      const apiUrl = (typeof SCORE_API_URL !== 'undefined' ? SCORE_API_URL : window.SCORE_API_URL) || '';
+      if (!apiUrl || !apiUrl.trim()) {
+        return; // SCORE_API_URL이 빈 문자열이면 전송 건너뜀
+      }
+
+      const nickname = (localStorage.getItem('nano_terra_nickname') || '').trim();
+      if (!nickname) {
+        return; // 닉네임이 없으면 전송하지 않음
+      }
+
+      const token = (typeof SCORE_TOKEN !== 'undefined' ? SCORE_TOKEN : window.SCORE_TOKEN) || 'nano_terra_secret_token_2026';
+      const payload = {
+        token: token,
+        nickname: nickname,
+        stageId: scoreData.stageId,
+        stageName: scoreData.stageName,
+        score: Number(scoreData.score) || 0,
+        rank: scoreData.rank || '-',
+        clearedAt: scoreData.clearedAt || new Date().toISOString()
+      };
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: JSON.stringify(payload)
+      }).then(res => res.json()).then(resJson => {
+        console.log('[nano_Terra] Leaderboard score recorded:', resJson);
+      }).catch(err => {
+        // 전송 실패는 조용히 무시 (게임 흐름 절대 차단 금지)
+        console.warn('[nano_Terra] Leaderboard score submission skipped/failed:', err && err.message);
+      });
+    } catch (err) {
+      // 조용히 무시
+    }
+  }
+
+  async openRankingModal(initialStageId = null) {
+    const modal = document.getElementById('modal-ranking');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    if (typeof SFX !== 'undefined' && SFX.playClick) SFX.playClick();
+
+    // 1. 구역 선택 드롭다운 채우기
+    const selectEl = document.getElementById('ranking-stage-select');
+    if (selectEl) {
+      selectEl.innerHTML = '';
+      const stages = (typeof LEVELS !== 'undefined' && LEVELS.length > 0) ? LEVELS : [];
+      stages.forEach((lvl, idx) => {
+        const sid = lvl.id != null ? lvl.id : (idx + 1);
+        const opt = document.createElement('option');
+        opt.value = String(sid);
+        opt.innerText = `${idx + 1}구역: ${lvl.title || 'STAGE ' + (idx + 1)}`;
+        selectEl.appendChild(opt);
+      });
+
+      if (initialStageId != null) {
+        selectEl.value = String(initialStageId);
+      } else if (this.currentLevelIdx != null && stages[this.currentLevelIdx]) {
+        const curSid = stages[this.currentLevelIdx].id != null ? stages[this.currentLevelIdx].id : (this.currentLevelIdx + 1);
+        selectEl.value = String(curSid);
+      }
+    }
+
+    // 2. 랭킹 데이터 불러오기
+    const contentArea = document.getElementById('ranking-content-area');
+    const apiUrl = (typeof SCORE_API_URL !== 'undefined' ? SCORE_API_URL : window.SCORE_API_URL) || '';
+
+    if (!apiUrl || !apiUrl.trim()) {
+      if (contentArea) {
+        contentArea.innerHTML = `
+          <div style="padding: 32px 16px; text-align: center; color: var(--text-dim); line-height: 1.6;">
+            <div style="font-size: 26px; margin-bottom: 8px;">⚙️</div>
+            <div style="color: var(--neon-gold); font-size: 13px; font-weight: bold; margin-bottom: 6px;">온라인 랭킹 서버(SCORE_API_URL) 미설정</div>
+            <div style="font-size: 11px;">Google Apps Script 웹 앱 배포 URL이 등록되면<br>전체 플레이어의 실시간 랭킹이 표시됩니다.</div>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    if (contentArea) {
+      contentArea.innerHTML = `
+        <div style="padding: 36px 16px; text-align: center; color: var(--neon-cyan);">
+          <div style="font-size: 22px; margin-bottom: 6px;">🛰️</div>
+          <div style="font-size: 12px; font-family: 'Orbitron', sans-serif;">LEADERBOARD FETCHING...</div>
+          <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">구글 시트로부터 최신 랭킹 데이터를 수신하고 있습니다.</div>
+        </div>
+      `;
+    }
+
+    try {
+      const res = await fetch(apiUrl, { method: 'GET' });
+      if (!res.ok) {
+        throw new Error('HTTP Status: ' + res.status);
+      }
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        throw new Error('Response is not an array');
+      }
+
+      this.cachedRankingRecords = data;
+      this.renderSelectedStageRanking();
+
+    } catch (err) {
+      console.warn('[nano_Terra] Leaderboard fetch error:', err);
+      if (contentArea) {
+        contentArea.innerHTML = `
+          <div style="padding: 32px 16px; text-align: center; color: #ff4466;">
+            <div style="font-size: 24px; margin-bottom: 6px;">⚠️</div>
+            <div style="font-size: 13px; font-weight: bold;">랭킹을 불러올 수 없음</div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">네트워크 연결 상태나 웹 앱 URL을 확인해주세요.</div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  closeRankingModal() {
+    const modal = document.getElementById('modal-ranking');
+    if (modal) modal.style.display = 'none';
+  }
+
+  renderSelectedStageRanking() {
+    const selectEl = document.getElementById('ranking-stage-select');
+    const contentArea = document.getElementById('ranking-content-area');
+    if (!selectEl || !contentArea) return;
+
+    const selectedStageId = String(selectEl.value);
+    const records = this.cachedRankingRecords || [];
+
+    // Filter by stageId
+    const stageRecords = records.filter(r => String(r.stageId) === selectedStageId);
+
+    // Group by nickname: keep highest score for each player
+    const userBestMap = new Map();
+    stageRecords.forEach(r => {
+      const nick = (r.nickname || '익명').trim();
+      const score = Number(r.score) || 0;
+      if (!userBestMap.has(nick) || score > userBestMap.get(nick).score) {
+        userBestMap.set(nick, {
+          nickname: nick,
+          score: score,
+          rank: r.rank || '-',
+          clearedAt: r.clearedAt || r.serverTime || ''
+        });
+      }
+    });
+
+    const topList = Array.from(userBestMap.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+    const myNickname = (localStorage.getItem('nano_terra_nickname') || '').trim();
+
+    if (topList.length === 0) {
+      contentArea.innerHTML = `
+        <div style="padding: 32px 16px; text-align: center; color: var(--text-dim); line-height: 1.6;">
+          <div style="font-size: 20px; margin-bottom: 6px;">🛸</div>
+          <div style="font-size: 12px; color: #a0c0d8;">아직 등록된 랭킹 기록이 없습니다.</div>
+          <div style="font-size: 10px; margin-top: 4px;">이 구역을 클리어하고 첫 번째 명예의 전당에 올라보세요!</div>
+        </div>
+      `;
+      return;
+    }
+
+    let rowsHtml = '';
+    topList.forEach((entry, idx) => {
+      const rankNum = idx + 1;
+      let medal = `${rankNum}위`;
+      let rankRowClass = '';
+      if (rankNum === 1) {
+        medal = '🥇 1위';
+        rankRowClass = 'ranking-row-gold';
+      } else if (rankNum === 2) {
+        medal = '🥈 2위';
+        rankRowClass = 'ranking-row-silver';
+      } else if (rankNum === 3) {
+        medal = '🥉 3위';
+        rankRowClass = 'ranking-row-bronze';
+      }
+
+      const isMe = myNickname && (entry.nickname.toLowerCase() === myNickname.toLowerCase());
+      const isMeClass = isMe ? ' ranking-row-me' : '';
+      const meBadge = isMe ? ' <span style="background:var(--neon-cyan); color:#000; font-size:9px; padding:1px 4px; border-radius:3px; font-weight:bold;">ME</span>' : '';
+
+      let dateStr = '-';
+      if (entry.clearedAt) {
+        try {
+          const d = new Date(entry.clearedAt);
+          if (!isNaN(d.getTime())) {
+            const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+            const dd = d.getDate().toString().padStart(2, '0');
+            const hh = d.getHours().toString().padStart(2, '0');
+            const min = d.getMinutes().toString().padStart(2, '0');
+            dateStr = `${mm}-${dd} ${hh}:${min}`;
+          } else {
+            dateStr = String(entry.clearedAt).substring(5, 16);
+          }
+        } catch (e) {
+          dateStr = String(entry.clearedAt).substring(5, 16);
+        }
+      }
+
+      rowsHtml += `
+        <tr class="${rankRowClass}${isMeClass}">
+          <td style="text-align: center; font-weight: bold; width: 62px;">${medal}</td>
+          <td style="text-align: left; font-weight: 600; color: ${isMe ? 'var(--neon-cyan)' : '#fff'};">${escapeHtml(entry.nickname)}${meBadge}</td>
+          <td style="text-align: right; font-family: 'Orbitron', sans-serif; color: var(--neon-gold); font-weight: bold;">${entry.score.toLocaleString()} pt</td>
+          <td style="text-align: center; width: 50px;"><span class="rank-badge rank-${entry.rank}">${entry.rank}</span></td>
+          <td style="text-align: center; font-size: 10px; color: var(--text-dim); width: 85px;">${dateStr}</td>
+        </tr>
+      `;
+    });
+
+    contentArea.innerHTML = `
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th style="width: 62px; text-align: center;">순위</th>
+            <th style="text-align: left;">사령관 (닉네임)</th>
+            <th style="text-align: right;">최고 점수</th>
+            <th style="width: 50px; text-align: center;">랭크</th>
+            <th style="width: 85px; text-align: center;">일시</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    `;
   }
 
   setSpeed(spd) {
@@ -848,10 +1213,10 @@ class GameEngine {
         }
         // Check if diagonal path in front is steel
         const mineAheadX = unit.x + unit.dir * 6;
-        const isSteelMine = this.terrain.isSteel(mineAheadX, unit.y + 2) || 
-                            this.terrain.isSteel(mineAheadX, unit.y - 4) || 
-                            this.terrain.isSteel(unit.x + unit.dir * 4, unit.y + 1) ||
-                            this.terrain.isSteel(unit.x, unit.y + 1);
+        const isSteelMine = this.terrain.isSteel(mineAheadX, unit.y + 2) ||
+          this.terrain.isSteel(mineAheadX, unit.y - 4) ||
+          this.terrain.isSteel(unit.x + unit.dir * 4, unit.y + 1) ||
+          this.terrain.isSteel(unit.x, unit.y + 1);
         if (isSteelMine) {
           this.particles.spawnBurst(unit.x + unit.dir * 4, unit.y - 4, '#ffffff', 8, 2.5);
           this.particles.spawnBurst(unit.x + unit.dir * 4, unit.y - 4, '#ffb700', 10, 3.2);
@@ -871,11 +1236,11 @@ class GameEngine {
           return;
         }
         // Check if directly standing on steel
-        const isSteelFloor = this.terrain.isSteel(unit.x, unit.y + 1) || 
-                             this.terrain.isSteel(unit.x, unit.y + 3) || 
-                             this.terrain.isSteel(unit.x - 4, unit.y + 2) || 
-                             this.terrain.isSteel(unit.x + 4, unit.y + 2) ||
-                             this.terrain.isSteel(unit.x, unit.y + 5);
+        const isSteelFloor = this.terrain.isSteel(unit.x, unit.y + 1) ||
+          this.terrain.isSteel(unit.x, unit.y + 3) ||
+          this.terrain.isSteel(unit.x - 4, unit.y + 2) ||
+          this.terrain.isSteel(unit.x + 4, unit.y + 2) ||
+          this.terrain.isSteel(unit.x, unit.y + 5);
         if (isSteelFloor) {
           this.particles.spawnBurst(unit.x, unit.y, '#ffffff', 8, 2.5);
           this.particles.spawnBurst(unit.x, unit.y, '#ffb700', 10, 3.2);
@@ -941,13 +1306,13 @@ class GameEngine {
 
   placePortal(x, y) {
     if (this.skillCounts.portal <= 0) return;
-    
+
     if (!this.portalPair.entry) {
       let checkY = y;
       while (this.terrain.isSolid(x, checkY) && checkY > 20) {
         checkY--;
       }
-      
+
       this.portalPair.entry = { x, y: checkY };
       SFX.playTeleport();
       this.particles.spawnBurst(x, checkY, '#00f3ff', 24, 3.5);
@@ -1133,6 +1498,26 @@ class GameEngine {
       }
       localStorage.setItem(`nano_terra_level_${currentLvl.id}_rank`, rank);
       SFX.playVictory();
+
+      // 온라인 랭킹 점수 전송 (스테이지 클리어 시 베스트 점수 저장 지점)
+      try {
+        const stageKeyId = currentLvl.id != null ? currentLvl.id : (this.currentLevelIdx + 1);
+        const sentKey = `nano_terra_level_${stageKeyId}_sent_best`;
+        const lastSentBest = parseInt(localStorage.getItem(sentKey) || '0', 10);
+
+        if (isNewRecord || totalScore > lastSentBest) {
+          localStorage.setItem(sentKey, totalScore.toString());
+          this.submitOnlineScore({
+            stageId: stageKeyId,
+            stageName: currentLvl.title || `STAGE ${this.currentLevelIdx + 1}`,
+            score: totalScore,
+            rank: rank,
+            clearedAt: new Date().toISOString()
+          });
+        }
+      } catch (sendErr) {
+        // 전송 예외는 조용히 무시 (게임 클리어 흐름 보호)
+      }
     } else {
       starCount = 0;
       rank = 'F';
@@ -1168,7 +1553,7 @@ class GameEngine {
 
     if (isCleared) {
       if (title) {
-        title.innerText = this.isCustomPlay 
+        title.innerText = this.isCustomPlay
           ? `작전 성공: [CUSTOM] ${currentLvl.title}`
           : `작전 성공: ${this.currentLevelIdx + 1}구역 (${currentLvl.title})`;
         title.style.color = "var(--neon-cyan)";
@@ -1213,7 +1598,7 @@ class GameEngine {
     setSafeText('hud-rescued-num', this.rescuedCount);
     setSafeHTML('hud-rescued-count', `<span class="highlight">${this.rescuedCount}</span> / ${Math.ceil(currentLvl.totalUnits * currentLvl.needPercent / 100)} (${pct}%)`);
     setSafeText('hud-active-count', `${this.units.filter(u => u.state !== STATE.DEAD && u.state !== STATE.EXITING).length} / ${currentLvl.totalUnits}`);
-    
+
     const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
     const s = (this.timeRemaining % 60).toString().padStart(2, '0');
     setSafeText('hud-time-left', `${m}:${s}`);
@@ -1295,7 +1680,7 @@ class GameEngine {
     if (this.portalPair.entry) {
       const px = this.portalPair.entry.x;
       const py = this.portalPair.entry.y;
-      
+
       if (!this.portalPair.exit) {
         this.ctx.save();
         this.ctx.strokeStyle = 'rgba(0, 243, 255, 0.5)';
@@ -1412,7 +1797,7 @@ class GameEngine {
       this.ctx.fillStyle = '#00f3ff';
       this.ctx.globalAlpha = alpha;
       this.ctx.fillText(currentSec > 0 ? currentSec.toString() : "GO!", 0, 0);
-      
+
       this.ctx.font = '700 16px Orbitron, sans-serif';
       this.ctx.fillStyle = '#ffffff';
       const subtitle = currentSec === 3 ? "GET READY..." : (currentSec === 2 ? "PLAN YOUR ROUTE" : "MISSION START!");

@@ -1334,6 +1334,15 @@ class StageManager {
       };
     }
 
+    const btnOpenRank = document.getElementById('btn-open-ranking');
+    if (btnOpenRank) {
+      btnOpenRank.onclick = () => {
+        if (this.game && this.game.openRankingModal) {
+          this.game.openRankingModal();
+        }
+      };
+    }
+
     // 1-Click Campaign.json Download (For GitHub synchronization)
     const btnDownCamp = document.getElementById('btn-download-campaign-json');
     if (btnDownCamp) {
@@ -1463,6 +1472,7 @@ class StageManager {
           <div class="stage-item-actions">
             <button class="btn-tool btn-tool-play" data-act="play" data-idx="${idx}">▶️ 플레이</button>
             <button class="btn-tool" data-act="edit" data-idx="${idx}">✏️ 수정</button>
+            <button class="btn-tool" style="border-color: #ffd700; color: #ffd700;" data-act="ranking" data-idx="${idx}" title="이 구역 온라인 랭킹 보기">🏆 랭킹</button>
             ${actionBtn}
           </div>
         `;
@@ -1532,6 +1542,12 @@ class StageManager {
         } else if (act === 'edit') {
           this.closeModal();
           this.game.enterEditor(LEVELS[idx]);
+        } else if (act === 'ranking') {
+          const lvl = LEVELS[idx];
+          const sid = lvl ? (lvl.id != null ? lvl.id : (idx + 1)) : (idx + 1);
+          if (this.game && this.game.openRankingModal) {
+            this.game.openRankingModal(sid);
+          }
         } else if (act === 'reset-slot') {
           if (confirm(`${idx + 1}구역을 오리지널 기본 맵으로 복원하시겠습니까?`)) {
             this.resetCampaignSlot(idx);

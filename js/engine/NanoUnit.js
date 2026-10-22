@@ -246,8 +246,8 @@ class NanoUnit {
       } else {
         this.x = nextAirX;
       }
-      // Air drag on horizontal velocity
-      this.vx *= 0.985;
+      // Air drag on horizontal velocity for smooth natural parabolic fall
+      this.vx *= 0.965;
     }
 
     const prevFootY = this.y;
@@ -493,12 +493,12 @@ class NanoUnit {
         this.dismountCooldown = 30;
         this.ridingPlatform = null;
       }
-      // 발판/절벽 밖으로 한 걸음 전진하며 즉시 낙하 상태 진입 (끝단 멈춤/지체 현상 완전 제거)
+      // 발판/절벽 밖으로 한 걸음 전진하며 즉시 낙하 상태 진입 (자연스러운 미세 포물선 궤적 부여)
       this.x += this.dir * 1.25 * speedScale;
       this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
       this.fallDistance = 0;
       this.vy = 0;
-      this.vx = 0; // 명확한 원칙: 일반 보행 낙하 시 불필요한 잔여 관성을 제거하여 균일한 수직 낙하 보장
+      this.vx = this.dir * 0.85 * speedScale; // 걷던 속도에 맞추어 아주 자연스럽게 완만한 포물선을 그리며 낙하
       return;
     }
 
@@ -1015,10 +1015,10 @@ class NanoUnit {
     SFX.startContinuousBeam('mine_' + this.id, 'mine');
 
     if (this.cutSteps % 2 === 0) {
-      const cutW = 20;
-      const cutH = 20;
+      const cutW = 24;
+      const cutH = 26;
       const cutX = this.dir > 0 ? this.x - 4 : this.x - (cutW - 4);
-      terrain.carveRect(cutX, this.y - 17, cutW, cutH, particles);
+      terrain.carveRect(cutX, this.y - 21, cutW, cutH, particles);
 
       // Smooth diagonal progression
       this.x += this.dir * 1.25 * speedScale;
@@ -1044,30 +1044,54 @@ class NanoUnit {
       return;
     }
 
-    // Check if there is still solid rock at the diagonal cutting tip (dist: 16px)
-    const tipX = this.x + this.dir * 16;
-    const isSolidAhead = terrain.isSolid(tipX, this.y - 10) || 
-                         terrain.isSolid(tipX, this.y - 3) || 
-                         terrain.isSolid(tipX, this.y + 3);
+    // 전방 대각선 굴착 통로(거리 6~24px, 머리~발끝 cy=-20~0)에 아직 암벽이 남아있는지 정밀 검사
+    let isSolidAhead = false;
+    for (let dist = 6; dist <= 24; dist += 3) {
+      const checkX = this.x + this.dir * dist;
+      for (let cy = -20; cy <= 0; cy += 4) {
+        if (terrain.isNaturalSolid ? terrain.isNaturalSolid(checkX, this.y + cy) : terrain.isSolid(checkX, this.y + cy)) {
+          isSolidAhead = true;
+          break;
+        }
+      }
+      if (isSolidAhead) break;
+    }
 
     if (isSolidAhead) {
-      this.exitSteps = 0; // Still inside solid rock slope, keep mining
+      this.exitSteps = 0; // 아직 암벽을 뚫는 중, 지속 굴착
     } else {
-      // Breached through current floor! Follow-through for 8 steps
+      // 벽 측면/바닥을 완전히 관통함! 유닛 몸체 전체가 벽 밖으로 안전하게 빠져나올 수 있도록 10스텝 여유 전진
       this.exitSteps = (this.exitSteps || 0) + 1;
-      if (this.exitSteps > 8 || this.cutSteps > 12) {
+      if (this.exitSteps > 10) {
         this.stopSounds();
-        const cutW = 20;
-        const cutH = 20;
-        const cutX = this.dir > 0 ? this.x - 4 : this.x - (cutW - 4);
-        terrain.carveRect(cutX, this.y - 17, cutW, cutH, particles);
+        const cutW = 28;
+        const cutH = 26;
+        const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
+        terrain.carveRect(cutX, this.y - 21, cutW, cutH, particles);
 
-        const hasFloorDirectlyBelow = terrain.isSolid(this.x, this.y + 2) || terrain.isSolid(this.x, this.y + 4);
-        this.state = hasFloorDirectlyBelow ? STATE.WALKING : (this.hasAntiGrav ? STATE.FLOATING : STATE.FALLING);
+        const hasFloorDirectlyBelow = terrain.isSolid(this.x, this.y + 1) || 
+                                      terrain.isSolid(this.x, this.y + 3) ||
+                                      terrain.isSolid(this.x, this.y + 6);
+        if (hasFloorDirectlyBelow) {
+          for (let dy = 0; dy <= 6; dy++) {
+            if (terrain.isSolid(this.x, this.y + dy)) {
+              this.y = this.y + dy - 1;
+              break;
+            }
+          }
+          this.state = STATE.WALKING;
+          this.vx = this.dir * 1.25;
+        } else {
+          this.state = (this.hasAntiGrav) ? STATE.FLOATING : STATE.FALLING;
+          this.vx = this.dir * 0.85 * speedScale;
+          this.vy = 0.5;
+        }
         this.cutSteps = 0;
         this.exitSteps = 0;
         this.fallDistance = 0;
-        particles.spawnBurst(this.x, this.y, '#00ff88', 16, 2.5);
+        if (particles) {
+          particles.spawnBurst(this.x, this.y - 8, '#00ff88', 16, 2.5);
+        }
       }
     }
   }

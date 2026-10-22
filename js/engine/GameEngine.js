@@ -868,24 +868,44 @@ class GameEngine {
     // Filter by stageId
     const stageRecords = records.filter(r => String(r.stageId) === selectedStageId);
 
-    // Group by nickname: keep highest score for each player
-    const userBestMap = new Map();
-    stageRecords.forEach(r => {
-      const nick = (r.nickname || '익명').trim();
-      const score = Number(r.score) || 0;
-      if (!userBestMap.has(nick) || score > userBestMap.get(nick).score) {
-        userBestMap.set(nick, {
-          nickname: nick,
-          score: score,
-          rank: r.rank || '-',
-          clearedAt: r.clearedAt || r.serverTime || ''
-        });
+    // 스테이지의 모든 클리어 기록 매핑 (재도전 기록 및 닉네임별 다중 Top10 랭크인 허용)
+    const cleanRecords = stageRecords.map(r => ({
+      nickname: (r.nickname || '익명').trim(),
+      score: Number(r.score) || 0,
+      rank: r.rank || '-',
+      clearedAt: r.clearedAt || r.serverTime || ''
+    }));
+
+    // 정렬 원칙:
+    // 1. 점수 내림차순 (높은 점수 우선)
+    // 2. 동점일 경우: "먼저 1등이 된 사람부터 위부터 보여줌" (달성 일시 오름차순)
+    cleanRecords.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
       }
+      const tA = new Date(a.clearedAt).getTime() || 0;
+      const tB = new Date(b.clearedAt).getTime() || 0;
+      return tA - tB;
     });
 
-    const topList = Array.from(userBestMap.values())
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+    const topList = cleanRecords.slice(0, 10);
+
+    // 공동 순위 계산 (표준 경쟁 순위: 1등이 3명이면 1위, 1위, 1위 다음은 4위)
+    let prevScore = null;
+    let prevRank = 1;
+    topList.forEach((entry, idx) => {
+      let rankNum;
+      if (idx === 0) {
+        rankNum = 1;
+      } else if (entry.score === prevScore) {
+        rankNum = prevRank; // 공동 순위 유지
+      } else {
+        rankNum = idx + 1;  // 동점자 수만큼 건너뛴 순위 (예: 1등 3명이면 다음은 4위)
+      }
+      entry.rankNum = rankNum;
+      prevScore = entry.score;
+      prevRank = rankNum;
+    });
 
     const myNickname = (localStorage.getItem('nano_terra_nickname') || '').trim();
 
@@ -902,7 +922,7 @@ class GameEngine {
 
     let rowsHtml = '';
     topList.forEach((entry, idx) => {
-      const rankNum = idx + 1;
+      const rankNum = entry.rankNum;
       let medal = `${rankNum}위`;
       let rankRowClass = '';
       if (rankNum === 1) {
@@ -955,7 +975,7 @@ class GameEngine {
           <tr>
             <th style="width: 62px; text-align: center;">순위</th>
             <th style="text-align: left;">사령관 (닉네임)</th>
-            <th style="text-align: right;">최고 점수</th>
+            <th style="text-align: right;">점수</th>
             <th style="width: 50px; text-align: center;">랭크</th>
             <th style="width: 85px; text-align: center;">일시</th>
           </tr>
@@ -1499,22 +1519,16 @@ class GameEngine {
       localStorage.setItem(`nano_terra_level_${currentLvl.id}_rank`, rank);
       SFX.playVictory();
 
-      // 온라인 랭킹 점수 전송 (스테이지 클리어 시 베스트 점수 저장 지점)
+      // 온라인 랭킹 점수 전송 (스테이지 클리어 시마다 실시간 기록 전송)
       try {
         const stageKeyId = currentLvl.id != null ? currentLvl.id : (this.currentLevelIdx + 1);
-        const sentKey = `nano_terra_level_${stageKeyId}_sent_best`;
-        const lastSentBest = parseInt(localStorage.getItem(sentKey) || '0', 10);
-
-        if (isNewRecord || totalScore > lastSentBest) {
-          localStorage.setItem(sentKey, totalScore.toString());
-          this.submitOnlineScore({
-            stageId: stageKeyId,
-            stageName: currentLvl.title || `STAGE ${this.currentLevelIdx + 1}`,
-            score: totalScore,
-            rank: rank,
-            clearedAt: new Date().toISOString()
-          });
-        }
+        this.submitOnlineScore({
+          stageId: stageKeyId,
+          stageName: currentLvl.title || `STAGE ${this.currentLevelIdx + 1}`,
+          score: totalScore,
+          rank: rank,
+          clearedAt: new Date().toISOString()
+        });
       } catch (sendErr) {
         // 전송 예외는 조용히 무시 (게임 클리어 흐름 보호)
       }

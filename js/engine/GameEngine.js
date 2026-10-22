@@ -916,7 +916,7 @@ class GameEngine {
         rankRowClass = 'ranking-row-bronze';
       }
 
-      const isMe = myNickname && (entry.nickname.toLowerCase() === myNickname.toLowerCase());
+      const isMe = myNickname && (entry.nickname === myNickname);
       const isMeClass = isMe ? ' ranking-row-me' : '';
       const meBadge = isMe ? ' <span style="background:var(--neon-cyan); color:#000; font-size:9px; padding:1px 4px; border-radius:3px; font-weight:bold;">ME</span>' : '';
 

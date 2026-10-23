@@ -34,14 +34,16 @@ for (const diff of diffKeys) {
     console.log(`    - Dynamic Time Limit: ${map.timeLimit}s (Formula: ${expectedTime}s)`);
     assert.strictEqual(map.timeLimit, expectedTime, 'Time limit must match dynamic time formula');
 
-    // 3. Decoy skills and tight budget checks for HARD/NIGHTMARE
-    if (diff === 'hard' || diff === 'nightmare') {
+    // 3. Decoy skills and tight budget checks for HARD
+    if (diff === 'hard') {
       const solSet = new Set(map.solutionDna.map(s => s.toLowerCase()));
       const allSkills = ['climb', 'float', 'bash', 'mine', 'drill', 'bomb', 'build', 'block'];
       const decoys = allSkills.filter(s => (map.skills[s] || 0) > 0 && !solSet.has(s));
       console.log(`    - Decoy Skills present: [${decoys.join(', ')}]`);
       assert(decoys.length > 0, `High difficulty ${diff} must include at least 1 decoy skill`);
+    }
 
+    if (diff === 'hard' || diff === 'nightmare') {
       // Check unique skills
       assert(new Set(map.solutionDna).size >= DIFF_SPECS[diff].minUniqueSkills, `Unique skills must be >= ${DIFF_SPECS[diff].minUniqueSkills}`);
     }

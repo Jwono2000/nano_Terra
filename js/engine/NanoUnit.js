@@ -61,9 +61,9 @@ class NanoUnit {
     this.stopSounds();
 
     if (deathType === 'explosion') {
-      SFX.playExplosion();
+      if (typeof SFX !== 'undefined' && SFX.playExplosion) SFX.playExplosion();
     } else {
-      SFX.playSplat();
+      if (typeof SFX !== 'undefined' && SFX.playSplat) SFX.playSplat();
     }
   }
 
@@ -222,7 +222,7 @@ class NanoUnit {
     
     if (isFloater) {
       this.vy = 0.85;
-      if (Math.random() < 0.5) {
+      if (particles && Math.random() < 0.5) {
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 6, this.y + 2, '#cceeff', 2, 1.2);
         particles.spawnBurst(this.x + (Math.random() - 0.5) * 4, this.y + 1, '#00f3ff', 2, 1.0);
       }
@@ -357,6 +357,13 @@ class NanoUnit {
     if (terrain.getDiagonalBeamAt && this.vy >= 0) {
       const beamContact = terrain.getDiagonalBeamAt(this.x, this.y, 8);
       if (beamContact && !beamContact.isBottomEnd) {
+        if (this.fallDistance > this.maxSafeFall && !isFloater) {
+          this.die(particles, 'splat');
+          if (particles) {
+            particles.spawnBurst(this.x, beamContact.topY - 8, '#ff2255', 20, 3);
+          }
+          return;
+        }
         this.state = STATE.BEAM_SLIDING;
         this.dir = beamContact.slopeDir;
         this.vx = this.dir * 1.38;

@@ -98,6 +98,7 @@ class JumpPad {
       unit.vx = 0;
       unit.x = launchCenterX;
     }
+    unit.vxDrag = 0.985; // 점프패드 공기저항 계수 (예측 궤적 calculateTrajectory와 100% 일치)
 
     if (particles) {
       particles.spawnBurst(this.x + this.w / 2, this.y + 2, '#ffaa00', 16, 3.8);

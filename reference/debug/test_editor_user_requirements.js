@@ -5,7 +5,7 @@ global.document = {
   elements: {},
   getElementById(id) {
     if (!this.elements[id]) {
-      this.elements[id] = { id, style: {}, innerHTML: '', innerText: '', value: '', classList: { toggle() {} } };
+      this.elements[id] = { id, style: {}, innerHTML: '', innerText: '', value: '', classList: { toggle() {}, add() {}, remove() {}, contains() { return false; } } };
     }
     return this.elements[id];
   },

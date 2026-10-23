@@ -23,6 +23,7 @@ class NanoUnit {
     this.dir = dir;
     this.vx = dir * 1.25;
     this.vy = 0;
+    this.vxDrag = 0.985;
     this.state = STATE.FALLING;
     this.fallDistance = 0;
     this.maxSafeFall = 96; // Reduced by 20% from 120px to 96px for tighter fall risk
@@ -246,8 +247,11 @@ class NanoUnit {
       } else {
         this.x = nextAirX;
       }
-      // Air drag on horizontal velocity for smooth natural parabolic fall
-      this.vx *= 0.965;
+      // Air drag on horizontal velocity:
+      // JumpPad launch uses 0.985 matching calculateTrajectory exactly;
+      // ledge drop uses 0.965 for subtle natural step-off parabola
+      const drag = (this.vxDrag !== undefined) ? this.vxDrag : 0.985;
+      this.vx *= Math.pow(drag, speedScale);
     }
 
     const prevFootY = this.y;
@@ -282,6 +286,7 @@ class NanoUnit {
               this.fallDistance = 0;
               this.vy = 0;
               this.vx = 0;
+              this.vxDrag = 0.985;
               this.y = p.y;
               this.ridingPlatform = p;
               this.hasAntiGrav = false;
@@ -313,6 +318,7 @@ class NanoUnit {
             this.state = STATE.WALKING;
             this.vy = 0;
             this.vx = 0;
+            this.vxDrag = 0.985;
             this.ridingPlatform = null;
             this.lastDismountedPlatform = null;
             return;
@@ -387,6 +393,7 @@ class NanoUnit {
         this.fallDistance = 0;
         this.vy = 0;
         this.vx = 0;
+        this.vxDrag = 0.985;
         this.hasAntiGrav = false;
       }
     }
@@ -499,6 +506,7 @@ class NanoUnit {
       this.fallDistance = 0;
       this.vy = 0;
       this.vx = this.dir * 0.85 * speedScale; // 걷던 속도에 맞추어 아주 자연스럽게 완만한 포물선을 그리며 낙하
+      this.vxDrag = 0.965; // 절벽 보행 낙하 시 미세 포물선 감쇠율
       return;
     }
 

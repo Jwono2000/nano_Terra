@@ -1339,13 +1339,13 @@
         "x": 90,
         "y": 140,
         "w": 200,
-        "h": 20,
+        "h": 10,
         "palette": "purple",
         "profile": [
-          16,
-          24,
-          16,
-          14
+          8,
+          12,
+          8,
+          7
         ]
       },
       {
@@ -1450,7 +1450,7 @@
         "w": 100,
         "h": 10,
         "axis": "vertical",
-        "range": 260,
+        "range": 60,
         "speed": 0.75,
         "pauseTicks": 30,
         "palette": "cyan"
@@ -1458,9 +1458,9 @@
       {
         "type": "steelBarrier",
         "x": 730,
-        "y": 100,
+        "y": 110,
         "w": 20,
-        "h": 270,
+        "h": 260,
         "palette": "purple"
       },
       {
@@ -1535,6 +1535,46 @@
         "dir": "right",
         "power": 9.5,
         "palette": "purple"
+      },
+      {
+        "type": "diagonalBeam",
+        "x": 180,
+        "y": 220,
+        "w": 50,
+        "h": 40,
+        "palette": "purple",
+        "slope": -1,
+        "thickness": 16,
+        "isSteel": true
+      },
+      {
+        "type": "steelBarrier",
+        "x": 730,
+        "y": 90,
+        "w": 20,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "steelPlatform",
+        "x": 630,
+        "y": 170,
+        "w": 100,
+        "h": 10,
+        "palette": "purple",
+        "isSteel": true
+      },
+      {
+        "type": "movingPlatform",
+        "x": 630,
+        "y": 220,
+        "w": 100,
+        "h": 10,
+        "axis": "vertical",
+        "range": 60,
+        "speed": 0.75,
+        "pauseTicks": 30,
+        "palette": "cyan"
       }
     ],
     "solutionDna": [
@@ -2353,7 +2393,7 @@
       {
         "type": "quantumCrystal",
         "x": 90,
-        "y": 140,
+        "y": 130,
         "w": 200,
         "h": 20,
         "palette": "purple",
@@ -2381,17 +2421,17 @@
       },
       {
         "type": "steelBarrier",
-        "x": 270,
-        "y": 90,
-        "w": 20,
+        "x": 260,
+        "y": 80,
+        "w": 30,
         "h": 50,
         "palette": "purple"
       },
       {
         "type": "quantumCrystal",
-        "x": 360,
+        "x": 340,
         "y": 100,
-        "w": 270,
+        "w": 290,
         "h": 20,
         "palette": "purple",
         "profile": [
@@ -2415,9 +2455,9 @@
       },
       {
         "type": "steelBarrier",
-        "x": 80,
+        "x": 70,
         "y": 110,
-        "w": 20,
+        "w": 30,
         "h": 260,
         "palette": "purple"
       },
@@ -2463,26 +2503,18 @@
         "type": "movingPlatform",
         "x": 630,
         "y": 100,
-        "w": 100,
+        "w": 80,
         "h": 10,
         "axis": "vertical",
-        "range": 260,
+        "range": 70,
         "speed": 0.75,
         "pauseTicks": 30,
         "palette": "cyan"
       },
       {
-        "type": "steelBarrier",
-        "x": 730,
-        "y": 100,
-        "w": 20,
-        "h": 270,
-        "palette": "purple"
-      },
-      {
         "type": "steelPlatform",
         "x": 100,
-        "y": 140,
+        "y": 130,
         "w": 60,
         "h": 10,
         "palette": "purple",
@@ -2501,7 +2533,7 @@
         "type": "steelPlatform",
         "x": 100,
         "y": 360,
-        "w": 630,
+        "w": 610,
         "h": 10,
         "palette": "purple",
         "isSteel": true
@@ -2550,6 +2582,25 @@
         "h": 10,
         "dir": "right",
         "power": 9.5,
+        "palette": "purple"
+      },
+      {
+        "type": "diagonalBeam",
+        "x": 180,
+        "y": 240,
+        "w": 60,
+        "h": 20,
+        "palette": "purple",
+        "slope": -1,
+        "thickness": 16,
+        "isSteel": true
+      },
+      {
+        "type": "steelBarrier",
+        "x": 710,
+        "y": 80,
+        "w": 30,
+        "h": 290,
         "palette": "purple"
       }
     ],

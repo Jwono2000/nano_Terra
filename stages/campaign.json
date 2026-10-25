@@ -1538,10 +1538,10 @@
       },
       {
         "type": "diagonalBeam",
-        "x": 180,
-        "y": 220,
-        "w": 50,
-        "h": 40,
+        "x": 200,
+        "y": 260,
+        "w": 30,
+        "h": 10,
         "palette": "purple",
         "slope": -1,
         "thickness": 16,
@@ -2366,248 +2366,278 @@
   },
   {
     "id": 21,
-    "title": "[HARD] QUANTUM (HARD)",
-    "bgImg": "assets/bg_level_3.jpg",
-    "terrainTheme": "purple",
-    "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
-    "totalUnits": 15,
-    "needPercent": 80,
-    "spawnRate": 80,
-    "timeLimit": 240,
+    "title": "[NIGHTMARE] KRONOS (NIGHTMARE)",
+    "desc": "[ZIGZAG] 역방향 인과율 설계 구역. (난이도: NIGHTMARE, 점수: 153pt, 기믹 체인: SEALED_SHAFT → HEAVY_BULKHEAD → SEALED_SHAFT → HIGH_ABYSS, 솔루션: DRILL → BOMB → DRILL → BUILD) · [기믹: ⬛스틸발판 2개, 🥢사선빔 1개, 🚀점프패드 2개]",
+    "bgImg": "assets/bg_level_4.jpg",
+    "terrainTheme": "brown",
+    "totalUnits": 25,
+    "needPercent": 85,
+    "spawnRate": 18,
+    "timeLimit": 104,
     "skills": {
-      "climb": 3,
-      "float": 3,
+      "climb": 2,
+      "float": 1,
       "bash": 2,
-      "mine": 2,
+      "mine": 0,
       "drill": 3,
-      "bomb": 3,
-      "build": 7,
-      "block": 3,
+      "bomb": 2,
+      "build": 4,
+      "block": 0,
       "portal": 0
     },
-    "spawnX": 160,
-    "spawnY": 70,
-    "gateX": 600,
-    "gateY": 290,
+    "spawnX": 87,
+    "spawnY": 165,
+    "gateX": 683,
+    "gateY": 293,
     "elements": [
       {
-        "type": "quantumCrystal",
-        "x": 90,
-        "y": 130,
-        "w": 200,
-        "h": 20,
-        "palette": "purple",
-        "profile": [
-          16,
-          24,
-          16,
-          14
-        ]
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 280,
-        "y": 220,
-        "w": 350,
-        "h": 10,
-        "palette": "purple",
-        "profile": [
-          9,
-          13,
-          7,
-          8,
-          13
-        ]
-      },
-      {
-        "type": "steelBarrier",
-        "x": 260,
-        "y": 80,
-        "w": 30,
-        "h": 50,
-        "palette": "purple"
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 340,
-        "y": 100,
-        "w": 290,
-        "h": 20,
-        "palette": "purple",
+        "type": "craggyRock",
+        "x": 39,
+        "y": 201,
+        "w": 139,
+        "h": 24,
+        "palette": "brown",
         "profile": [
           18,
-          28,
-          18,
-          16,
-          26,
-          18
+          23,
+          23,
+          17
         ]
       },
       {
-        "type": "triangleSlope",
-        "x": 160,
-        "y": 290,
+        "type": "steelPlatform",
+        "x": 126,
+        "y": 277,
         "w": 180,
-        "h": 70,
-        "palette": "purple",
-        "direction": "up-left",
-        "isSteel": false
-      },
-      {
-        "type": "steelBarrier",
-        "x": 70,
-        "y": 110,
-        "w": 30,
-        "h": 260,
-        "palette": "purple"
-      },
-      {
-        "type": "steelPlatform",
-        "x": 440,
-        "y": 220,
-        "w": 110,
-        "h": 10,
-        "palette": "purple",
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          23,
+          27,
+          14,
+          22,
+          26
+        ],
         "isSteel": true
       },
       {
         "type": "steelPlatform",
-        "x": 440,
-        "y": 100,
-        "w": 110,
-        "h": 10,
-        "palette": "purple",
+        "x": 306,
+        "y": 277,
+        "w": 170,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          27,
+          24,
+          31,
+          20
+        ],
         "isSteel": true
-      },
-      {
-        "type": "movingPlatform",
-        "x": 100,
-        "y": 210,
-        "w": 60,
-        "h": 10,
-        "axis": "vertical",
-        "range": 80,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
       },
       {
         "type": "platform",
-        "x": 100,
-        "y": 290,
-        "w": 60,
-        "h": 70,
-        "palette": "purple"
-      },
-      {
-        "type": "movingPlatform",
-        "x": 630,
-        "y": 100,
-        "w": 80,
-        "h": 10,
-        "axis": "vertical",
-        "range": 70,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
-      },
-      {
-        "type": "steelPlatform",
-        "x": 100,
-        "y": 130,
-        "w": 60,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "steelPlatform",
-        "x": 100,
-        "y": 290,
-        "w": 60,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "steelPlatform",
-        "x": 100,
-        "y": 360,
-        "w": 610,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 0,
-        "y": 370,
-        "w": 800,
-        "h": 40,
-        "palette": "purple",
+        "x": 424,
+        "y": 341,
+        "w": 157,
+        "h": 24,
+        "palette": "brown",
         "profile": [
-          30,
-          56,
-          27,
-          29,
-          51,
-          34,
-          24,
-          50,
-          31,
-          26,
-          52,
-          25,
-          28,
-          56,
-          30,
-          31,
-          52,
-          29,
-          30,
-          52,
-          31,
-          28,
-          53,
-          31,
-          30,
-          56
+          21,
+          20,
+          15,
+          17
         ]
       },
       {
-        "type": "jumpPad",
-        "x": 420,
-        "y": 360,
-        "w": 40,
-        "h": 10,
-        "dir": "right",
-        "power": 9.5,
-        "palette": "purple"
-      },
-      {
-        "type": "diagonalBeam",
-        "x": 180,
-        "y": 240,
-        "w": 60,
-        "h": 20,
-        "palette": "purple",
-        "slope": -1,
-        "thickness": 16,
-        "isSteel": true
+        "type": "craggyRock",
+        "x": 613,
+        "y": 319,
+        "w": 118,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          30,
+          27,
+          31,
+          31
+        ]
       },
       {
         "type": "steelBarrier",
-        "x": 710,
-        "y": 80,
-        "w": 30,
-        "h": 290,
-        "palette": "purple"
+        "x": 158,
+        "y": 121,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 126,
+        "y": 231,
+        "w": 18,
+        "h": 46
+      },
+      {
+        "type": "rockWall",
+        "x": 274,
+        "y": 221,
+        "w": 64,
+        "h": 56,
+        "palette": "brown"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 270,
+        "y": 151,
+        "w": 72,
+        "h": 70
+      },
+      {
+        "type": "steelBarrier",
+        "x": 456,
+        "y": 197,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 424,
+        "y": 305,
+        "w": 18,
+        "h": 36
+      },
+      {
+        "type": "steelBarrier",
+        "x": 611,
+        "y": 343,
+        "w": 18,
+        "h": 55
+      },
+      {
+        "type": "steelBarrier",
+        "x": 39,
+        "y": 121,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 711,
+        "y": 239,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 20,
+        "y": 6,
+        "w": 760,
+        "h": 14
+      },
+      {
+        "type": "jumpPad",
+        "x": 200,
+        "y": 270,
+        "w": 40,
+        "h": 10,
+        "dir": "up-right",
+        "power": 10.8,
+        "palette": "brown"
+      },
+      {
+        "type": "jumpPad",
+        "x": 480,
+        "y": 330,
+        "w": 40,
+        "h": 10,
+        "dir": "up-right",
+        "power": 10.4,
+        "palette": "brown"
+      },
+      {
+        "type": "diagonalBeam",
+        "x": 550,
+        "y": 210,
+        "w": 70,
+        "h": 60,
+        "slope": -1,
+        "thickness": 16,
+        "isSteel": true,
+        "palette": "brown"
+      },
+      {
+        "type": "movingPlatform",
+        "x": 370,
+        "y": 120,
+        "w": 70,
+        "h": 10,
+        "axis": "horizontal",
+        "range": 70,
+        "speed": 0.75,
+        "pauseTicks": 30,
+        "palette": "brown"
       }
     ],
     "solutionDna": [
-      "CUSTOM"
+      "DRILL",
+      "BOMB",
+      "DRILL",
+      "BUILD"
     ],
-    "difficultyScore": 50
+    "difficultyScore": 153,
+    "difficultyFactors": {
+      "timingCountScore": 64,
+      "sequenceLengthScore": 62,
+      "transitionSynergyScore": 27,
+      "timingCount": 4,
+      "sequenceLength": 4
+    },
+    "layoutType": "zigzag",
+    "_meta": {
+      "seed": 2008672265,
+      "archetype": "zigzag",
+      "difficulty": "NIGHTMARE",
+      "gimmickChain": [
+        "SEALED_SHAFT",
+        "HEAVY_BULKHEAD",
+        "SEALED_SHAFT",
+        "HIGH_ABYSS"
+      ],
+      "timingCount": 4,
+      "sequenceLength": 4,
+      "attempt": 5,
+      "simVerified": true,
+      "rescuedRatio": "5/5"
+    },
+    "seed": 2008618917,
+    "genParams": {
+      "difficulty": "nightmare",
+      "layout": "random",
+      "theme": "random",
+      "palette": "random",
+      "includeMovingPlatform": false,
+      "includeOptionA": true,
+      "includeOptionB": true
+    },
+    "verification": {
+      "adapter": "reference",
+      "solvable": false,
+      "plan": null,
+      "score": null,
+      "scoreParts": null,
+      "band": null,
+      "requiredSkills": null,
+      "criticalActions": null,
+      "minWindow": null,
+      "alternatives": null,
+      "zeroSkillShortcut": false,
+      "lintOk": true,
+      "reasons": [
+        "sim-verified-pass"
+      ],
+      "nodes": 3000,
+      "checkedAt": "2026-10-23T21:33:32.018Z"
+    }
   },
   {
     "id": 22,
@@ -2842,5 +2872,280 @@
       "CUSTOM"
     ],
     "difficultyScore": 50
+  },
+  {
+    "id": 23,
+    "title": "[NIGHTMARE] KRONOS (NIGHTMARE)",
+    "desc": "[ZIGZAG] 역방향 인과율 설계 구역. (난이도: NIGHTMARE, 점수: 153pt, 기믹 체인: SEALED_SHAFT → HEAVY_BULKHEAD → SEALED_SHAFT → HIGH_ABYSS, 솔루션: DRILL → BOMB → DRILL → BUILD) · [기믹: ⬛스틸발판 2개, 🥢사선빔 1개, 🚀점프패드 2개]",
+    "bgImg": "assets/bg_level_4.jpg",
+    "terrainTheme": "brown",
+    "totalUnits": 25,
+    "needPercent": 85,
+    "spawnRate": 18,
+    "timeLimit": 104,
+    "skills": {
+      "climb": 2,
+      "float": 1,
+      "bash": 2,
+      "mine": 0,
+      "drill": 3,
+      "bomb": 2,
+      "build": 4,
+      "block": 0,
+      "portal": 0
+    },
+    "spawnX": 87,
+    "spawnY": 165,
+    "gateX": 683,
+    "gateY": 293,
+    "elements": [
+      {
+        "type": "craggyRock",
+        "x": 39,
+        "y": 201,
+        "w": 139,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          18,
+          23,
+          23,
+          17
+        ]
+      },
+      {
+        "type": "steelPlatform",
+        "x": 126,
+        "y": 277,
+        "w": 180,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          23,
+          27,
+          14,
+          22,
+          26
+        ],
+        "isSteel": true
+      },
+      {
+        "type": "steelPlatform",
+        "x": 306,
+        "y": 277,
+        "w": 170,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          27,
+          24,
+          31,
+          20
+        ],
+        "isSteel": true
+      },
+      {
+        "type": "platform",
+        "x": 424,
+        "y": 341,
+        "w": 157,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          21,
+          20,
+          15,
+          17
+        ]
+      },
+      {
+        "type": "craggyRock",
+        "x": 613,
+        "y": 319,
+        "w": 118,
+        "h": 24,
+        "palette": "brown",
+        "profile": [
+          30,
+          27,
+          31,
+          31
+        ]
+      },
+      {
+        "type": "steelBarrier",
+        "x": 158,
+        "y": 121,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 126,
+        "y": 231,
+        "w": 18,
+        "h": 46
+      },
+      {
+        "type": "rockWall",
+        "x": 274,
+        "y": 221,
+        "w": 64,
+        "h": 56,
+        "palette": "brown"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 270,
+        "y": 151,
+        "w": 72,
+        "h": 70
+      },
+      {
+        "type": "steelBarrier",
+        "x": 456,
+        "y": 197,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 424,
+        "y": 305,
+        "w": 18,
+        "h": 36
+      },
+      {
+        "type": "steelBarrier",
+        "x": 611,
+        "y": 343,
+        "w": 18,
+        "h": 55
+      },
+      {
+        "type": "steelBarrier",
+        "x": 39,
+        "y": 121,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 711,
+        "y": 239,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 20,
+        "y": 6,
+        "w": 760,
+        "h": 14
+      },
+      {
+        "type": "jumpPad",
+        "x": 200,
+        "y": 270,
+        "w": 40,
+        "h": 10,
+        "dir": "up-right",
+        "power": 10.8,
+        "palette": "brown"
+      },
+      {
+        "type": "jumpPad",
+        "x": 480,
+        "y": 330,
+        "w": 40,
+        "h": 10,
+        "dir": "up-right",
+        "power": 10.4,
+        "palette": "brown"
+      },
+      {
+        "type": "diagonalBeam",
+        "x": 550,
+        "y": 210,
+        "w": 70,
+        "h": 60,
+        "slope": -1,
+        "thickness": 16,
+        "isSteel": true,
+        "palette": "brown"
+      },
+      {
+        "type": "movingPlatform",
+        "x": 370,
+        "y": 120,
+        "w": 70,
+        "h": 10,
+        "axis": "horizontal",
+        "range": 70,
+        "speed": 0.75,
+        "pauseTicks": 30,
+        "palette": "brown"
+      }
+    ],
+    "solutionDna": [
+      "DRILL",
+      "BOMB",
+      "DRILL",
+      "BUILD"
+    ],
+    "difficultyScore": 153,
+    "difficultyFactors": {
+      "timingCountScore": 64,
+      "sequenceLengthScore": 62,
+      "transitionSynergyScore": 27,
+      "timingCount": 4,
+      "sequenceLength": 4
+    },
+    "layoutType": "zigzag",
+    "_meta": {
+      "seed": 2008672265,
+      "archetype": "zigzag",
+      "difficulty": "NIGHTMARE",
+      "gimmickChain": [
+        "SEALED_SHAFT",
+        "HEAVY_BULKHEAD",
+        "SEALED_SHAFT",
+        "HIGH_ABYSS"
+      ],
+      "timingCount": 4,
+      "sequenceLength": 4,
+      "attempt": 5,
+      "simVerified": true,
+      "rescuedRatio": "5/5"
+    },
+    "seed": 2008618917,
+    "genParams": {
+      "difficulty": "nightmare",
+      "layout": "random",
+      "theme": "random",
+      "palette": "random",
+      "includeMovingPlatform": false,
+      "includeOptionA": true,
+      "includeOptionB": true
+    },
+    "verification": {
+      "adapter": "reference",
+      "solvable": false,
+      "plan": null,
+      "score": null,
+      "scoreParts": null,
+      "band": null,
+      "requiredSkills": null,
+      "criticalActions": null,
+      "minWindow": null,
+      "alternatives": null,
+      "zeroSkillShortcut": false,
+      "lintOk": true,
+      "reasons": [
+        "sim-verified-pass"
+      ],
+      "nodes": 3000,
+      "checkedAt": "2026-10-23T21:33:32.018Z"
+    }
   }
 ]

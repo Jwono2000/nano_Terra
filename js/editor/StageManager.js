@@ -16,7 +16,7 @@ class StageDataEngine {
           }
           break;
         case 'craggyRock':
-          terrain.drawCraggyRockFloor(el.x, el.y, el.w, el.h || 22, el.profile || [18, 24, 36, 16], pal);
+          terrain.drawCraggyRockFloor(el.x, el.y, el.w, el.h || 22, el.profile || [18, 24, 36, 16], pal, el.isRect || false);
           break;
         case 'polygonRock':
           if (el.points && el.points.length >= 3) {
@@ -26,10 +26,10 @@ class StageDataEngine {
           }
           break;
         case 'volcanicBasalt':
-          terrain.drawVolcanicBasaltFloor(el.x, el.y, el.w, el.h || 24, el.profile || [16, 28, 40, 14], el.palette || (stagePal === 'cyan' ? 'red' : stagePal));
+          terrain.drawVolcanicBasaltFloor(el.x, el.y, el.w, el.h || 24, el.profile || [16, 28, 40, 14], el.palette || (stagePal === 'cyan' ? 'red' : stagePal), el.isRect || false);
           break;
         case 'quantumCrystal':
-          terrain.drawQuantumCrystalFloor(el.x, el.y, el.w, el.h || 24, el.profile || [14, 22, 34, 18], el.palette || (stagePal === 'cyan' ? 'purple' : stagePal));
+          terrain.drawQuantumCrystalFloor(el.x, el.y, el.w, el.h || 24, el.profile || [14, 22, 34, 18], el.palette || (stagePal === 'cyan' ? 'purple' : stagePal), el.isRect || false);
           break;
         case 'rockWall':
           terrain.drawRockWall(el.x, el.y, el.w || 70, el.h || 70, pal);

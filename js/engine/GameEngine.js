@@ -1246,7 +1246,18 @@ class GameEngine {
         }
         unit.stopSounds();
         unit.state = STATE.DIAGONAL_MINING;
+        unit.mineStartX = Math.round(unit.x);
+        let floorYAtStart = Math.round(unit.y) + 1;
+        for (let dy = -2; dy <= 4; dy++) {
+          if (this.terrain.isSolid(unit.mineStartX, Math.round(unit.y) + dy)) {
+            floorYAtStart = Math.round(unit.y) + dy;
+            break;
+          }
+        }
+        unit.mineStartY = floorYAtStart - 1;
+        unit.mineDir = unit.dir;
         unit.cutSteps = 0;
+        unit.exitSteps = 0;
         applied = true;
         skillColor = "#f0a028";
         break;

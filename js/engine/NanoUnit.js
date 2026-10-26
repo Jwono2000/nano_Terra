@@ -1020,6 +1020,20 @@ class NanoUnit {
   }
 
   updateDiagonalMining(terrain, particles, speedScale) {
+    // Initialize mineStart origin if first step or missing
+    if (this.cutSteps === 0 || this.mineStartX === undefined || this.mineStartX === null) {
+      this.mineStartX = Math.round(this.x);
+      this.mineDir = this.dir;
+      let floorYAtStart = Math.round(this.y) + 1;
+      for (let dy = -2; dy <= 4; dy++) {
+        if (terrain.isSolid(this.mineStartX, Math.round(this.y) + dy)) {
+          floorYAtStart = Math.round(this.y) + dy;
+          break;
+        }
+      }
+      this.mineStartY = floorYAtStart - 1;
+    }
+
     // 1. Pre-check: Check if steel barrier or constructed structure is directly in diagonal progression path BEFORE cutting!
     const aheadX = this.x + this.dir * 6;
     const isObstacleAhead = terrain.isSteel(aheadX, this.y + 2) || 
@@ -1028,6 +1042,9 @@ class NanoUnit {
                             terrain.isSteel(this.x + this.dir * 4, this.y + 1);
     if (isObstacleAhead) {
       this.stopSounds();
+      this.mineStartX = null;
+      this.mineStartY = null;
+      this.mineDir = null;
       this.dir = -this.dir;
       this.vx = this.dir * 1.25;
       this.state = STATE.WALKING;
@@ -1048,16 +1065,22 @@ class NanoUnit {
     SFX.startContinuousBeam('mine_' + this.id, 'mine');
 
     if (this.cutSteps % 2 === 0) {
-      const cutW = 24;
-      const cutH = 26;
-      const cutX = this.dir > 0 ? this.x - 4 : this.x - (cutW - 4);
-      terrain.carveRect(cutX, this.y - 21, cutW, cutH, particles);
+      if (terrain.carveDiagonal && this.mineStartX !== null && this.mineStartX !== undefined) {
+        const fromX = this.x - this.dir * 4;
+        const toX = this.x + this.dir * 20;
+        terrain.carveDiagonal(this.mineStartX, this.mineStartY, this.mineDir, fromX, toX, 28, particles);
+      } else {
+        const cutW = 24;
+        const cutH = 26;
+        const cutX = this.dir > 0 ? this.x - 4 : this.x - (cutW - 4);
+        terrain.carveRect(cutX, this.y - 21, cutW, cutH, particles);
+      }
 
       // Smooth diagonal progression
       this.x += this.dir * 1.25 * speedScale;
       this.y += 1.05 * speedScale;
       this.fallDistance = 0;
-      if (Math.random() < 0.4) {
+      if (particles && Math.random() < 0.4) {
         particles.spawnBurst(this.x + this.dir * 6, this.y - 8, '#f0a028', 3, 1.2);
       }
     }
@@ -1066,6 +1089,9 @@ class NanoUnit {
     // Out of screen bounds check
     if (this.y >= 425 || this.x < 10 || this.x > 790) {
       this.stopSounds();
+      this.mineStartX = null;
+      this.mineStartY = null;
+      this.mineDir = null;
       if (this.y >= 425) {
         this.die(particles, 'splat');
         particles.spawnBurst(this.x, 425, '#ff2255', 18, 3);
@@ -1097,10 +1123,16 @@ class NanoUnit {
       this.exitSteps = (this.exitSteps || 0) + 1;
       if (this.exitSteps > 10) {
         this.stopSounds();
-        const cutW = 28;
-        const cutH = 26;
-        const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
-        terrain.carveRect(cutX, this.y - 21, cutW, cutH, particles);
+        if (terrain.carveDiagonal && this.mineStartX !== null && this.mineStartX !== undefined) {
+          const fromX = this.x - this.dir * 6;
+          const toX = this.x + this.dir * 24;
+          terrain.carveDiagonal(this.mineStartX, this.mineStartY, this.mineDir, fromX, toX, 28, particles);
+        } else {
+          const cutW = 28;
+          const cutH = 26;
+          const cutX = this.dir > 0 ? this.x - 6 : this.x - (cutW - 6);
+          terrain.carveRect(cutX, this.y - 21, cutW, cutH, particles);
+        }
 
         const hasFloorDirectlyBelow = terrain.isSolid(this.x, this.y + 1) || 
                                       terrain.isSolid(this.x, this.y + 3) ||
@@ -1121,6 +1153,9 @@ class NanoUnit {
         }
         this.cutSteps = 0;
         this.exitSteps = 0;
+        this.mineStartX = null;
+        this.mineStartY = null;
+        this.mineDir = null;
         this.fallDistance = 0;
         if (particles) {
           particles.spawnBurst(this.x, this.y - 8, '#00ff88', 16, 2.5);

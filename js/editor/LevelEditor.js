@@ -893,38 +893,60 @@ class LevelEditor {
       }
     } else {
       // 2) 일반 사각형 및 기타 요소의 재질/유형 변환: 위치와 크기(x, y, w, h)를 보존하면서 변경
-      if (tool === 'polygonRock') {
+      if (tool === 'polygonRock' || tool === 'volcanicBasalt' || tool === 'quantumCrystal' || (tool === 'craggyRock' && el.h >= 35)) {
+        // 사각형 암석 지형을 화산암/양자암/다각형암석으로 변환 시 4개 꼭짓점을 형성하여 직사각형 모양과 전체 높이(w×h)를 100% 보존
         el.type = 'polygonRock';
-        el.material = 'rock';
+        el.material = (tool === 'polygonRock' || tool === 'craggyRock') ? 'rock' : tool;
+        el.palette = (tool === 'volcanicBasalt') ? 'red' : ((tool === 'quantumCrystal') ? 'purple' : (el.palette || 'cyan'));
         el.isSteel = false;
+        delete el.profile;
+        delete el.isRect;
         el.points = [
           { x: el.x, y: el.y },
           { x: el.x + el.w, y: el.y },
           { x: el.x + el.w, y: el.y + el.h },
           { x: el.x, y: el.y + el.h }
         ];
-        this._toast(`📐 사각형 요소가 [다각형 암석]으로 변환되었습니다 (꼭짓점 수정 가능)!`);
+        this._toast(`✨ 직사각형 지형이 [${targetName}]으로 변환되었습니다 (직사각형 모양 완벽 유지)!`);
       } else {
         el.type = tool;
+        delete el.points;
+        delete el.material;
         if (tool === 'volcanicBasalt') {
           el.palette = 'red';
           el.isSteel = false;
-          if (!el.profile) el.profile = [16, 28, 40, 14];
+          if (!el.profile) {
+            const segs = Math.max(3, Math.floor(el.w / 28));
+            el.profile = [];
+            for (let i = 0; i < segs; i++) el.profile.push(Math.round(el.h * ((i % 2 === 0 ? 0.8 : 0.35) + 0.3)));
+          }
         } else if (tool === 'quantumCrystal') {
           el.palette = 'purple';
           el.isSteel = false;
-          if (!el.profile) el.profile = [14, 22, 34, 18];
+          if (!el.profile) {
+            const segs = Math.max(3, Math.floor(el.w / 30));
+            el.profile = [];
+            for (let i = 0; i < segs; i++) el.profile.push(Math.round(el.h * ((i % 3 === 1 ? 1.0 : 0.6) + 0.2)));
+          }
         } else if (tool === 'craggyRock') {
           el.isSteel = false;
-          if (!el.profile) el.profile = [18, 24, 36, 16];
+          if (!el.profile) {
+            const segs = Math.max(3, Math.floor(el.w / 35));
+            el.profile = [];
+            for (let i = 0; i < segs; i++) el.profile.push(Math.round(el.h * 0.85));
+          }
         } else if (tool === 'platform') {
           el.isSteel = false;
+          delete el.profile;
         } else if (tool === 'rockWall') {
           el.isSteel = false;
+          delete el.profile;
         } else if (tool === 'steelBarrier') {
           el.isSteel = true;
+          delete el.profile;
         } else if (tool === 'steelPlatform') {
           el.isSteel = true;
+          delete el.profile;
         } else if (tool === 'triangleSlope') {
           el.direction = el.direction || 'up-right';
         } else if (tool === 'diagonalBeam') {
@@ -2002,7 +2024,8 @@ class LevelEditor {
           const oldH = el.h;
           el.h = targetH;
           if (el.profile && el.profile.length > 0) {
-            const ratio = targetH / oldH;
+            const avg = el.profile.reduce((a, b) => a + b, 0) / el.profile.length;
+            const ratio = (avg > 0 && Math.abs(avg - oldH) > 4) ? (targetH / avg) : (targetH / oldH);
             el.profile = el.profile.map(p => Math.max(6, Math.round(p * ratio)));
           }
           if (el.type === 'polygonRock' && Array.isArray(el.points)) {

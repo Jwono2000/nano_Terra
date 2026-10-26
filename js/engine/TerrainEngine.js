@@ -655,25 +655,38 @@ class TerrainEngine {
     this.ctx.restore();
   }
 
-  drawCraggyRockFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'cyan') {
+  drawCraggyRockFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'cyan', isRect = false) {
     x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
     const pal = this.getPalette(paletteKey, 'cyan');
     
+    // Scale profile proportionally if baseH is significantly different from profile average
+    let profileScale = 1.0;
+    if (thicknessProfile && thicknessProfile.length > 0 && baseH > 0) {
+      const avgProfile = thicknessProfile.reduce((sum, v) => sum + v, 0) / thicknessProfile.length;
+      if (avgProfile > 0 && Math.abs(avgProfile - baseH) > 4) {
+        profileScale = baseH / avgProfile;
+      }
+    }
+
     // Natural stratified rock heights: undulating geological crags
     const heights = new Array(w);
     for (let i = 0; i < w; i++) {
       let customH = baseH;
-      if (thicknessProfile.length > 0) {
+      if (thicknessProfile && thicknessProfile.length > 0) {
         const seg = (i / w) * (thicknessProfile.length - 1);
         const idx = Math.floor(seg);
         const frac = seg - idx;
         const h0 = thicknessProfile[idx];
         const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
-        customH = h0 + (h1 - h0) * frac;
+        customH = (h0 + (h1 - h0) * frac) * profileScale;
       }
-      // Natural rolling sediment wave with rocky steps
-      const crags = Math.sin(i * 0.18) * 4 + Math.sin(i * 0.05) * 5 + (Math.floor(i / 16) % 2) * 2;
-      heights[i] = Math.max(12, Math.floor(customH + crags));
+      if (isRect) {
+        heights[i] = Math.max(12, Math.floor(customH));
+      } else {
+        // Natural rolling sediment wave with rocky steps
+        const crags = Math.sin(i * 0.18) * 4 + Math.sin(i * 0.05) * 5 + (Math.floor(i / 16) % 2) * 2;
+        heights[i] = Math.max(12, Math.floor(customH + crags));
+      }
     }
 
     // Set bitmask grid (1 = destructible natural rock)
@@ -795,27 +808,40 @@ class TerrainEngine {
     this.ctx.restore();
   }
 
-  drawVolcanicBasaltFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'red') {
+  drawVolcanicBasaltFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'red', isRect = false) {
     x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
     const pal = this.getPalette(paletteKey, 'red');
     
+    // Scale profile proportionally if baseH is significantly different from profile average
+    let profileScale = 1.0;
+    if (thicknessProfile && thicknessProfile.length > 0 && baseH > 0) {
+      const avgProfile = thicknessProfile.reduce((sum, v) => sum + v, 0) / thicknessProfile.length;
+      if (avgProfile > 0 && Math.abs(avgProfile - baseH) > 4) {
+        profileScale = baseH / avgProfile;
+      }
+    }
+
     // Columnar basalt profile: vertical prismatic steps and sharp dips
     const heights = new Array(w);
     for (let i = 0; i < w; i++) {
       let customH = baseH;
-      if (thicknessProfile.length > 0) {
+      if (thicknessProfile && thicknessProfile.length > 0) {
         const seg = (i / w) * (thicknessProfile.length - 1);
         const idx = Math.floor(seg);
         const frac = seg - idx;
         const h0 = thicknessProfile[idx];
         const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
-        customH = h0 + (h1 - h0) * frac;
+        customH = (h0 + (h1 - h0) * frac) * profileScale;
       }
-      // Columnar block joints: distinct 20px stepped columns with spiky slag
-      const colStep = (Math.floor(i / 20) % 2 === 0) ? 4 : -3;
-      const slagDrip = ((i % 10) === 5) ? 6 : 0;
-      const jagged = Math.sin(i * 0.4) * 3 + colStep + slagDrip;
-      heights[i] = Math.max(14, Math.floor(customH + jagged));
+      if (isRect) {
+        heights[i] = Math.max(14, Math.floor(customH));
+      } else {
+        // Columnar block joints: distinct 20px stepped columns with spiky slag
+        const colStep = (Math.floor(i / 20) % 2 === 0) ? 4 : -3;
+        const slagDrip = ((i % 10) === 5) ? 6 : 0;
+        const jagged = Math.sin(i * 0.4) * 3 + colStep + slagDrip;
+        heights[i] = Math.max(14, Math.floor(customH + jagged));
+      }
     }
 
     // Set bitmask grid (1 = destructible)
@@ -963,27 +989,40 @@ class TerrainEngine {
     this.ctx.restore();
   }
 
-  drawQuantumCrystalFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'purple') {
+  drawQuantumCrystalFloor(x, y, w, baseH, thicknessProfile = [], paletteKey = 'purple', isRect = false) {
     x = Math.floor(x); y = Math.floor(y); w = Math.floor(w);
     const pal = this.getPalette(paletteKey, 'purple');
     
+    // Scale profile proportionally if baseH is significantly different from profile average
+    let profileScale = 1.0;
+    if (thicknessProfile && thicknessProfile.length > 0 && baseH > 0) {
+      const avgProfile = thicknessProfile.reduce((sum, v) => sum + v, 0) / thicknessProfile.length;
+      if (avgProfile > 0 && Math.abs(avgProfile - baseH) > 4) {
+        profileScale = baseH / avgProfile;
+      }
+    }
+
     // Prismatic crystal silhouette: sharp 45° and 60° downward facets and stepped crystal points
     const heights = new Array(w);
     for (let i = 0; i < w; i++) {
       let customH = baseH;
-      if (thicknessProfile.length > 0) {
+      if (thicknessProfile && thicknessProfile.length > 0) {
         const seg = (i / w) * (thicknessProfile.length - 1);
         const idx = Math.floor(seg);
         const frac = seg - idx;
         const h0 = thicknessProfile[idx];
         const h1 = thicknessProfile[Math.min(thicknessProfile.length - 1, idx + 1)];
-        customH = h0 + (h1 - h0) * frac;
+        customH = (h0 + (h1 - h0) * frac) * profileScale;
       }
-      // Sharp triangular crystal points repeating every 24px
-      const crystalPhase = (i % 24);
-      const crystalTip = (crystalPhase < 12) ? (crystalPhase * 0.9) : ((24 - crystalPhase) * 0.9);
-      const steppedPillar = Math.floor(i / 24) % 2 === 0 ? 3 : -3;
-      heights[i] = Math.max(14, Math.floor(customH + crystalTip + steppedPillar));
+      if (isRect) {
+        heights[i] = Math.max(14, Math.floor(customH));
+      } else {
+        // Sharp triangular crystal points repeating every 24px
+        const crystalPhase = (i % 24);
+        const crystalTip = (crystalPhase < 12) ? (crystalPhase * 0.9) : ((24 - crystalPhase) * 0.9);
+        const steppedPillar = Math.floor(i / 24) % 2 === 0 ? 3 : -3;
+        heights[i] = Math.max(14, Math.floor(customH + crystalTip + steppedPillar));
+      }
     }
 
     // Set bitmask grid (1 = destructible)
@@ -1843,6 +1882,90 @@ class TerrainEngine {
     }
     if (hitImpenetrable && particles && Math.random() < 0.3) {
       particles.spawnBurst(x + w / 2, y + h / 2, '#ffb700', 8, 3);
+    }
+    return hitImpenetrable;
+  }
+
+  carveDiagonal(mineStartX, mineStartY, mineDir, fromX, toX, tunnelH = 28, particles) {
+    const minX = Math.max(0, Math.floor(Math.min(fromX, toX)));
+    const maxX = Math.min(this.width - 1, Math.ceil(Math.max(fromX, toX)));
+    if (minX > maxX) return false;
+
+    const slope = 1.05 / 1.25; // 0.84
+
+    const getFloorY = (px) => {
+      const deltaX = (px - mineStartX) * mineDir;
+      return deltaX <= 0 ? (mineStartY + 1) : ((mineStartY + 1) + deltaX * slope);
+    };
+    const getCeilingY = (px) => {
+      return getFloorY(px) - tunnelH;
+    };
+
+    let modified = false;
+    let hitImpenetrable = false;
+
+    let overallMinY = this.height;
+    let overallMaxY = 0;
+
+    for (let px = minX; px <= maxX; px++) {
+      const fY = getFloorY(px);
+      const cY = getCeilingY(px);
+      const startPy = Math.max(0, Math.floor(cY));
+      const endPy = Math.min(this.height - 1, Math.floor(fY) - 1);
+
+      if (startPy < overallMinY) overallMinY = startPy;
+      if (endPy > overallMaxY) overallMaxY = endPy;
+
+      for (let py = startPy; py <= endPy; py++) {
+        const cell = this.grid[py * this.width + px];
+        if (cell === 2 || cell === 3) {
+          hitImpenetrable = true;
+          continue;
+        }
+        if (cell === 1) {
+          this.grid[py * this.width + px] = 0;
+          modified = true;
+        }
+      }
+    }
+
+    // Always unconditionally clear canvas pixels for natural terrain cut
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = 'destination-out';
+    this.ctx.fillStyle = '#000000';
+    this.ctx.beginPath();
+
+    const startXClamped = Math.max(minX, Math.min(maxX, mineStartX));
+    if (mineStartX > minX && mineStartX < maxX) {
+      this.ctx.moveTo(minX, getCeilingY(minX));
+      this.ctx.lineTo(startXClamped, getCeilingY(startXClamped));
+      this.ctx.lineTo(maxX, getCeilingY(maxX));
+      this.ctx.lineTo(maxX, getFloorY(maxX));
+      this.ctx.lineTo(startXClamped, getFloorY(startXClamped));
+      this.ctx.lineTo(minX, getFloorY(minX));
+    } else {
+      this.ctx.moveTo(minX, getCeilingY(minX));
+      this.ctx.lineTo(maxX, getCeilingY(maxX));
+      this.ctx.lineTo(maxX, getFloorY(maxX));
+      this.ctx.lineTo(minX, getFloorY(minX));
+    }
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.restore();
+
+    // Instantly restore and protect all steel barriers, platforms, slopes, beams and constructed structures
+    const boxW = (maxX - minX) + 4;
+    const boxH = Math.max(1, (overallMaxY - overallMinY) + 4);
+    this.restoreSteelBarriersInBox(minX - 2, overallMinY - 2, boxW, boxH);
+    if (this.constructedStructures && this.constructedStructures.length > 0) {
+      this.restoreStructuresInBox(minX - 2, overallMinY - 2, boxW, boxH);
+    }
+
+    if (modified && particles) {
+      particles.spawnBurst((minX + maxX) / 2, (overallMinY + overallMaxY) / 2, '#00f3ff', 6, 2);
+    }
+    if (hitImpenetrable && particles && Math.random() < 0.3) {
+      particles.spawnBurst((minX + maxX) / 2, (overallMinY + overallMaxY) / 2, '#ffb700', 8, 3);
     }
     return hitImpenetrable;
   }

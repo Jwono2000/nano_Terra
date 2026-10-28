@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 12,
   "title": "[NORMAL] SECTOR 12",
   "bgImg": "assets/bg_level_2.jpg",
@@ -66,5 +66,5 @@
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50,
-  "isOverridden": true}
+  "difficultyScore": 50
+}

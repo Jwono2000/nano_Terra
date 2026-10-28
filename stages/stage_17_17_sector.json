@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 17,
   "title": "17구역 SECTOR",
   "bgImg": "assets/bg_level_1.jpg",
@@ -139,38 +139,14 @@
       "type": "steelPlatform",
       "x": 110,
       "y": 340,
-      "w": 300,
+      "w": 240,
       "h": 10,
       "palette": "cyan",
       "isSteel": true
-    },
-    {
-      "type": "movingPlatform",
-      "x": 350,
-      "y": 130,
-      "w": 60,
-      "h": 10,
-      "axis": "vertical",
-      "range": 220,
-      "speed": 0.75,
-      "pauseTicks": 30,
-      "palette": "cyan"
-    },
-    {
-      "type": "movingPlatform",
-      "x": 350,
-      "y": 170,
-      "w": 60,
-      "h": 10,
-      "axis": "vertical",
-      "range": 180,
-      "speed": 0.75,
-      "pauseTicks": 30,
-      "palette": "cyan"
     }
   ],
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50,
-  "isOverridden": true}
+  "difficultyScore": 50
+}

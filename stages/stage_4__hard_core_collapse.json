@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 4,
   "title": "[HARD] CORE COLLAPSE",
   "bgImg": "assets/bg_level_4.jpg",
@@ -60,5 +60,5 @@
       "h": 70,
       "palette": "brown"
     }
-  ],
-  "isOverridden": true}
+  ]
+}

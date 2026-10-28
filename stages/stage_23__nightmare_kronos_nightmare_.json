@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 23,
   "title": "[NIGHTMARE] KRONOS (NIGHTMARE)",
   "desc": "[ZIGZAG] 역방향 인과율 설계 구역. (난이도: NIGHTMARE, 점수: 153pt, 기믹 체인: SEALED_SHAFT → HEAVY_BULKHEAD → SEALED_SHAFT → HIGH_ABYSS, 솔루션: DRILL → BOMB → DRILL → BUILD) · [기믹: ⬛스틸발판 2개, 🥢사선빔 1개, 🚀점프패드 2개]",
@@ -271,4 +271,5 @@
     ],
     "nodes": 3000,
     "checkedAt": "2026-10-23T21:33:32.018Z"
-  }}
+  }
+}

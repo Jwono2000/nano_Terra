@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 6,
   "title": "[HARD] VOLCANIC SPEEDWAY",
   "bgImg": "assets/bg_level_2.jpg",
@@ -78,5 +78,5 @@
       "palette": "red",
       "isSteel": true
     }
-  ],
-  "isOverridden": true}
+  ]
+}

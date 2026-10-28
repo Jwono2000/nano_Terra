@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 18,
   "title": "18구역 SECTOR",
   "bgImg": "assets/bg_level_1.jpg",
@@ -213,5 +213,5 @@
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50,
-  "isOverridden": true}
+  "difficultyScore": 50
+}

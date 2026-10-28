@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 8,
   "title": "[NIGHTMARE] ASTEROID DRILL FACILITY",
   "bgImg": "assets/bg_level_4.jpg",
@@ -54,5 +54,5 @@
         27
       ]
     }
-  ],
-  "isOverridden": false}
+  ]
+}

@@ -1,23 +1,23 @@
-﻿{
+{
   "id": 1,
   "title": "[NORMAL] GENESIS DROP",
   "bgImg": "assets/bg_level_1.jpg",
   "terrainTheme": "cyan",
   "desc": "1구역: 외계 행성 테라포밍 전초기지입니다. 1층에서 2층으로 착지 후 플라즈마 레이저(Bash)로 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill)로 뚫어 탈출하십시오.<br><span style='color: #ffb700;'>※ 노란색 사선 줄무늬의 강철 격벽은 절삭/천공할 수 없습니다!</span>",
   "totalUnits": 10,
-  "needPercent": 90,
-  "spawnRate": 50,
-  "timeLimit": 200,
+  "needPercent": 80,
+  "spawnRate": 30,
+  "timeLimit": 240,
   "skills": {
-    "climb": 0,
-    "float": 0,
-    "bash": 2,
-    "mine": 0,
-    "drill": 0,
-    "bomb": 0,
-    "build": 0,
-    "block": 0,
-    "portal": 0
+    "climb": 1,
+    "float": 1,
+    "bash": 1,
+    "mine": 1,
+    "drill": 1,
+    "bomb": 1,
+    "build": 1,
+    "block": 1,
+    "portal": 1
   },
   "spawnX": 210,
   "spawnY": 190,
@@ -76,5 +76,5 @@
         104
       ]
     }
-  ],
-  "isOverridden": true}
+  ]
+}

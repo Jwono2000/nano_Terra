@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "id": 1,
     "title": "[NORMAL] GENESIS DROP",
@@ -6,19 +6,19 @@
     "terrainTheme": "cyan",
     "desc": "1구역: 외계 행성 테라포밍 전초기지입니다. 1층에서 2층으로 착지 후 플라즈마 레이저(Bash)로 암벽을 뚫고, 강철벽 앞에서 바닥을 드릴(Drill)로 뚫어 탈출하십시오.<br><span style='color: #ffb700;'>※ 노란색 사선 줄무늬의 강철 격벽은 절삭/천공할 수 없습니다!</span>",
     "totalUnits": 10,
-    "needPercent": 90,
-    "spawnRate": 50,
-    "timeLimit": 200,
+    "needPercent": 80,
+    "spawnRate": 30,
+    "timeLimit": 240,
     "skills": {
-      "climb": 0,
-      "float": 0,
-      "bash": 2,
-      "mine": 0,
-      "drill": 0,
-      "bomb": 0,
-      "build": 0,
-      "block": 0,
-      "portal": 0
+      "climb": 1,
+      "float": 1,
+      "bash": 1,
+      "mine": 1,
+      "drill": 1,
+      "bomb": 1,
+      "build": 1,
+      "block": 1,
+      "portal": 1
     },
     "spawnX": 210,
     "spawnY": 190,
@@ -322,25 +322,25 @@
     "bgImg": "assets/bg_level_1.jpg",
     "terrainTheme": "green",
     "desc": "5구역: 외계 바이오 에덴 성역입니다. 다단 녹색 테라스와 암벽을 방어막(Block)으로 나노봇의 진로를 반전시키고 흡착 등반(Climb)을 활용해 웜홀로 집결시키십시오.",
-    "totalUnits": 10,
+    "totalUnits": 20,
     "needPercent": 80,
-    "spawnRate": 80,
+    "spawnRate": 25,
     "timeLimit": 240,
     "skills": {
-      "climb": 0,
-      "float": 15,
-      "bash": 0,
-      "mine": 1,
-      "drill": 1,
-      "bomb": 0,
-      "build": 0,
-      "block": 1,
-      "portal": 0
+      "climb": 5,
+      "float": 5,
+      "bash": 4,
+      "mine": 4,
+      "drill": 4,
+      "bomb": 2,
+      "build": 8,
+      "block": 5,
+      "portal": 1
     },
-    "spawnX": 90,
-    "spawnY": 90,
-    "gateX": 670,
-    "gateY": 240,
+    "spawnX": 80,
+    "spawnY": 60,
+    "gateX": 710,
+    "gateY": 230,
     "solutionDna": [
       "BLOCK",
       "BUILD",
@@ -350,9 +350,17 @@
     "difficultyScore": 95,
     "elements": [
       {
+        "type": "platform",
+        "x": 40,
+        "y": 120,
+        "w": 180,
+        "h": 20,
+        "palette": "green"
+      },
+      {
         "type": "craggyRock",
-        "x": 70,
-        "y": 130,
+        "x": 160,
+        "y": 200,
         "w": 380,
         "h": 40,
         "palette": "green",
@@ -365,11 +373,41 @@
         ]
       },
       {
+        "type": "steelBarrier",
+        "x": 520,
+        "y": 110,
+        "w": 20,
+        "h": 90
+      },
+      {
+        "type": "rockWall",
+        "x": 300,
+        "y": 130,
+        "w": 70,
+        "h": 70,
+        "palette": "green"
+      },
+      {
+        "type": "craggyRock",
+        "x": 80,
+        "y": 320,
+        "w": 400,
+        "h": 26,
+        "palette": "green",
+        "profile": [
+          18,
+          28,
+          38,
+          24,
+          18
+        ]
+      },
+      {
         "type": "platform",
-        "x": 320,
-        "y": 280,
-        "w": 390,
-        "h": 40,
+        "x": 430,
+        "y": 270,
+        "w": 330,
+        "h": 22,
         "palette": "green"
       }
     ]
@@ -1044,10 +1082,10 @@
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
     "desc": "14구역: 170px 고도 낙하 및 이중 암벽 지대입니다. 역추진과 연속 레이저로 관통하십시오.",
-    "totalUnits": 15,
+    "totalUnits": 18,
     "needPercent": 80,
-    "spawnRate": 80,
-    "timeLimit": 200,
+    "spawnRate": 35,
+    "timeLimit": 180,
     "skills": {
       "climb": 3,
       "float": 4,
@@ -1056,7 +1094,7 @@
       "bomb": 2,
       "build": 4,
       "block": 2,
-      "portal": 0,
+      "portal": 1,
       "mine": 4
     },
     "spawnX": 80,
@@ -1143,307 +1181,153 @@
   },
   {
     "id": 15,
-    "title": "[HARD] QUANTUM (HARD)",
+    "difficulty": "hard",
+    "title": "[HARD] TACHYON RIFT #709",
     "bgImg": "assets/bg_level_3.jpg",
     "terrainTheme": "purple",
-    "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
-    "totalUnits": 15,
-    "needPercent": 80,
-    "spawnRate": 80,
-    "timeLimit": 240,
+    "desc": "15구역: 역방향 퍼즐 설계 기반 160px 치명적 낙차 및 강철 격벽 우회 구역. BASH → DRILL → FLOAT → BLOCK → BUILD 5단 연계로 웜홀을 개척하십시오.",
+    "totalUnits": 10,
+    "needPercent": 70,
+    "spawnRate": 40,
+    "timeLimit": 135,
     "skills": {
-      "climb": 3,
-      "float": 3,
-      "bash": 2,
-      "mine": 2,
-      "drill": 3,
-      "bomb": 3,
-      "build": 7,
-      "block": 3,
+      "climb": 2,
+      "float": 10,
+      "bash": 1,
+      "mine": 0,
+      "drill": 1,
+      "bomb": 1,
+      "build": 2,
+      "block": 2,
       "portal": 0
     },
-    "spawnX": 160,
-    "spawnY": 70,
-    "gateX": 600,
-    "gateY": 290,
+    "spawnX": 75,
+    "spawnY": 45,
+    "gateX": 705,
+    "gateY": 266,
+    "solutionDna": [
+      "BASH",
+      "DRILL",
+      "FLOAT",
+      "BLOCK",
+      "BUILD"
+    ],
+    "difficultyScore": 183,
     "elements": [
       {
-        "type": "quantumCrystal",
-        "x": 90,
-        "y": 140,
-        "w": 200,
-        "h": 10,
-        "palette": "purple",
-        "profile": [
-          8,
-          12,
-          8,
-          7
-        ]
+        "type": "platform",
+        "x": 30,
+        "y": 80,
+        "w": 350,
+        "h": 20,
+        "palette": "purple"
       },
       {
-        "type": "quantumCrystal",
-        "x": 280,
-        "y": 220,
-        "w": 350,
-        "h": 10,
-        "palette": "purple",
-        "profile": [
-          9,
-          13,
-          7,
-          8,
-          13
-        ]
+        "type": "rockWall",
+        "x": 135,
+        "y": 15,
+        "w": 35,
+        "h": 68,
+        "palette": "purple"
       },
       {
         "type": "steelBarrier",
-        "x": 270,
-        "y": 90,
+        "x": 380,
+        "y": 10,
         "w": 20,
+        "h": 90
+      },
+      {
+        "type": "platform",
+        "x": 180,
+        "y": 140,
+        "w": 115,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 170,
+        "y": 80,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 360,
+        "y": 190,
+        "w": 90,
+        "h": 20,
+        "palette": "purple",
+        "profile": [
+          14,
+          22,
+          16
+        ]
+      },
+      {
+        "type": "quantumCrystal",
+        "x": 245,
+        "y": 300,
+        "w": 235,
+        "h": 24,
+        "palette": "purple",
+        "profile": [
+          20,
+          28,
+          40,
+          30,
+          18
+        ]
+      },
+      {
+        "type": "platform",
+        "x": 512,
+        "y": 276,
+        "w": 235,
+        "h": 22,
+        "palette": "purple"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 745,
+        "y": 205,
+        "w": 15,
+        "h": 80
+      },
+      {
+        "type": "steelBarrier",
+        "x": 20,
+        "y": 50,
+        "w": 10,
         "h": 50,
         "palette": "purple"
       },
       {
         "type": "quantumCrystal",
-        "x": 360,
-        "y": 100,
-        "w": 270,
-        "h": 20,
+        "x": 50,
+        "y": 300,
+        "w": 200,
+        "h": 30,
         "palette": "purple",
         "profile": [
-          18,
-          28,
-          18,
-          16,
-          26,
-          18
-        ]
-      },
-      {
-        "type": "triangleSlope",
-        "x": 160,
-        "y": 290,
-        "w": 180,
-        "h": 70,
-        "palette": "purple",
-        "direction": "up-left",
-        "isSteel": false
-      },
-      {
-        "type": "steelBarrier",
-        "x": 80,
-        "y": 140,
-        "w": 20,
-        "h": 260,
-        "palette": "purple"
-      },
-      {
-        "type": "steelPlatform",
-        "x": 440,
-        "y": 220,
-        "w": 110,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "steelPlatform",
-        "x": 440,
-        "y": 100,
-        "w": 110,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "movingPlatform",
-        "x": 100,
-        "y": 210,
-        "w": 60,
-        "h": 10,
-        "axis": "vertical",
-        "range": 80,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
-      },
-      {
-        "type": "platform",
-        "x": 100,
-        "y": 290,
-        "w": 60,
-        "h": 70,
-        "palette": "purple"
-      },
-      {
-        "type": "movingPlatform",
-        "x": 630,
-        "y": 100,
-        "w": 100,
-        "h": 10,
-        "axis": "vertical",
-        "range": 60,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
-      },
-      {
-        "type": "steelBarrier",
-        "x": 730,
-        "y": 110,
-        "w": 20,
-        "h": 260,
-        "palette": "purple"
-      },
-      {
-        "type": "steelPlatform",
-        "x": 20,
-        "y": 140,
-        "w": 140,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "steelPlatform",
-        "x": 100,
-        "y": 290,
-        "w": 60,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "steelPlatform",
-        "x": 100,
-        "y": 360,
-        "w": 630,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "quantumCrystal",
-        "x": 0,
-        "y": 370,
-        "w": 800,
-        "h": 40,
-        "palette": "purple",
-        "profile": [
-          30,
-          56,
           27,
-          29,
-          51,
-          34,
+          36,
           24,
-          50,
-          31,
-          26,
-          52,
-          25,
-          28,
-          56,
-          30,
-          31,
-          52,
-          29,
-          30,
-          52,
-          31,
-          28,
-          53,
-          31,
-          30,
-          56
+          24,
+          36,
+          21
         ]
       },
       {
-        "type": "jumpPad",
-        "x": 420,
-        "y": 360,
-        "w": 40,
-        "h": 10,
-        "dir": "right",
-        "power": 9.5,
-        "palette": "purple"
-      },
-      {
-        "type": "diagonalBeam",
-        "x": 200,
-        "y": 260,
-        "w": 30,
-        "h": 10,
-        "palette": "purple",
-        "slope": -1,
-        "thickness": 16,
-        "isSteel": true
-      },
-      {
         "type": "steelBarrier",
-        "x": 730,
-        "y": 90,
+        "x": 250,
+        "y": 210,
         "w": 20,
-        "h": 20,
-        "palette": "purple"
-      },
-      {
-        "type": "steelPlatform",
-        "x": 630,
-        "y": 170,
-        "w": 100,
-        "h": 10,
-        "palette": "purple",
-        "isSteel": true
-      },
-      {
-        "type": "movingPlatform",
-        "x": 630,
-        "y": 220,
-        "w": 100,
-        "h": 10,
-        "axis": "vertical",
-        "range": 60,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
-      },
-      {
-        "type": "polygonRock",
-        "points": [
-          {
-            "x": 20,
-            "y": 140
-          },
-          {
-            "x": 30,
-            "y": 130
-          },
-          {
-            "x": 40,
-            "y": 130
-          },
-          {
-            "x": 50,
-            "y": 120
-          },
-          {
-            "x": 60,
-            "y": 140
-          }
-        ],
-        "x": 20,
-        "y": 120,
-        "w": 40,
-        "h": 20,
+        "h": 90,
         "palette": "purple"
       }
-    ],
-    "solutionDna": [
-      "CUSTOM"
-    ],
-    "difficultyScore": 50
+    ]
   },
   {
     "id": 16,
@@ -1860,34 +1744,10 @@
         "type": "steelPlatform",
         "x": 110,
         "y": 340,
-        "w": 300,
+        "w": 240,
         "h": 10,
         "palette": "cyan",
         "isSteel": true
-      },
-      {
-        "type": "movingPlatform",
-        "x": 350,
-        "y": 130,
-        "w": 60,
-        "h": 10,
-        "axis": "vertical",
-        "range": 220,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
-      },
-      {
-        "type": "movingPlatform",
-        "x": 350,
-        "y": 170,
-        "w": 60,
-        "h": 10,
-        "axis": "vertical",
-        "range": 180,
-        "speed": 0.75,
-        "pauseTicks": 30,
-        "palette": "cyan"
       }
     ],
     "solutionDna": [

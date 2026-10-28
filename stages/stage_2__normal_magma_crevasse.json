@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 2,
   "title": "[NORMAL] MAGMA CREVASSE",
   "bgImg": "assets/bg_level_2.jpg",
@@ -68,5 +68,5 @@
         22
       ]
     }
-  ],
-  "isOverridden": true}
+  ]
+}

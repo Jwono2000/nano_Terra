@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 10,
   "title": "[NIGHTMARE] TERRAFORM ALPHA CORE",
   "bgImg": "assets/bg_level_4.jpg",
@@ -88,5 +88,5 @@
       "h": 20,
       "palette": "red"
     }
-  ],
-  "isOverridden": true}
+  ]
+}

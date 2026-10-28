@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 22,
   "title": "[HARD] QUANTUM (HARD)",
   "bgImg": "assets/bg_level_3.jpg",
@@ -230,5 +230,5 @@
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50,
-  "isOverridden": true}
+  "difficultyScore": 50
+}

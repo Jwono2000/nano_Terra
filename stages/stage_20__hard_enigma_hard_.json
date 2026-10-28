@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 20,
   "title": "[HARD] ENIGMA (HARD)",
   "desc": "[CASCADE] 100% 클리어 검증 구역. (난이도: HARD, 점수: 149pt, 솔루션: BASH → MINE → FLOAT → DRILL) · [기믹: 📐경사로 1개, 🥢사선빔 1개, 🚀점프패드 1개]",
@@ -257,4 +257,5 @@
     ],
     "nodes": 3000,
     "checkedAt": "2026-10-20T20:49:19.393Z"
-  }}
+  }
+}

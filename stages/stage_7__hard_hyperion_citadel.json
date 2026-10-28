@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 7,
   "title": "[HARD] HYPERION CITADEL",
   "bgImg": "assets/bg_level_3.jpg",
@@ -73,5 +73,5 @@
         18
       ]
     }
-  ],
-  "isOverridden": false}
+  ]
+}

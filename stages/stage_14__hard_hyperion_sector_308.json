@@ -1,24 +1,24 @@
-﻿{
+{
   "id": 14,
   "difficulty": "hard",
   "title": "[HARD] HYPERION SECTOR #308",
   "bgImg": "assets/bg_level_3.jpg",
   "terrainTheme": "purple",
   "desc": "14구역: 170px 고도 낙하 및 이중 암벽 지대입니다. 역추진과 연속 레이저로 관통하십시오.",
-  "totalUnits": 15,
+  "totalUnits": 18,
   "needPercent": 80,
-  "spawnRate": 80,
-  "timeLimit": 200,
+  "spawnRate": 35,
+  "timeLimit": 180,
   "skills": {
     "climb": 3,
     "float": 4,
     "bash": 4,
-    "mine": 4,
     "drill": 3,
     "bomb": 2,
     "build": 4,
     "block": 2,
-    "portal": 0
+    "portal": 1,
+    "mine": 4
   },
   "spawnX": 80,
   "spawnY": 50,
@@ -100,5 +100,5 @@
     "DRILL",
     "BUILD"
   ],
-  "difficultyScore": 124,
-  "isOverridden": false}
+  "difficultyScore": 124
+}

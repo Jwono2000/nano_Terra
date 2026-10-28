@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 13,
   "difficulty": "normal",
   "title": "[NORMAL] VALKYRIE SECTOR #204",
@@ -13,12 +13,12 @@
     "climb": 4,
     "float": 4,
     "bash": 4,
-    "mine": 4,
     "drill": 4,
     "bomb": 2,
     "build": 6,
     "block": 3,
-    "portal": 0
+    "portal": 0,
+    "mine": 4
   },
   "spawnX": 80,
   "spawnY": 50,
@@ -99,5 +99,5 @@
     "DRILL",
     "BLOCK"
   ],
-  "difficultyScore": 68,
-  "isOverridden": false}
+  "difficultyScore": 68
+}

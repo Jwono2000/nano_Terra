@@ -1,4 +1,4 @@
-﻿{
+{
   "id": 9,
   "title": "[NIGHTMARE] PLASMA VOID RIFT",
   "bgImg": "assets/bg_level_1.jpg",
@@ -82,5 +82,5 @@
         20
       ]
     }
-  ],
-  "isOverridden": false}
+  ]
+}

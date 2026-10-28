@@ -1,4 +1,4 @@
-{
+﻿{
   "id": 15,
   "difficulty": "hard",
   "title": "[HARD] TACHYON RIFT #709",
@@ -7,7 +7,7 @@
   "desc": "15구역: 역방향 퍼즐 설계 기반 160px 치명적 낙차 및 강철 격벽 우회 구역. BASH → DRILL → FLOAT → BLOCK → BUILD 5단 연계로 웜홀을 개척하십시오.",
   "totalUnits": 10,
   "needPercent": 70,
-  "spawnRate": 40,
+  "spawnRate": 80,
   "timeLimit": 135,
   "skills": {
     "climb": 2,
@@ -22,8 +22,8 @@
   },
   "spawnX": 75,
   "spawnY": 45,
-  "gateX": 705,
-  "gateY": 266,
+  "gateX": 720,
+  "gateY": 220,
   "solutionDna": [
     "BASH",
     "DRILL",
@@ -73,7 +73,7 @@
     },
     {
       "type": "quantumCrystal",
-      "x": 360,
+      "x": 380,
       "y": 190,
       "w": 90,
       "h": 20,
@@ -101,18 +101,11 @@
     },
     {
       "type": "platform",
-      "x": 512,
-      "y": 276,
-      "w": 235,
-      "h": 22,
+      "x": 510,
+      "y": 280,
+      "w": 240,
+      "h": 20,
       "palette": "purple"
-    },
-    {
-      "type": "steelBarrier",
-      "x": 745,
-      "y": 205,
-      "w": 15,
-      "h": 80
     },
     {
       "type": "steelBarrier",
@@ -145,6 +138,24 @@
       "w": 20,
       "h": 90,
       "palette": "purple"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 50,
+      "y": 300,
+      "w": 430,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 510,
+      "y": 270,
+      "w": 240,
+      "h": 10,
+      "palette": "purple",
+      "isSteel": true
     }
-  ]
-}
+  ],
+  "isOverridden": false}

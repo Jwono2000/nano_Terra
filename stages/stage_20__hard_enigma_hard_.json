@@ -1,4 +1,4 @@
-{
+﻿{
   "id": 20,
   "title": "[HARD] ENIGMA (HARD)",
   "desc": "[CASCADE] 100% 클리어 검증 구역. (난이도: HARD, 점수: 149pt, 솔루션: BASH → MINE → FLOAT → DRILL) · [기믹: 📐경사로 1개, 🥢사선빔 1개, 🚀점프패드 1개]",
@@ -15,14 +15,14 @@
     "mine": 1,
     "drill": 1,
     "bomb": 1,
-    "build": 0,
+    "build": 5,
     "block": 0,
     "portal": 0
   },
   "spawnX": 140,
   "spawnY": 80,
-  "gateX": 725,
-  "gateY": 369,
+  "gateX": 720,
+  "gateY": 330,
   "elements": [
     {
       "type": "craggyRock",
@@ -47,18 +47,10 @@
       "h": 70
     },
     {
-      "type": "rockWall",
-      "x": 208,
-      "y": 50,
-      "w": 41,
-      "h": 58,
-      "palette": "cyan"
-    },
-    {
       "type": "craggyRock",
       "x": 250,
       "y": 110,
-      "w": 150,
+      "w": 210,
       "h": 50,
       "palette": "cyan",
       "profile": [
@@ -73,8 +65,8 @@
     {
       "type": "rockWall",
       "x": 690,
-      "y": 150,
-      "w": 30,
+      "y": 190,
+      "w": 40,
       "h": 50,
       "palette": "cyan"
     },
@@ -110,13 +102,6 @@
       ]
     },
     {
-      "type": "steelBarrier",
-      "x": 728,
-      "y": 319,
-      "w": 20,
-      "h": 65
-    },
-    {
       "type": "craggyRock",
       "x": 615,
       "y": 395,
@@ -147,39 +132,16 @@
     },
     {
       "type": "craggyRock",
-      "x": 157,
-      "y": 280,
-      "w": 56,
-      "h": 19,
-      "palette": "cyan",
-      "profile": [
-        21,
-        14,
-        21
-      ]
-    },
-    {
-      "type": "craggyRock",
-      "x": 200,
+      "x": 180,
       "y": 340,
-      "w": 70,
-      "h": 20,
+      "w": 130,
+      "h": 30,
       "palette": "cyan",
       "profile": [
-        12,
-        17,
-        16
+        24,
+        33,
+        33
       ]
-    },
-    {
-      "type": "triangleSlope",
-      "x": 210,
-      "y": 280,
-      "w": 40,
-      "h": 20,
-      "direction": "up-left",
-      "isSteel": false,
-      "palette": "cyan"
     },
     {
       "type": "jumpPad",
@@ -193,14 +155,135 @@
     },
     {
       "type": "diagonalBeam",
-      "x": 680,
-      "y": 60,
-      "w": 90,
-      "h": 90,
-      "slope": 1,
+      "x": 320,
+      "y": 270,
+      "w": 60,
+      "h": 40,
+      "slope": -1,
       "thickness": 16,
       "isSteel": true,
       "palette": "cyan"
+    },
+    {
+      "type": "craggyRock",
+      "x": 460,
+      "y": 110,
+      "w": 220,
+      "h": 50,
+      "palette": "cyan",
+      "profile": [
+        43,
+        45,
+        38,
+        63,
+        59,
+        35
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "points": [
+        {
+          "x": 180,
+          "y": 360
+        },
+        {
+          "x": 150,
+          "y": 370
+        },
+        {
+          "x": 140,
+          "y": 350
+        },
+        {
+          "x": 130,
+          "y": 310
+        },
+        {
+          "x": 160,
+          "y": 300
+        },
+        {
+          "x": 190,
+          "y": 320
+        }
+      ],
+      "x": 130,
+      "y": 300,
+      "w": 60,
+      "h": 70,
+      "palette": "cyan"
+    },
+    {
+      "type": "polygonRock",
+      "points": [
+        {
+          "x": 180,
+          "y": 340
+        },
+        {
+          "x": 280,
+          "y": 330
+        },
+        {
+          "x": 310,
+          "y": 340
+        },
+        {
+          "x": 330,
+          "y": 380
+        },
+        {
+          "x": 290,
+          "y": 380
+        },
+        {
+          "x": 260,
+          "y": 370
+        },
+        {
+          "x": 230,
+          "y": 380
+        },
+        {
+          "x": 190,
+          "y": 370
+        },
+        {
+          "x": 170,
+          "y": 360
+        }
+      ],
+      "x": 170,
+      "y": 330,
+      "w": 160,
+      "h": 50,
+      "palette": "cyan"
+    },
+    {
+      "type": "platform",
+      "x": 200,
+      "y": 220,
+      "w": 150,
+      "h": 10,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 670,
+      "y": 70,
+      "w": 20,
+      "h": 70,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 670,
+      "y": 140,
+      "w": 130,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
     }
   ],
   "solutionDna": [
@@ -257,5 +340,5 @@
     ],
     "nodes": 3000,
     "checkedAt": "2026-10-20T20:49:19.393Z"
-  }
-}
+  },
+  "isOverridden": false}

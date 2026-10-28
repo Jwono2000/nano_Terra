@@ -1,4 +1,4 @@
-{
+﻿{
   "id": 16,
   "title": "[HARD] QUANTUM (HARD)",
   "bgImg": "assets/bg_level_3.jpg",
@@ -12,11 +12,11 @@
     "climb": 3,
     "float": 3,
     "bash": 2,
-    "mine": 2,
-    "drill": 3,
-    "bomb": 3,
-    "build": 7,
-    "block": 3,
+    "mine": 1,
+    "drill": 2,
+    "bomb": 2,
+    "build": 5,
+    "block": 2,
     "portal": 0
   },
   "spawnX": 160,
@@ -90,7 +90,7 @@
     {
       "type": "steelBarrier",
       "x": 80,
-      "y": 110,
+      "y": 120,
       "w": 20,
       "h": 260,
       "palette": "purple"
@@ -270,5 +270,5 @@
   "solutionDna": [
     "CUSTOM"
   ],
-  "difficultyScore": 50
-}
+  "difficultyScore": 50,
+  "isOverridden": false}

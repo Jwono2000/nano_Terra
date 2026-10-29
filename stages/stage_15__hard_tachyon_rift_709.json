@@ -23,7 +23,7 @@
   "spawnX": 75,
   "spawnY": 45,
   "gateX": 720,
-  "gateY": 220,
+  "gateY": 250,
   "solutionDna": [
     "BASH",
     "DRILL",
@@ -43,10 +43,10 @@
     },
     {
       "type": "rockWall",
-      "x": 135,
-      "y": 15,
-      "w": 35,
-      "h": 68,
+      "x": 170,
+      "y": 20,
+      "w": 40,
+      "h": 60,
       "palette": "purple"
     },
     {
@@ -58,15 +58,15 @@
     },
     {
       "type": "platform",
-      "x": 180,
+      "x": 170,
       "y": 140,
-      "w": 115,
+      "w": 160,
       "h": 20,
       "palette": "purple"
     },
     {
       "type": "steelBarrier",
-      "x": 170,
+      "x": 150,
       "y": 80,
       "w": 20,
       "h": 80
@@ -75,7 +75,7 @@
       "type": "quantumCrystal",
       "x": 380,
       "y": 190,
-      "w": 90,
+      "w": 130,
       "h": 20,
       "palette": "purple",
       "profile": [
@@ -86,10 +86,10 @@
     },
     {
       "type": "quantumCrystal",
-      "x": 245,
-      "y": 300,
-      "w": 235,
-      "h": 24,
+      "x": 250,
+      "y": 310,
+      "w": 220,
+      "h": 20,
       "palette": "purple",
       "profile": [
         20,
@@ -102,7 +102,7 @@
     {
       "type": "platform",
       "x": 510,
-      "y": 280,
+      "y": 290,
       "w": 240,
       "h": 20,
       "palette": "purple"
@@ -118,7 +118,7 @@
     {
       "type": "quantumCrystal",
       "x": 50,
-      "y": 300,
+      "y": 310,
       "w": 200,
       "h": 30,
       "palette": "purple",
@@ -133,17 +133,17 @@
     },
     {
       "type": "steelBarrier",
-      "x": 250,
+      "x": 240,
       "y": 210,
       "w": 20,
-      "h": 90,
+      "h": 100,
       "palette": "purple"
     },
     {
       "type": "steelPlatform",
       "x": 50,
-      "y": 300,
-      "w": 430,
+      "y": 310,
+      "w": 420,
       "h": 10,
       "palette": "purple",
       "isSteel": true
@@ -151,11 +151,11 @@
     {
       "type": "steelPlatform",
       "x": 510,
-      "y": 270,
+      "y": 290,
       "w": 240,
       "h": 10,
       "palette": "purple",
       "isSteel": true
     }
   ],
-  "isOverridden": false}
+  "isOverridden": true}

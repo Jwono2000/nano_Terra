@@ -1204,7 +1204,7 @@
     "spawnX": 75,
     "spawnY": 45,
     "gateX": 720,
-    "gateY": 220,
+    "gateY": 250,
     "solutionDna": [
       "BASH",
       "DRILL",
@@ -1224,10 +1224,10 @@
       },
       {
         "type": "rockWall",
-        "x": 135,
-        "y": 15,
-        "w": 35,
-        "h": 68,
+        "x": 170,
+        "y": 20,
+        "w": 40,
+        "h": 60,
         "palette": "purple"
       },
       {
@@ -1239,15 +1239,15 @@
       },
       {
         "type": "platform",
-        "x": 180,
+        "x": 170,
         "y": 140,
-        "w": 115,
+        "w": 160,
         "h": 20,
         "palette": "purple"
       },
       {
         "type": "steelBarrier",
-        "x": 170,
+        "x": 150,
         "y": 80,
         "w": 20,
         "h": 80
@@ -1256,7 +1256,7 @@
         "type": "quantumCrystal",
         "x": 380,
         "y": 190,
-        "w": 90,
+        "w": 130,
         "h": 20,
         "palette": "purple",
         "profile": [
@@ -1267,10 +1267,10 @@
       },
       {
         "type": "quantumCrystal",
-        "x": 245,
-        "y": 300,
-        "w": 235,
-        "h": 24,
+        "x": 250,
+        "y": 310,
+        "w": 220,
+        "h": 20,
         "palette": "purple",
         "profile": [
           20,
@@ -1283,7 +1283,7 @@
       {
         "type": "platform",
         "x": 510,
-        "y": 280,
+        "y": 290,
         "w": 240,
         "h": 20,
         "palette": "purple"
@@ -1299,7 +1299,7 @@
       {
         "type": "quantumCrystal",
         "x": 50,
-        "y": 300,
+        "y": 310,
         "w": 200,
         "h": 30,
         "palette": "purple",
@@ -1314,17 +1314,17 @@
       },
       {
         "type": "steelBarrier",
-        "x": 250,
+        "x": 240,
         "y": 210,
         "w": 20,
-        "h": 90,
+        "h": 100,
         "palette": "purple"
       },
       {
         "type": "steelPlatform",
         "x": 50,
-        "y": 300,
-        "w": 430,
+        "y": 310,
+        "w": 420,
         "h": 10,
         "palette": "purple",
         "isSteel": true
@@ -1332,7 +1332,7 @@
       {
         "type": "steelPlatform",
         "x": 510,
-        "y": 270,
+        "y": 290,
         "w": 240,
         "h": 10,
         "palette": "purple",
@@ -1741,7 +1741,7 @@
       },
       {
         "type": "movingPlatform",
-        "x": 350,
+        "x": 360,
         "y": 210,
         "w": 60,
         "h": 10,
@@ -1762,24 +1762,24 @@
       },
       {
         "type": "movingPlatform",
-        "x": 350,
-        "y": 260,
+        "x": 360,
+        "y": 270,
         "w": 60,
         "h": 10,
         "axis": "vertical",
-        "range": 90,
+        "range": 80,
         "speed": 0.75,
         "pauseTicks": 30,
         "palette": "cyan"
       },
       {
         "type": "movingPlatform",
-        "x": 350,
-        "y": 160,
+        "x": 360,
+        "y": 150,
         "w": 60,
         "h": 10,
         "axis": "vertical",
-        "range": 190,
+        "range": 200,
         "speed": 0.75,
         "pauseTicks": 30,
         "palette": "cyan"
@@ -3040,23 +3040,23 @@
     "desc": "[CASCADE] 100% 클리어 검증 구역. (난이도: HARD, 점수: 149pt, 솔루션: BASH → MINE → FLOAT → DRILL) · [기믹: 📐경사로 1개, 🥢사선빔 1개, 🚀점프패드 1개]",
     "bgImg": "assets/bg_level_6.jpg",
     "terrainTheme": "cyan",
-    "totalUnits": 20,
-    "needPercent": 75,
-    "spawnRate": 22,
+    "totalUnits": 15,
+    "needPercent": 80,
+    "spawnRate": 80,
     "timeLimit": 115,
     "skills": {
       "climb": 1,
       "float": 20,
       "bash": 2,
       "mine": 1,
-      "drill": 1,
+      "drill": 0,
       "bomb": 1,
       "build": 5,
-      "block": 0,
+      "block": 1,
       "portal": 0
     },
     "spawnX": 140,
-    "spawnY": 80,
+    "spawnY": 70,
     "gateX": 720,
     "gateY": 330,
     "elements": [
@@ -3087,31 +3087,23 @@
         "x": 250,
         "y": 110,
         "w": 210,
-        "h": 50,
+        "h": 20,
         "palette": "cyan",
         "profile": [
-          14,
-          34,
-          21,
-          18,
-          27,
-          29
+          11,
+          29,
+          17,
+          15,
+          23,
+          25
         ]
       },
       {
-        "type": "rockWall",
-        "x": 690,
-        "y": 190,
-        "w": 40,
-        "h": 50,
-        "palette": "cyan"
-      },
-      {
         "type": "craggyRock",
-        "x": 388,
-        "y": 225,
-        "w": 183,
-        "h": 22,
+        "x": 410,
+        "y": 220,
+        "w": 170,
+        "h": 20,
         "palette": "cyan",
         "profile": [
           18,
@@ -3123,25 +3115,9 @@
       },
       {
         "type": "craggyRock",
-        "x": 528,
-        "y": 384,
-        "w": 224,
-        "h": 24,
-        "palette": "cyan",
-        "profile": [
-          15,
-          18,
-          15,
-          28,
-          19,
-          34
-        ]
-      },
-      {
-        "type": "craggyRock",
-        "x": 615,
-        "y": 395,
-        "w": 165,
+        "x": 480,
+        "y": 370,
+        "w": 280,
         "h": 20,
         "palette": "cyan",
         "profile": [
@@ -3154,16 +3130,16 @@
       {
         "type": "steelBarrier",
         "x": 760,
-        "y": 330,
+        "y": 320,
         "w": 20,
-        "h": 65
+        "h": 70
       },
       {
         "type": "platform",
-        "x": 409,
-        "y": 291,
+        "x": 390,
+        "y": 310,
         "w": 80,
-        "h": 16,
+        "h": 20,
         "palette": "cyan"
       },
       {
@@ -3202,18 +3178,18 @@
       },
       {
         "type": "craggyRock",
-        "x": 460,
+        "x": 450,
         "y": 110,
         "w": 220,
-        "h": 50,
+        "h": 20,
         "palette": "cyan",
         "profile": [
-          43,
-          45,
-          38,
-          63,
-          59,
-          35
+          18,
+          18,
+          16,
+          26,
+          24,
+          14
         ]
       },
       {
@@ -3297,12 +3273,19 @@
         "palette": "cyan"
       },
       {
-        "type": "platform",
+        "type": "craggyRock",
         "x": 200,
         "y": 220,
         "w": 150,
-        "h": 10,
-        "palette": "cyan"
+        "h": 20,
+        "palette": "cyan",
+        "isSteel": false,
+        "profile": [
+          18,
+          18,
+          18,
+          18
+        ]
       },
       {
         "type": "steelBarrier",
@@ -3317,6 +3300,99 @@
         "x": 670,
         "y": 140,
         "w": 130,
+        "h": 10,
+        "palette": "cyan",
+        "isSteel": true
+      },
+      {
+        "type": "diagonalBeam",
+        "x": 560,
+        "y": 290,
+        "w": 40,
+        "h": 30,
+        "palette": "cyan",
+        "slope": -1,
+        "thickness": 16,
+        "isSteel": true
+      },
+      {
+        "type": "steelPlatform",
+        "x": 390,
+        "y": 110,
+        "w": 280,
+        "h": 10,
+        "palette": "cyan",
+        "isSteel": true
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 720,
+            "y": 220
+          },
+          {
+            "x": 690,
+            "y": 230
+          },
+          {
+            "x": 680,
+            "y": 250
+          },
+          {
+            "x": 690,
+            "y": 260
+          },
+          {
+            "x": 720,
+            "y": 270
+          },
+          {
+            "x": 740,
+            "y": 260
+          },
+          {
+            "x": 770,
+            "y": 250
+          },
+          {
+            "x": 790,
+            "y": 260
+          },
+          {
+            "x": 800,
+            "y": 260
+          },
+          {
+            "x": 800,
+            "y": 220
+          },
+          {
+            "x": 740,
+            "y": 210
+          }
+        ],
+        "x": 680,
+        "y": 210,
+        "w": 120,
+        "h": 60,
+        "palette": "cyan"
+      },
+      {
+        "type": "jumpPad",
+        "x": 250,
+        "y": 220,
+        "w": 40,
+        "h": 20,
+        "dir": "right",
+        "power": 7.5,
+        "palette": "cyan"
+      },
+      {
+        "type": "steelPlatform",
+        "x": 70,
+        "y": 110,
+        "w": 190,
         "h": 10,
         "palette": "cyan",
         "isSteel": true

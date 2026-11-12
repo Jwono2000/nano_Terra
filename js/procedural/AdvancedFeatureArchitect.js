@@ -49,19 +49,22 @@
     const spawn = { x: stage.spawnX, y: stage.spawnY };
     const gate = { x: stage.gateX, y: stage.gateY };
 
-    // 1. Convert 1~2 suitable platforms to Permanent Steel Platforms
-    const candidatesForSteel = elements.filter(e =>
-      (e.type === 'platform' || e.type === 'craggyRock') &&
-      e.w >= 80 && e.w <= 240 &&
-      isClearOfCrucialZones(e, spawn, gate, 20)
-    );
-
+    // 1. Convert 1 suitable platform to Permanent Steel Platform ONLY if it doesn't break DRILL/MINE gimmicks
+    const gimmicks = (stage._meta && Array.isArray(stage._meta.gimmickChain)) ? stage._meta.gimmickChain : [];
+    const hasDiggingGimmick = gimmicks.includes('SEALED_DROP_SHAFT') || gimmicks.includes('DIAGONAL_ROCK_VEIN');
     let steelReplaced = 0;
-    for (const el of candidatesForSteel) {
-      if (rng() < 0.45 && steelReplaced < 2) {
-        el.type = 'steelPlatform';
-        el.isSteel = true;
-        steelReplaced++;
+    if (!hasDiggingGimmick) {
+      const candidatesForSteel = elements.filter(e =>
+        (e.type === 'platform' || e.type === 'craggyRock') &&
+        e.w >= 90 && e.w <= 200 &&
+        isClearOfCrucialZones(e, spawn, gate, 24)
+      );
+      for (const el of candidatesForSteel) {
+        if (rng() < 0.35 && steelReplaced < 1) {
+          el.type = 'steelPlatform';
+          el.isSteel = true;
+          steelReplaced++;
+        }
       }
     }
 
@@ -74,8 +77,8 @@
 
     let slopesAdded = 0;
     for (const plat of solidPlatforms) {
-      if (slopesAdded >= 3) break;
-      if (rng() > 0.6) continue;
+      if (slopesAdded >= 1) break;
+      if (rng() > 0.5) continue;
 
       const slopeW = 40 + Math.floor(rng() * 3) * 10; // 40~60px
       const slopeH = 20 + Math.floor(rng() * 2) * 10; // 20~30px

@@ -292,9 +292,28 @@
       };
     }
 
-    static lockStartAndGoalAnchors(archetype, numGimmicks, R) {
-      const startX = R.irange(65, 92);
-      const goalX = R.irange(695, 730);
+    static pickFlowMode(archetype, R) {
+      if (archetype === 'chamber' || archetype === 'zigzag') {
+        return R.chance(0.75) ? 'uturn' : (R.chance(0.5) ? 'rtl' : 'ltr');
+      }
+      if (archetype === 'split') {
+        return R.chance(0.55) ? 'uturn' : 'ltr';
+      }
+      return R.chance(0.35) ? 'rtl' : 'ltr';
+    }
+
+    static lockStartAndGoalAnchors(archetype, numGimmicks, R, flowMode = 'ltr') {
+      if (flowMode === 'uturn') {
+        const startX = R.irange(75, 110);
+        const startY = R.irange(105, 135);
+        const goalX = R.irange(85, 130);
+        const goalY = R.irange(285, 330);
+        return { startX, startY, goalX, goalY, flowMode };
+      }
+
+      const isRtl = (flowMode === 'rtl');
+      const startX = isRtl ? R.irange(695, 730) : R.irange(65, 92);
+      const goalX = isRtl ? R.irange(68, 102) : R.irange(695, 730);
       let startY, goalY;
 
       switch (archetype) {
@@ -325,10 +344,54 @@
           break;
       }
 
-      return { startX, startY, goalX, goalY };
+      return { startX, startY, goalX, goalY, flowMode };
     }
 
     static planReverseGimmickChain(anchors, archetype, diff, R) {
+      const flowMode = anchors.flowMode || 'ltr';
+
+      if (flowMode === 'uturn') {
+        const K = 4; // 상층 1개 -> 하강 전환 1개 -> 하층 2개 (총 4기믹 2층 U턴 구조)
+        const topY = R.irange(112, 138);
+        const midDropY = topY + R.irange(68, 78);
+        const botY = midDropY + R.irange(68, 78);
+
+        const nodes = [
+          { index: 0, role: 'start', x: 110, y: topY },
+          { index: 1, role: 'mid',   x: 380, y: topY },
+          { index: 2, role: 'mid',   x: 660, y: topY },
+          { index: 3, role: 'mid',   x: 420, y: midDropY },
+          { index: 4, role: 'goal',  x: 130, y: botY }
+        ];
+
+        const topGimmick = R.pick([GIMMICK_CATALOG.HOLDING_CELL_BREACH, GIMMICK_CATALOG.ARMORED_BULKHEAD, GIMMICK_CATALOG.HIGH_WALL_VAULT]);
+        const dropGimmick = R.pick([GIMMICK_CATALOG.SEALED_DROP_SHAFT, GIMMICK_CATALOG.DIAGONAL_ROCK_VEIN]);
+        const botGimmick1 = R.pick([GIMMICK_CATALOG.HOLDING_CELL_BREACH, GIMMICK_CATALOG.SKY_BRIDGE_ASCENT, GIMMICK_CATALOG.ARMORED_BULKHEAD]);
+        const botGimmick2 = R.pick([GIMMICK_CATALOG.SEALED_DROP_SHAFT, GIMMICK_CATALOG.DIAGONAL_ROCK_VEIN]);
+
+        const gimmicks = [
+          { index: 0, ...topGimmick, skills: topGimmick.skills.slice(), dy: 0 },
+          { index: 1, ...dropGimmick, skills: dropGimmick.skills.slice(), dy: midDropY - topY, isUTurnPivot: true },
+          { index: 2, ...botGimmick1, skills: botGimmick1.skills.slice(), dy: 0 },
+          { index: 3, ...botGimmick2, skills: botGimmick2.skills.slice(), dy: botY - midDropY }
+        ];
+        // 노드 2 -> 3은 같은 우측 수직 하강 구간이므로 X좌표 정렬
+        nodes[2].x = 640;
+        nodes[3].x = 600;
+        nodes[3].y = midDropY;
+        nodes.splice(4, 0, { index: 4, role: 'mid', x: 350, y: midDropY });
+        nodes[5] = { index: 5, role: 'goal', x: 115, y: botY };
+        // K=4에 맞춰 5개 노드로 재정렬: 0(좌상)->1(우상)->2(우중,하강)->3(좌중)->4(좌하,골)
+        const cleanNodes = [
+          { index: 0, role: 'start', x: 115, y: topY },
+          { index: 1, role: 'mid',   x: 420, y: topY },
+          { index: 2, role: 'mid',   x: 650, y: topY },
+          { index: 3, role: 'mid',   x: 380, y: midDropY },
+          { index: 4, role: 'goal',  x: 115, y: botY }
+        ];
+        return { nodes: cleanNodes, gimmicks, flowMode: 'uturn' };
+      }
+
       const K = R.irange(diff.gimmickRange[0], diff.gimmickRange[1]);
       const pool = ARCHETYPE_GIMMICK_WEIGHTS[archetype] || ARCHETYPE_GIMMICK_WEIGHTS.cascade;
 
@@ -400,11 +463,11 @@
       }
 
       nodes[0].x = anchors.startX;
-      return { nodes, gimmicks };
+      return { nodes, gimmicks, flowMode };
     }
 
     static buildMultiRoutePuzzleLayout(chainPlan, archetype, diff, R, pal, stones) {
-      const { nodes, gimmicks } = chainPlan;
+      const { nodes, gimmicks, flowMode = 'ltr' } = chainPlan;
       const K = gimmicks.length;
       const elements = [];
       const slabs = [];
@@ -413,85 +476,140 @@
       const decoyInfo = [];
       const altRouteInfo = [];
 
-      // 1) 정석 루트(Golden Path) 슬랩 생성 — 넉넉한 스타팅 안전 벙커 보장
+      // 각 노드의 진행 방향 계산 (+1: 우측, -1: 좌측)
+      const getOutDir = (i) => {
+        if (i < K) return (nodes[i + 1].x >= nodes[i].x) ? 1 : -1;
+        return (nodes[i].x >= nodes[i - 1].x) ? 1 : -1;
+      };
+
+      // 1) 정석 루트(Golden Path) 슬랩 생성 — 8px 단위 깔끔한 그리드 스냅
+      const snap8 = (v) => Math.round(v / 8) * 8;
       const nodeSlabs = [];
+
       for (let i = 0; i <= K; i++) {
         const node = nodes[i];
+        const outDir = getOutDir(i);
         const prevGimmick = i > 0 ? gimmicks[i - 1] : null;
         const nextGimmick = i < K ? gimmicks[i] : null;
 
         let x0, x1;
-        if (i === 0) {
-          x0 = clamp(node.x - 45, 22, 72);
-        } else {
-          const prevNode = nodes[i - 1];
-          const midX = Math.round((prevNode.x + node.x) / 2);
-          if (prevGimmick.id === 'SKY_BRIDGE_ASCENT') {
-            x0 = midX + 10; // 1단 BUILD(48px 전진)로 확실히 도달
-          } else if (prevGimmick.id === 'GRAND_CHASM_ASCENT') {
-            x0 = midX + 32; // 2단 BUILD(96px 전진)로 확실히 도달
-          } else if (prevGimmick.id === 'HIGH_WALL_VAULT') {
-            x0 = midX - 6;  // 벽을 타고 넘어가 바로 착지
-          } else if (prevGimmick.id === 'SEALED_DROP_SHAFT' || prevGimmick.id === 'DIAGONAL_ROCK_VEIN') {
-            x0 = midX - 32; // 상단에서 굴착/낙하 시 하단 발판 안쪽 안전 착지
+        if (flowMode === 'uturn') {
+          // 2층 U턴 전용 깔끔한 대칭 슬랩 배치
+          if (i === 0) { x0 = 56; x1 = 264; }
+          else if (i === 1) { x0 = 264; x1 = 496; }
+          else if (i === 2) { x0 = 496; x1 = 720; }
+          else if (i === 3) { x0 = 272; x1 = 704; }
+          else { x0 = 64; x1 = 272; }
+        } else if (outDir === 1) {
+          // 좌 -> 우 정방향
+          if (i === 0) {
+            x0 = snap8(clamp(node.x - 44, 24, 72));
           } else {
-            x0 = midX;
+            const prevNode = nodes[i - 1];
+            const midX = snap8((prevNode.x + node.x) / 2);
+            if (prevGimmick.id === 'SKY_BRIDGE_ASCENT') x0 = midX + 8;
+            else if (prevGimmick.id === 'GRAND_CHASM_ASCENT') x0 = midX + 32;
+            else if (prevGimmick.id === 'HIGH_WALL_VAULT') x0 = midX - 8;
+            else if (prevGimmick.id === 'SEALED_DROP_SHAFT' || prevGimmick.id === 'DIAGONAL_ROCK_VEIN') x0 = midX - 32;
+            else x0 = midX;
+          }
+
+          if (i === K) {
+            x1 = snap8(clamp(node.x + 64, node.x + 48, W - 24));
+          } else {
+            const nextNode = nodes[i + 1];
+            const midX = snap8((node.x + nextNode.x) / 2);
+            if (nextGimmick.id === 'SKY_BRIDGE_ASCENT') x1 = midX - 8;
+            else if (nextGimmick.id === 'GRAND_CHASM_ASCENT') x1 = midX - 32;
+            else if (nextGimmick.id === 'HIGH_WALL_VAULT') x1 = midX + 8;
+            else if (nextGimmick.id === 'SEALED_DROP_SHAFT' || nextGimmick.id === 'DIAGONAL_ROCK_VEIN') x1 = midX + 24;
+            else x1 = midX;
+          }
+        } else {
+          // 우 -> 좌 역방향 (dir = -1)
+          if (i === 0) {
+            x1 = snap8(clamp(node.x + 44, W - 72, W - 24));
+          } else {
+            const prevNode = nodes[i - 1];
+            const midX = snap8((prevNode.x + node.x) / 2);
+            if (prevGimmick.id === 'SKY_BRIDGE_ASCENT') x1 = midX - 8;
+            else if (prevGimmick.id === 'GRAND_CHASM_ASCENT') x1 = midX - 32;
+            else if (prevGimmick.id === 'HIGH_WALL_VAULT') x1 = midX + 8;
+            else if (prevGimmick.id === 'SEALED_DROP_SHAFT' || prevGimmick.id === 'DIAGONAL_ROCK_VEIN') x1 = midX + 32;
+            else x1 = midX;
+          }
+
+          if (i === K) {
+            x0 = snap8(clamp(node.x - 64, 24, node.x - 48));
+          } else {
+            const nextNode = nodes[i + 1];
+            const midX = snap8((node.x + nextNode.x) / 2);
+            if (nextGimmick.id === 'SKY_BRIDGE_ASCENT') x0 = midX + 8;
+            else if (nextGimmick.id === 'GRAND_CHASM_ASCENT') x0 = midX + 32;
+            else if (nextGimmick.id === 'HIGH_WALL_VAULT') x0 = midX - 8;
+            else if (nextGimmick.id === 'SEALED_DROP_SHAFT' || nextGimmick.id === 'DIAGONAL_ROCK_VEIN') x0 = midX - 24;
+            else x0 = midX;
           }
         }
 
-        if (i === K) {
-          x1 = clamp(node.x + 62, node.x + 48, W - 22);
-        } else {
-          const nextNode = nodes[i + 1];
-          const midX = Math.round((node.x + nextNode.x) / 2);
-          if (nextGimmick.id === 'SKY_BRIDGE_ASCENT') {
-            x1 = midX - 10;
-          } else if (nextGimmick.id === 'GRAND_CHASM_ASCENT') {
-            x1 = midX - 32;
-          } else if (nextGimmick.id === 'HIGH_WALL_VAULT') {
-            x1 = midX + 12;
-          } else if (nextGimmick.id === 'SEALED_DROP_SHAFT') {
-            x1 = midX + 26;
-          } else if (nextGimmick.id === 'DIAGONAL_ROCK_VEIN') {
-            x1 = midX + 28;
-          } else {
-            x1 = midX;
-          }
+        const minW = (i === 0) ? 108 : 84;
+        if (x1 - x0 < minW) {
+          if (outDir === 1) x1 = x0 + minW;
+          else x0 = x1 - minW;
         }
+        x0 = clamp(x0, 24, W - 108);
+        x1 = clamp(x1, x0 + 84, W - 24);
 
-        // 스타팅 발판은 본대가 안전하게 왕복 대기할 수 있도록 최소 105px 폭 보장
-        const minW = (i === 0) ? 105 : 82;
-        if (x1 - x0 < minW) x1 = x0 + minW;
-
-        const slabH = (nextGimmick && nextGimmick.id === 'DIAGONAL_ROCK_VEIN') ? 34 : 24;
-        const slab = this.makeSlab(x0, node.y, x1 - x0, slabH, R, pal, stones);
+        const slabH = (nextGimmick && nextGimmick.id === 'DIAGONAL_ROCK_VEIN') ? 32 : 24;
+        const slab = this.makeSlab(x0, snap8(node.y), x1 - x0, slabH, R, pal, stones);
         nodeSlabs.push(slab);
         slabs.push(slab);
         elements.push(slab);
       }
 
-      // 2) 스폰 구역 좌측 안전 벙커 벽 (본대가 뒤로 떨어져 죽지 않음)
+      // 2) 스폰 구역 안전 벙커 벽 (진행 반대편을 막아 본대 안전 확보 & 역방향 시 자동 턴 유도)
       const startSlab = nodeSlabs[0];
-      const leftWallH = Math.min(82, Math.max(48, startSlab.y - 16));
+      const startOutDir = getOutDir(0);
+      const startWallH = Math.min(80, Math.max(48, startSlab.y - 16));
       elements.push({
         type: 'steelBarrier',
-        x: startSlab.x,
-        y: startSlab.y - leftWallH,
+        x: startOutDir === 1 ? startSlab.x : (startSlab.x + startSlab.w - 18),
+        y: startSlab.y - startWallH,
         w: 18,
-        h: leftWallH
+        h: startWallH
       });
 
-      // 3) 각 기믹별 구조물 배치 — 일부 구간은 상단을 개방해 CLIMB / BUILD 다해법 허용!
+      // U턴 모드일 때는 하층(nodeSlabs[3]) 우측에 반전 벽을 세워 좌측으로 턴 유도
+      if (flowMode === 'uturn' && nodeSlabs[3]) {
+        const lowerTurnSlab = nodeSlabs[3];
+        const turnH = Math.min(72, Math.max(48, lowerTurnSlab.y - (nodeSlabs[2].y + nodeSlabs[2].h) - 8));
+        if (turnH >= 32) {
+          elements.push({
+            type: 'steelBarrier',
+            x: lowerTurnSlab.x + lowerTurnSlab.w - 18,
+            y: lowerTurnSlab.y - turnH,
+            w: 18,
+            h: turnH
+          });
+        }
+      }
+
+      // 3) 각 기믹별 구조물 배치 (진행 방향 dir=+1 / -1 완벽 지원)
       for (let i = 0; i < K; i++) {
         const g = gimmicks[i];
         const curSlab = nodeSlabs[i];
         const nextSlab = nodeSlabs[i + 1];
+        const dir = (flowMode === 'uturn')
+          ? (i < 2 ? 1 : -1)
+          : getOutDir(i);
+
+        const frontEdgeX = (dir === 1) ? (curSlab.x + curSlab.w) : curSlab.x;
 
         switch (g.id) {
           case 'HOLDING_CELL_BREACH': {
             const wallW = 34;
             const wallH = 52;
-            const wallX = curSlab.x + curSlab.w - Math.floor(wallW / 2);
+            const wallX = (dir === 1) ? (frontEdgeX - Math.floor(wallW / 2)) : (frontEdgeX - Math.floor(wallW / 2));
             const wallY = curSlab.y - wallH;
 
             elements.push({
@@ -499,7 +617,6 @@
               x: wallX, y: wallY, w: wallW, h: wallH, palette: pal
             });
 
-            // 모든 벽을 강철 뚜껑으로 틀어막지 않고 50% 확률로 상단을 개방해 CLIMB/BUILD 등반 우회 허용!
             if (R.chance(0.45)) {
               const capH = Math.max(22, Math.min(54, wallY - 16));
               elements.push({
@@ -514,9 +631,9 @@
           }
 
           case 'ARMORED_BULKHEAD': {
-            const wallW = 54;
+            const wallW = 52;
             const wallH = 54;
-            const wallX = curSlab.x + curSlab.w - Math.floor(wallW / 2);
+            const wallX = frontEdgeX - Math.floor(wallW / 2);
             const wallY = curSlab.y - wallH;
 
             elements.push({
@@ -524,7 +641,6 @@
               x: wallX, y: wallY, w: wallW, h: wallH, palette: pal
             });
 
-            // 상단을 열어두거나 부분 차폐하여 BOMB 외에도 CLIMB/BASHx2/BUILD 등 유연한 해법 유도
             if (R.chance(0.35)) {
               const capH = Math.max(22, Math.min(50, wallY - 18));
               elements.push({
@@ -541,7 +657,7 @@
           case 'SEALED_DROP_SHAFT': {
             const steelW = 18;
             const steelH = Math.min(64, Math.max(42, curSlab.y - 24));
-            const steelX = curSlab.x + curSlab.w - steelW;
+            const steelX = (dir === 1) ? (frontEdgeX - steelW) : frontEdgeX;
             const steelY = curSlab.y - steelH;
 
             elements.push({
@@ -549,23 +665,15 @@
               x: steelX, y: steelY, w: steelW, h: steelH
             });
 
-            const guideH = Math.max(32, Math.min(58, nextSlab.y - (curSlab.y + curSlab.h) - 6));
-            if (guideH >= 28) {
-              elements.push({
-                type: 'steelBarrier',
-                x: nextSlab.x, y: nextSlab.y - guideH, w: 16, h: guideH
-              });
-            }
-
             actionUsage.push({ act: 'DRILL', count: 1, gimmickId: g.id });
-            triggerPoints.push({ x: steelX - 12, y: curSlab.y, skill: 'DRILL', timingWeight: g.timingWeight });
+            triggerPoints.push({ x: steelX - dir * 12, y: curSlab.y, skill: 'DRILL', timingWeight: g.timingWeight });
             break;
           }
 
           case 'DIAGONAL_ROCK_VEIN': {
             const wallW = 28;
             const wallH = 48;
-            const wallX = curSlab.x + curSlab.w - wallW;
+            const wallX = (dir === 1) ? (frontEdgeX - wallW) : frontEdgeX;
             const wallY = curSlab.y - wallH;
 
             elements.push({
@@ -575,86 +683,87 @@
 
             elements.push({
               type: 'steelBarrier',
-              x: wallX + wallW, y: wallY - 12, w: 16, h: wallH + 12
+              x: (dir === 1) ? (wallX + wallW) : (wallX - 16),
+              y: wallY - 12,
+              w: 16,
+              h: wallH + 12
             });
 
-            const guideH = Math.max(30, Math.min(54, nextSlab.y - (curSlab.y + curSlab.h) - 6));
-            if (guideH >= 26) {
-              elements.push({
-                type: 'steelBarrier',
-                x: nextSlab.x, y: nextSlab.y - guideH, w: 16, h: guideH
-              });
-            }
-
             actionUsage.push({ act: 'MINE', count: 1, gimmickId: g.id });
-            triggerPoints.push({ x: wallX - 10, y: curSlab.y, skill: 'MINE', timingWeight: g.timingWeight });
+            triggerPoints.push({ x: wallX - dir * 10, y: curSlab.y, skill: 'MINE', timingWeight: g.timingWeight });
             break;
           }
 
           case 'HIGH_WALL_VAULT': {
             const stepWallW = 22;
             const stepWallH = Math.max(34, curSlab.y - nextSlab.y + 18);
-            const wallX = curSlab.x + curSlab.w - stepWallW;
+            const wallX = (dir === 1) ? (frontEdgeX - stepWallW) : frontEdgeX;
             const wallY = curSlab.y - stepWallH;
 
-            // 암벽으로 배치하여 CLIMB, BUILD, 또는 BASH/BOMB 등 다양한 방식으로 돌파 가능
             elements.push({
               type: 'rockWall',
               x: wallX, y: wallY, w: stepWallW, h: stepWallH, palette: pal
             });
 
             actionUsage.push({ act: 'CLIMB', count: 1, gimmickId: g.id });
-            triggerPoints.push({ x: wallX - 8, y: curSlab.y, skill: 'CLIMB', timingWeight: g.timingWeight });
+            triggerPoints.push({ x: wallX - dir * 8, y: curSlab.y, skill: 'CLIMB', timingWeight: g.timingWeight });
             break;
           }
 
           case 'SKY_BRIDGE_ASCENT': {
+            const blockX = (dir === 1) ? (nextSlab.x - 2) : (nextSlab.x + nextSlab.w - 14);
             elements.push({
               type: 'steelBarrier',
-              x: nextSlab.x - 2, y: nextSlab.y + nextSlab.h, w: 16, h: 50
+              x: blockX, y: nextSlab.y + nextSlab.h, w: 16, h: 48
             });
 
             actionUsage.push({ act: 'BUILD', count: 1, gimmickId: g.id });
-            triggerPoints.push({ x: curSlab.x + curSlab.w - 4, y: curSlab.y, skill: 'BUILD', timingWeight: g.timingWeight });
+            triggerPoints.push({ x: frontEdgeX - dir * 4, y: curSlab.y, skill: 'BUILD', timingWeight: g.timingWeight });
             break;
           }
 
           case 'GRAND_CHASM_ASCENT': {
+            const blockX = (dir === 1) ? (nextSlab.x - 2) : (nextSlab.x + nextSlab.w - 14);
             elements.push({
               type: 'steelBarrier',
-              x: nextSlab.x - 2, y: nextSlab.y + nextSlab.h, w: 16, h: 60
+              x: blockX, y: nextSlab.y + nextSlab.h, w: 16, h: 56
             });
 
             actionUsage.push({ act: 'BUILD', count: 2, gimmickId: g.id });
             triggerPoints.push(
-              { x: curSlab.x + curSlab.w - 4, y: curSlab.y, skill: 'BUILD', timingWeight: 13 },
-              { x: curSlab.x + curSlab.w + 42, y: curSlab.y - 22, skill: 'BUILD', timingWeight: 13 }
+              { x: frontEdgeX - dir * 4, y: curSlab.y, skill: 'BUILD', timingWeight: 13 },
+              { x: frontEdgeX + dir * 42, y: curSlab.y - 22, skill: 'BUILD', timingWeight: 13 }
             );
             break;
           }
         }
       }
 
-      // 4) 골인 지점 우측 안전 프레임 (유닛이 지나쳐 낭떠러지로 떨어지지 않고 왕복하도록)
+      // 4) 골인 지점 안전 프레임 (진행 방향 끝을 막아 유닛 왕복 유도)
       const goalSlab = nodeSlabs[K];
-      const rightWallH = Math.min(82, Math.max(48, goalSlab.y - 16));
+      const goalOutDir = (flowMode === 'uturn') ? -1 : getOutDir(K);
+      const goalWallH = Math.min(80, Math.max(48, goalSlab.y - 16));
       elements.push({
         type: 'steelBarrier',
-        x: goalSlab.x + goalSlab.w - 18,
-        y: goalSlab.y - rightWallH,
+        x: (goalOutDir === 1) ? (goalSlab.x + goalSlab.w - 18) : goalSlab.x,
+        y: goalSlab.y - goalWallH,
         w: 18,
-        h: rightWallH
+        h: goalWallH
       });
 
-      // 5) 실질적으로 연결 가능한 상/하단 대안 루트(Alt Routes) + 전술 함정 배치
+      // 5) 정돈된 상/하단 다해법 연결 브릿지 배치 (너저분한 파편 발판 제거)
       this.injectConnectedAltRoutes(elements, nodeSlabs, gimmicks, diff, R, pal, stones, decoyInfo, altRouteInfo);
 
       const spawn = {
-        x: clamp(startSlab.x + 52, startSlab.x + 32, startSlab.x + startSlab.w - 28),
+        x: (startOutDir === 1)
+          ? clamp(startSlab.x + 48, startSlab.x + 32, startSlab.x + startSlab.w - 28)
+          : clamp(startSlab.x + startSlab.w - 48, startSlab.x + 28, startSlab.x + startSlab.w - 32),
         y: startSlab.y - 36
       };
       const gate = {
-        x: clamp(goalSlab.x + goalSlab.w - 46, goalSlab.x + 28, goalSlab.x + goalSlab.w - 28),
+        x: (goalOutDir === 1)
+          ? clamp(goalSlab.x + goalSlab.w - 46, goalSlab.x + 28, goalSlab.x + goalSlab.w - 28)
+          : clamp(goalSlab.x + 46, goalSlab.x + 28, goalSlab.x + goalSlab.w - 28),
         y: goalSlab.y - 26
       };
 
@@ -728,26 +837,6 @@
           elements.push(altSlab);
           altRouteInfo.push({ x: lowerX, y: lowerY, w: altW, kind: 'LOWER_UNDERPASS_ROUTE' });
         }
-      }
-
-      // 2) 미끼/함정 발판 (유인용이지만 BASH/BUILD 등으로 탈출 여지 남김)
-      const targetDecoys = diff.decoyBranches || 1;
-      for (let d = 0; d < targetDecoys * 4 && decoyInfo.length < targetDecoys; d++) {
-        const refIdx = R.irange(0, Math.max(0, nodeSlabs.length - 2));
-        const refSlab = nodeSlabs[refIdx];
-        const placeBelow = refSlab.y < 230;
-        const decoyW = R.irange(105, 145);
-        const decoyH = 20;
-        const decoyX = clamp(refSlab.x + R.irange(15, 55), 35, W - decoyW - 40);
-        const decoyY = placeBelow
-          ? refSlab.y + R.irange(78, 92)
-          : refSlab.y - R.irange(74, 92);
-
-        if (!isSafeRect(decoyX, decoyY, decoyW, decoyH)) continue;
-
-        const decoySlab = this.makeSlab(decoyX, decoyY, decoyW, decoyH, R, pal, stones);
-        elements.push(decoySlab);
-        decoyInfo.push({ x: decoyX, y: decoyY, w: decoyW, kind: placeBelow ? 'LOWER_GALLERY' : 'UPPER_LEDGE' });
       }
     }
 
@@ -1333,7 +1422,8 @@
         const archetype = this.pickArchetype(options.layout, R);
 
         const numGimmicks = R.irange(diff.gimmickRange[0], diff.gimmickRange[1]);
-        const anchors = this.lockStartAndGoalAnchors(archetype, numGimmicks, R);
+        const flowMode = this.pickFlowMode(archetype, R);
+        const anchors = this.lockStartAndGoalAnchors(archetype, numGimmicks, R, flowMode);
         const chainPlan = this.planReverseGimmickChain(anchors, archetype, diff, R);
         const layoutResult = this.buildMultiRoutePuzzleLayout(chainPlan, archetype, diff, R, palette, stoneTypes);
 

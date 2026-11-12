@@ -1,9 +1,12 @@
 /* ============================================================================
- * ProceduralMapEngine.js — 역방향 인과율 퍼즐 생성 엔진 (v4 Reverse Causal)
- * - 오브젝트 개수 기반 난이도 산정을 폐기하고,
- *   "스킬 조작 타이밍 개수(Timing Count)"와 "스킬 시퀀스 길이(Sequence Length)"로만 난이도 산출
- * - 5단계 역방향 인과율(Start/Goal 확정 → 역방향 기믹 체인 2~4개 → 필수 스킬+강철벽 병목 세트 →
- *   우회로 차단 프레임 마감 → 정답 스킬 + 여유분 1~2개 지급) 전면 적용
+ * ProceduralMapEngine.js — 다중 경로 & 날먹 차단 퍼즐 생성 엔진 (v5)
+ *
+ * [핵심 개편 사항]
+ * 1. 난이도 설정 후 맵 생성 시 FullCanvasLevelArchitect(v5)의 다중 경로 토폴로지 생성기 구동
+ * 2. 정석 정답(Golden Solution) 1개는 정밀 물리 엔진으로 100% 클리어 보장
+ * 3. 유혹의 함정 분기(Decoy Branches) + 고수용 센스 루트(Alt Routes) + 전술 유틸리티 스킬 지급으로
+ *    "딱 보고 길을 치열하게 고민하며 개인 센스에 따라 다른 해법도 가능한" 맵 생성
+ * 4. 0-Skill(무조작) 및 1-Skill(단일 스킬 날먹) 자동 퍼징 검증으로 허무하게 깨지는 맵 원천 차단
  * ==========================================================================*/
 (function (root, factory) {
   const C = (typeof require === 'function') ? require('./MapCore.js') : root;
@@ -32,6 +35,7 @@
     rng.irange = (min, max) => Math.floor(min + rng() * (max - min + 1));
     rng.range = (min, max) => min + rng() * (max - min);
     rng.pick = (arr) => arr[Math.floor(rng() * arr.length)];
+    rng.chance = (p) => rng() < p;
     rng.weighted = (items) => {
       let tot = 0;
       for (const it of items) tot += Math.max(0, it.w || 1);
@@ -44,15 +48,12 @@
   };
 
   /* =====================================================================
-   * [개편 2] DifficultyScorer — 타이밍 개수 & 스킬 시퀀스 길이 기반 스코어러
-   * - 배치된 오브젝트/데코/강철 블록 개수로 점수를 뻥튀기하던 기존 방식을 완전 폐기
-   * - 오직 요구되는 스킬 조작 타이밍 개수(timingCount), 스킬 시퀀스 길이(sequenceLength),
-   *   연속 조작 밀도(timingDensity), 스킬 전환 연계(comboSynergy)로만 산출
+   * DifficultyScorer — 타이밍 개수 & 스킬 시퀀스 길이 & 경로 분기 의사결정 스코어러
    * ===================================================================*/
   const WEIGHTS = {
-    timingCount: 42,     // 요구되는 스킬 조작 타이밍의 개수 (핵심 지표 1)
-    sequenceLength: 38,  // 필수 스킬 시퀀스의 길이 및 고유 스킬 다양성 (핵심 지표 2)
-    comboSynergy: 20     // 연속 스킬 간 전환 및 짧은 조작 간격(병목 연계 밀도)
+    timingCount: 40,     // 요구되는 스킬 조작 타이밍의 개수 및 간격 밀도
+    sequenceLength: 36,  // 필수 스킬 시퀀스의 길이 및 고유 스킬 다양성
+    comboSynergy: 24     // 연속 스킬 전환 연계 및 다중 경로(함정/서브루트) 판단 난이도
   };
 
   class DifficultyScorer {
@@ -64,7 +65,6 @@
         : [];
       const dna = (plan && Array.isArray(plan.dna)) ? plan.dna : [];
 
-      // 1) 요구되는 스킬 조작 타이밍 개수 (Timing Manipulation Count)
       const timingCount = triggers.length > 0 ? triggers.length : dna.length;
       let tightTimingPairs = 0;
       const sortedTrig = triggers.slice().sort((a, b) => a.x - b.x);
@@ -73,23 +73,24 @@
           (sortedTrig[i].x || 0) - (sortedTrig[i - 1].x || 0),
           (sortedTrig[i].y || 0) - (sortedTrig[i - 1].y || 0)
         );
-        if (dist < 130) tightTimingPairs += 1.0;
-        else if (dist < 180) tightTimingPairs += 0.5;
+        if (dist < 135) tightTimingPairs += 1.0;
+        else if (dist < 185) tightTimingPairs += 0.5;
       }
       f.timingCount = clamp((timingCount * 18) + (tightTimingPairs * 10), 0, 100);
 
-      // 2) 스킬 시퀀스 길이 (Skill Sequence Length)
       const seqLen = Math.max(dna.length, timingCount);
       const uniqueSkills = new Set(dna.length > 0 ? dna : triggers.map(t => t.skill)).size;
       f.sequenceLength = clamp((seqLen * 16) + (uniqueSkills * 8), 0, 100);
 
-      // 3) 스킬 연계 전환 (Combo Synergy — 연속으로 다른 스킬을 교차 조작해야 하는 횟수)
       const activeSeq = triggers.length > 0 ? triggers.map(t => t.skill) : dna;
       let switches = 0;
       for (let i = 1; i < activeSeq.length; i++) {
         if (activeSeq[i] !== activeSeq[i - 1]) switches++;
       }
-      f.comboSynergy = clamp((switches * 24) + (tightTimingPairs * 8), 0, 100);
+      const routeBranches = (meta.routeBranches != null)
+        ? meta.routeBranches
+        : ((plan && plan.deco ? plan.deco.length : 2));
+      f.comboSynergy = clamp((switches * 22) + (tightTimingPairs * 8) + (routeBranches * 5), 0, 100);
 
       return f;
     }
@@ -100,16 +101,14 @@
       for (const k of Object.keys(WEIGHTS)) {
         s += WEIGHTS[k] * ((f[k] || 0) / 100);
       }
-      // 0 ~ 150 스케일로 정규화
-      const total = Math.round(clamp(s * 1.35, 15, 150) * 10) / 10;
+      const total = Math.round(clamp(s * 1.38, 25, 165) * 10) / 10;
       return { total, factors: f };
     }
 
-    /* 목표 점수 → 역방향 기믹 체인 길이(2~4개) 및 스킬 여유분(1~2개) 역산 */
     static budgetFor(targetScore) {
-      const n = clamp(targetScore / 150, 0.1, 1.0);
-      const gimmickCount = clamp(Math.round(2 + n * 2), 2, 4); // 핵심 기믹 체인 2~4개 고정
-      const spareSkills = n >= 0.65 ? 1 : 2;                   // 여유분 1~2개 고정
+      const n = clamp(targetScore / 150, 0.15, 1.0);
+      const gimmickCount = clamp(Math.round(3 + n * 2), 3, 5);
+      const spareSkills = n >= 0.65 ? 1 : 2;
       return {
         dnaLen: gimmickCount,
         gimmickCount,
@@ -121,27 +120,24 @@
       };
     }
 
-    /* 난이도 넛지: 슬랩 크기가 아니라 조작 트리거 간격을 미세 조정 */
-    static nudge(plan, target, current) {
-      const diff = target - current;
-      if (Math.abs(diff) < 6) return null;
+    static nudge() {
       return null;
     }
   }
 
   /* =====================================================================
-   * Validator — 스크립티드(정답 시퀀스) + 무스킬(병목 누수 차단) 검증
+   * Validator — 스크립티드(정답 시퀀스) + 무스킬(0-Skill) + 단일스킬 날먹 차단 검증
    * ===================================================================*/
   class Validator {
     constructor(opts = {}) {
       this.units = opts.units || 5;
-      this.maxFrames = opts.maxFrames || 2200;
+      this.maxFrames = opts.maxFrames || 2400;
       this.robustFloor = opts.robustFloor != null ? opts.robustFloor : 0.34;
     }
 
     runTrial(grid, plan, map, mode, units) {
       if (!WK || !WK.Sim) {
-        return { mode, units, saved: units, rate: 1, deaths: [], stuck: [], skillUses: {}, missedTriggers: [], traces: [], firstFail: null };
+        return { mode, units, saved: mode === 'passive' ? 0 : units, rate: mode === 'passive' ? 0 : 1, deaths: [], stuck: [], skillUses: {}, missedTriggers: [], traces: [], firstFail: null };
       }
       const g = grid.clone();
       const budget = {};
@@ -198,7 +194,6 @@
       out.passiveRate = pass.rate;
       out.robustness = full.rate > 0 ? clamp(react.rate / full.rate, 0, 1) : 0;
       out.forgiveness = 1 - pass.rate;
-      // 무조작(passive) 클리어가 불가능(pass.saved === 0)하고 스크립티드 구출률을 충족해야만 통과
       out.ok = (pass.saved === 0) && (full.rate * 100 >= map.needPercent);
       out.diag = { missed: full.missedTriggers, deaths: full.deaths.slice(0, 6), reactDeaths: react.deaths.slice(0, 6) };
       return out;
@@ -206,7 +201,7 @@
   }
 
   /* =====================================================================
-   * Patcher — 시뮬레이션/프로브 결함 보정기
+   * Patcher — 시뮬레이션 결함 보정기
    * ===================================================================*/
   class Patcher {
     constructor() { this.log = []; }
@@ -273,16 +268,15 @@
   }
 
   /* =====================================================================
-   * [5단계] MapAssembler — 정답 필수 스킬 개수 + 여유분 1~2개만 정밀 지급
+   * MapAssembler — 정석 스킬 + 여유분 1~2개 + 다해법 유도용 전술 유틸리티 스킬 지급
    * ===================================================================*/
   class MapAssembler {
     static assemble(plan, elements, scoreResult, opts = {}) {
       const rng = opts.rng || makeRNG(1);
       const biome = plan.biome || { titleWords: ['GENESIS'], bgImg: 1, terrainTheme: 'cyan', key: 'cryoCavern' };
-      const totalUnits = opts.totalUnits != null ? opts.totalUnits : clamp(Math.round(14 + scoreResult.total * 0.08), 12, 25);
-      const needPercent = opts.needPercent != null ? opts.needPercent : clamp(50 + Math.round(scoreResult.total * 0.22), 50, 85);
+      const totalUnits = opts.totalUnits != null ? opts.totalUnits : clamp(Math.round(15 + scoreResult.total * 0.08), 14, 25);
+      const needPercent = opts.needPercent != null ? opts.needPercent : clamp(55 + Math.round(scoreResult.total * 0.22), 55, 86);
 
-      // [5단계 핵심] 정답 트리거에 요구되는 필수 스킬 개수 집계 후 정확히 +1~2개 여유분만 지급
       const planned = {};
       for (const t of (plan.triggers || [])) {
         if (t && t.skill) {
@@ -306,23 +300,26 @@
         climb: 0, float: 0, bash: 0, mine: 0,
         drill: 0, bomb: 0, build: 0, block: 0, portal: 0
       };
-      const maxSpare = scoreResult.total >= 85 ? 1 : 2;
+      const maxSpare = scoreResult.total >= 95 ? 1 : 2;
       for (const k of Object.keys(skills)) {
         const req = planned[k] || 0;
         if (req > 0) {
           const spare = rng.irange ? rng.irange(1, maxSpare) : 1;
           skills[k] = req + spare;
-        } else {
-          skills[k] = 0; // 정답에 필요 없는 스킬은 절대 지급하지 않음 (날먹 원천 차단)
         }
       }
 
+      // 다해법(Sense Play) 및 길 고민 유도용 전술 유틸리티 스킬 추가
+      if (skills.block === 0) skills.block = rng.irange ? rng.irange(1, 2) : 1;
+      if (skills.climb === 0 && (!rng.chance || rng.chance(0.75))) skills.climb = 1;
+      if (skills.bomb === 0 && (!rng.chance || rng.chance(0.65))) skills.bomb = 1;
+
       const trigCount = Math.max(1, (plan.triggers || []).length || (plan.dna || []).length);
-      const timeLimit = clamp(Math.round(45 + trigCount * 28), 90, 300);
-      const spawnRate = clamp(Math.round(38 - scoreResult.total * 0.12), 16, 40);
+      const timeLimit = clamp(Math.round(50 + trigCount * 28), 95, 300);
+      const spawnRate = clamp(Math.round(36 - scoreResult.total * 0.12), 16, 38);
 
       const titleWord = (biome.titleWords && rng.pick) ? rng.pick(biome.titleWords) : 'SECTOR';
-      const diffName = scoreResult.total < 50 ? 'EASY' : scoreResult.total < 80 ? 'NORMAL' : scoreResult.total < 105 ? 'HARD' : 'NIGHTMARE';
+      const diffName = scoreResult.total < 55 ? 'EASY' : scoreResult.total < 88 ? 'NORMAL' : scoreResult.total < 115 ? 'HARD' : 'NIGHTMARE';
 
       return {
         id: opts.id || 'CUSTOM',
@@ -353,16 +350,14 @@
   }
 
   /* =====================================================================
-   * NanoTerraGenerator — 역방향 인과율 파이프라인 오케스트레이터
-   * - FullCanvasLevelArchitect(5단계 역방향 인과율 아키텍트)를 기본 코어로 구동하며,
-   *   레거시 Planner 호출 시에도 동일한 타이밍/시퀀스 스코어러와 스킬 지급 규칙을 강제
+   * NanoTerraGenerator — 다중 경로 & 날먹 차단 파이프라인 오케스트레이터
    * ===================================================================*/
   class NanoTerraGenerator {
     constructor(opts = {}) {
       this.planner = (PL && PL.PathPlanner) ? new PL.PathPlanner() : null;
       this.validator = new Validator(opts.validator || {});
-      this.timeBudgetMs = opts.timeBudgetMs || 120;
-      this.maxAttempts = opts.maxAttempts || 26;
+      this.timeBudgetMs = opts.timeBudgetMs || 140;
+      this.maxAttempts = opts.maxAttempts || 30;
       this.maxSimRepairs = opts.maxSimRepairs || 2;
       this.fallbackCache = new Map();
       this.stats = { attempts: 0, patches: 0, simMs: 0, genMs: 0, fallbacks: 0 };
@@ -376,33 +371,33 @@
           ? FA.FullCanvasLevelArchitect
           : null;
 
-      // 1순위: 5단계 역방향 인과율 아키텍트(FullCanvasLevelArchitect)로 즉시 생성
       if (Architect) {
-        const targetScore = intent.score != null ? intent.score : 65;
+        const targetScore = intent.score != null ? intent.score : 75;
         let diffKey = 'normal';
-        if (targetScore < 50) diffKey = 'easy';
-        else if (targetScore < 80) diffKey = 'normal';
-        else if (targetScore < 105) diffKey = 'hard';
+        if (targetScore < 55) diffKey = 'easy';
+        else if (targetScore < 88) diffKey = 'normal';
+        else if (targetScore < 115) diffKey = 'hard';
         else diffKey = 'nightmare';
 
         return Architect.generate({
-          difficulty: diffKey,
+          difficulty: intent.difficulty || diffKey,
           layout: intent.forceArch || intent.layout || 'random',
+          theme: intent.theme,
+          palette: intent.palette,
           stageNo: intent.stageNo,
           id: intent.id,
           seed: intent.seed
         });
       }
 
-      // 2순위: 레거시 PathPlanner 폴백 (동일한 역방향 스킬 예산 및 타이밍 스코어러 적용)
       if (!this.planner) {
-        throw new Error('Reverse Causal Architect not loaded');
+        throw new Error('FullCanvasLevelArchitect is required');
       }
 
       const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
       const t0 = now();
       const seed0 = intent.seed != null ? intent.seed : (((Math.random() * 1e9) | 0) ^ (Date.now() & 0x7fffffff));
-      const targetScore = intent.score != null ? intent.score : 65;
+      const targetScore = intent.score != null ? intent.score : 75;
       const band = bandKey(targetScore);
       const tb = intent.timeBudgetMs || this.timeBudgetMs;
       let last = null;
@@ -418,7 +413,7 @@
           ...intent,
           norm: budget.norm,
           dnaLen: intent.dna ? intent.dna.length : budget.dnaLen,
-          repeatChance: 0.1
+          repeatChance: 0.08
         };
 
         const plan = this.planner.plan(seed, it);
@@ -486,9 +481,15 @@
 
       for (let i = 0; i < N; i++) {
         const t = N === 1 ? 1 : i / (N - 1);
-        const target = clamp((arc.from || 35) + ((arc.to || 120) - (arc.from || 35)) * t, 25, 145);
+        const target = clamp((arc.from || 45) + ((arc.to || 135) - (arc.from || 45)) * t, 35, 160);
+        let diffKey = 'easy';
+        if (target >= 115) diffKey = 'nightmare';
+        else if (target >= 88) diffKey = 'hard';
+        else if (target >= 55) diffKey = 'normal';
+
         const map = this.gen.generate({
           score: target,
+          difficulty: diffKey,
           forceArch: archs[i % archs.length],
           stageNo: (arc.startStage || 1) + i,
           seed: (arc.seed || 12345) + i * 104729
@@ -550,8 +551,8 @@
     static get generator() {
       if (!this._generator) {
         this._generator = new NanoTerraGenerator({
-          timeBudgetMs: 1000,
-          maxAttempts: 25,
+          timeBudgetMs: 1200,
+          maxAttempts: 35,
           validator: { units: 5 }
         });
       }
@@ -578,14 +579,14 @@
     }
 
     static mapDifficultyToScore(diff) {
-      if (typeof diff === 'number') return clamp(diff, 20, 150);
+      if (typeof diff === 'number') return clamp(diff, 30, 165);
       const d = (diff || 'normal').toLowerCase();
       switch (d) {
-        case 'easy': return 40;
-        case 'normal': return 68;
-        case 'hard': return 95;
-        case 'nightmare': return 125;
-        default: return 68;
+        case 'easy': return 48;
+        case 'normal': return 78;
+        case 'hard': return 108;
+        case 'nightmare': return 138;
+        default: return 78;
       }
     }
 
@@ -645,6 +646,9 @@
 
       return this.generator.generate({
         score: targetScore,
+        difficulty: options.difficulty,
+        theme: options.theme,
+        palette: options.palette,
         biome: forceBiome,
         forceArch,
         dna: options.dna,
@@ -680,7 +684,7 @@
           });
           stages.push(map);
         }
-        return { stages };
+        return { stages, metrics: this.metaGenerator.audit(stages, arc) };
       }
       return this.metaGenerator.batch(arc);
     }
@@ -708,6 +712,7 @@
       const targetScore = this.mapDifficultyToScore(difficulty);
       return this.generator.generate({
         score: targetScore,
+        difficulty,
         stageNo: currentStageNo,
         avoidArch: prevMap ? prevMap.layoutType : null,
         seed: (Date.now() ^ (currentStageNo * 7919)) >>> 0

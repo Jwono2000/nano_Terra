@@ -1,0 +1,199 @@
+﻿{
+  "id": 22,
+  "difficulty": "nightmare",
+  "title": "[NIGHTMARE] TITAN (NIGHTMARE)",
+  "desc": "[ASCENT] CITADEL_ASCENT — 하단 암벽 돌파 후 다단 계단 등반(BUILDx2→BASH→BUILD) OR 비밀 벙커 점프패드. (점수: 162pt, 정석: BASH → BASH → BUILD → BUILD → BASH → BUILD → BUILD)",
+  "bgImg": "assets/bg_level_2.jpg",
+  "terrainTheme": "red",
+  "biome": "volcanicRift",
+  "totalUnits": 22,
+  "needPercent": 80,
+  "spawnRate": 20,
+  "timeLimit": 234,
+  "spawnX": 123,
+  "spawnY": 277,
+  "gateX": 736,
+  "gateY": 171,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 4,
+    "mine": 1,
+    "drill": 0,
+    "bomb": 1,
+    "build": 5,
+    "block": 1,
+    "portal": 0
+  },
+  "elements": [
+    {
+      "type": "steelBarrier",
+      "x": 52,
+      "y": 237,
+      "w": 20,
+      "h": 80
+    },
+    {
+      "type": "platform",
+      "x": 52,
+      "y": 317,
+      "w": 220,
+      "h": 20,
+      "palette": "red"
+    },
+    {
+      "type": "rockWall",
+      "x": 182,
+      "y": 257,
+      "w": 30,
+      "h": 60,
+      "palette": "red"
+    },
+    {
+      "type": "jumpPad",
+      "x": 227,
+      "y": 307,
+      "w": 40,
+      "h": 10,
+      "dir": "up-right",
+      "power": 5.8,
+      "palette": "red"
+    },
+    {
+      "type": "craggyRock",
+      "x": 352,
+      "y": 277,
+      "w": 100,
+      "h": 40,
+      "palette": "red",
+      "profile": [
+        14,
+        16,
+        33,
+        27
+      ]
+    },
+    {
+      "type": "rockWall",
+      "x": 392,
+      "y": 217,
+      "w": 30,
+      "h": 60,
+      "palette": "red"
+    },
+    {
+      "type": "platform",
+      "x": 532,
+      "y": 237,
+      "w": 80,
+      "h": 20,
+      "palette": "red"
+    },
+    {
+      "type": "rockWall",
+      "x": 562,
+      "y": 177,
+      "w": 30,
+      "h": 60,
+      "palette": "red"
+    },
+    {
+      "type": "platform",
+      "x": 692,
+      "y": 197,
+      "w": 80,
+      "h": 20,
+      "palette": "red"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 752,
+      "y": 117,
+      "w": 20,
+      "h": 80
+    },
+    {
+      "type": "volcanicBasalt",
+      "x": 0,
+      "y": 0,
+      "w": 800,
+      "h": 20,
+      "palette": "red",
+      "profile": [
+        12,
+        20,
+        13,
+        12,
+        18,
+        12,
+        14,
+        18,
+        17,
+        16,
+        16,
+        15,
+        19,
+        14,
+        12,
+        16
+      ]
+    }
+  ],
+  "solutionDna": [
+    "BASH",
+    "BASH",
+    "BUILD",
+    "BUILD",
+    "BASH",
+    "BUILD",
+    "BUILD"
+  ],
+  "difficultyScore": 162,
+  "difficultyFactors": {
+    "timingCount": 100,
+    "sequenceLength": 100,
+    "comboSynergy": 74,
+    "uniqueSkills": 2,
+    "skillTransitions": 3
+  },
+  "layoutType": "ascent",
+  "seed": 1870208512,
+  "_meta": {
+    "seed": 1870216431,
+    "archetype": "ascent",
+    "gimmickLabel": "CITADEL_ASCENT",
+    "shortcutHint": "하단 암벽 돌파 후 다단 계단 등반(BUILDx2→BASH→BUILD) OR 비밀 벙커 점프패드",
+    "difficulty": "NIGHTMARE",
+    "architecturalFeaturesIntegrated": true,
+    "attempt": 2,
+    "antiCheeseVerified": true,
+    "simVerified": true,
+    "rescuedRatio": "10/10"
+  },
+  "genParams": {
+    "difficulty": "nightmare",
+    "layout": "random",
+    "theme": "random",
+    "palette": "random",
+    "includeMovingPlatform": false,
+    "includeOptionA": true,
+    "includeOptionB": true
+  },
+  "verification": {
+    "adapter": "reference",
+    "solvable": false,
+    "plan": null,
+    "score": null,
+    "scoreParts": null,
+    "band": "nightmare",
+    "requiredSkills": null,
+    "criticalActions": 7,
+    "alternatives": 1,
+    "zeroSkillShortcut": false,
+    "lintOk": true,
+    "reasons": [
+      "sim-verified-pass"
+    ],
+    "nodes": 3000,
+    "checkedAt": "2026-11-13T14:43:58.103Z"
+  }}

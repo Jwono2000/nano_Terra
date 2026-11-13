@@ -386,7 +386,10 @@
           palette: intent.palette,
           stageNo: intent.stageNo,
           id: intent.id,
-          seed: intent.seed
+          seed: intent.seed,
+          includeMovingPlatform: intent.includeMovingPlatform,
+          includeOptionA: intent.includeOptionA,
+          includeOptionB: intent.includeOptionB
         });
       }
 
@@ -655,7 +658,10 @@
         skillPool: options.skillPool,
         stageNo: options.stageNo || 11,
         id: options.id || 'CUSTOM',
-        seed
+        seed,
+        includeMovingPlatform: options.includeMovingPlatform,
+        includeOptionA: options.includeOptionA,
+        includeOptionB: options.includeOptionB
       });
     }
 

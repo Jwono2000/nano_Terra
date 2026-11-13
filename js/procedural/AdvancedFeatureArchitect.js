@@ -250,6 +250,7 @@
    */
   function injectFeatures(stageData, opts = {}) {
     if (!stageData || !stageData.elements) return stageData;
+    if (stageData._meta && stageData._meta.architecturalFeaturesIntegrated) return stageData;
 
     const data = JSON.parse(JSON.stringify(stageData));
     const seed = opts.seed != null ? opts.seed : (data.seed || 12345);

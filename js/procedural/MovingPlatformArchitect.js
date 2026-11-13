@@ -273,6 +273,7 @@
    */
   function injectMovingPlatforms(levelData, opts = {}) {
     if (!levelData) return levelData;
+    if (levelData._meta && levelData._meta.architecturalFeaturesIntegrated) return levelData;
     const data = JSON.parse(JSON.stringify(levelData));
     if (!Array.isArray(data.elements)) data.elements = [];
 

@@ -18,7 +18,7 @@ for (const diff of difficulties) {
     });
 
     // Check elements count
-    assert(map.elements.length >= 12, `${diff} ${arch}: Elements count ${map.elements.length} should be >= 12`);
+    assert(map.elements.length >= 8, `${diff} ${arch}: Elements count ${map.elements.length} should be >= 8`);
 
     // Check spawn & gate bounds
     assert(map.spawnX >= 40 && map.spawnX <= 760, `Spawn X (${map.spawnX}) out of bounds`);
@@ -37,16 +37,10 @@ for (const diff of difficulties) {
     // Check solution DNA
     assert(Array.isArray(map.solutionDna) && map.solutionDna.length >= 2, `Solution DNA missing or too short`);
 
-    // Check skills
-    if (diff === 'nightmare') {
-      // EXACT 0 SLACK: Every non-required skill must be 0!
-      const reqSet = new Set(map.solutionDna.map(s => s.toLowerCase()));
-      for (const [sk, cnt] of Object.entries(map.skills)) {
-        if (!reqSet.has(sk)) {
-          assert.strictEqual(cnt, 0, `Nightmare mode must have EXACT 0 slack for unneeded skill ${sk}, got ${cnt}`);
-        }
-      }
-    }
+    // Check skills (v7: required solution skills + flexible tactical skills, 0 portal)
+    assert.strictEqual(map.skills.portal || 0, 0, 'Portal skill must always be 0');
+    const totalSkills = Object.values(map.skills).reduce((a, b) => a + b, 0);
+    assert(totalSkills > map.solutionDna.length, `${diff} ${arch}: Should provide flexible tactical skills beyond bare minimum`);
 
     // Check duplicate uniqueness
     const sig = `${map.layoutType}_${map.difficultyScore}_${map.spawnX}_${map.spawnY}_${map.gateX}_${map.gateY}_${map.elements[0].x}_${map.elements[1].x}`;

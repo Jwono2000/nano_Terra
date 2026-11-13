@@ -497,6 +497,10 @@ class LevelEditor {
     if (statusBox) {
       const dnaStr = (this.levelData.solutionDna || []).join(' → ') || 'CUSTOM';
       const archStr = this.levelData.layoutType || 'random';
+      const meta = this.levelData._meta || {};
+      const typeLabel = meta.gimmickLabel ? `${archStr.toUpperCase()} / ${meta.gimmickLabel}` : archStr.toUpperCase();
+      const varLabel = meta.variantName ? ` (${meta.variantName})` : '';
+      const hintLine = meta.shortcutHint ? `<br>• 💡 공략/시크릿: <b style="color:#7df9ff;">${meta.shortcutHint}</b>` : '';
       const lint = this.lintResult;
       const lintStr = lint ? `${lint.errors.length ? '⛔' : '✅'} 린트 ${lint.summary}` : '';
       let verifyStr = '';
@@ -514,10 +518,10 @@ class LevelEditor {
       statusBox.style.display = 'block';
       statusBox.innerHTML = `
         <div style="color:#00ff88; font-weight:bold; font-size:12px; margin-bottom:4px;">
-          ✨ [${(difficulty || 'normal').toUpperCase()}] 새 맵 생성 완료! (${(this.levelData.elements || []).length}개 지형) · 🎲 seed ${this.levelData.seed}
+          ✨ [${(difficulty || 'normal').toUpperCase()}] [${typeLabel}]${varLabel} 생성 완료! (${(this.levelData.elements || []).length}개 지형) · 🎲 seed ${this.levelData.seed}
         </div>
         <div style="color:#a0e8ff; font-size:11px; line-height:1.4;">
-          • 레이아웃: <b style="color:#fff;">${archStr}</b> | 솔루션 DNA: <b style="color:#ffcc00;">${dnaStr}</b> | ${lintStr}${verifyStr}<br>
+          • 아키타입: <b style="color:#fff;">${typeLabel}${varLabel}</b> | 정석 해법 DNA: <b style="color:#ffcc00;">${dnaStr}</b> | ${lintStr}${hintLine}${verifyStr}<br>
           • 마음에 들 때까지 <b>'🎲 즉시 생성'</b>을 계속 눌러 새로운 맵을 뽑아볼 수 있습니다! (시드 고정 시 같은 맵 재현)
         </div>
       `;

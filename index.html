@@ -699,23 +699,23 @@
         <div class="prop-group">
           <label class="prop-label">난이도 (DIFFICULTY)</label>
           <select class="prop-select" id="gen-difficulty">
-            <option value="easy">EASY (초급: 2~3단계 액션, 여유 스킬 +3)</option>
-            <option value="normal" selected>NORMAL (중급: 3~5단계 액션, 강철벽 배치)</option>
-            <option value="hard">HARD (고급: 5~7단계 콤보, 170px 치사낙하, 가짜길)</option>
-            <option value="nightmare">NIGHTMARE (극한: 7~9단계, 스킬 여유 0개, 미끼스킬)</option>
+            <option value="easy">EASY (초급: 선발대 개척 입문 + 여유 스킬 +3 + 히든 루트)</option>
+            <option value="normal" selected>NORMAL (중급: 선발/본대 2페이즈 협동 + 여유 스킬 +2)</option>
+            <option value="hard">HARD (고급: 복합 지형 우회 & 시크릿 지름길 + 여유 스킬 +1)</option>
+            <option value="nightmare">NIGHTMARE (극한: 칼타이밍 선발 개척 & 고득점 지름길)</option>
           </select>
         </div>
 
         <div class="prop-group">
-          <label class="prop-label">맵 레이아웃 형태</label>
+          <label class="prop-label">맵 레이아웃 형태 (6대 매크로 퍼즐 타입 × 3종 변형)</label>
           <select class="prop-select" id="gen-layout">
-            <option value="random" selected>🎲 완전 무작위 아키타입 (매번 새로운 맵)</option>
-            <option value="descent">하강 캐스케이드 (Descent - 낙하/Float 중심)</option>
-            <option value="ascent">상승 스카이라인 (Ascent - Build/Climb 중심)</option>
-            <option value="traverse">장거리 횡단 (Traverse - Bash/Mine/Drill 돌파)</option>
-            <option value="split">상/하 2단 분기 (Split - Drill/Build 왕복)</option>
-            <option value="chamber">강철 챔버/밀폐 구역 (Chamber - Drill/Bomb 탈출)</option>
-            <option value="zigzag">지그재그 반전 회랑 (Zigzag - 정밀 회랑)</option>
+            <option value="random" selected>🎲 6대 퍼즐 아키타입 셔플 순환 (중복 없이 매번 새로운 구조)</option>
+            <option value="cascade">1. 선발대 단층 협곡 (PIONEER_RIFT - 월담 가교 & 비밀 갱도)</option>
+            <option value="chamber">2. 강철 벙커 언더패스 (UNDERPASS_BUNKER - 지하 잠입 & 리프트)</option>
+            <option value="zigzag">3. 스위치백 3단 회랑 (SWITCHBACK_TERRACE - 반전 굴착 & 외벽 시크릿)</option>
+            <option value="split">4. 본대 감금 & 후방 해방 (BACKDOOR_CHAMBER - 선봉 개척 후 일괄 구출)</option>
+            <option value="traverse">5. 강철 코어 산악 우회 (CORE_MOUNTAIN - 하부 갱도 & 징검다리 요새)</option>
+            <option value="ascent">6. 시타델 다단 등반 (CITADEL_ASCENT - 천공 성채 계단 & 점프패드)</option>
           </select>
         </div>
 
@@ -958,14 +958,14 @@
   <script src="js/procedural/PuzzleGrammar.js?v=7"></script>
   <script src="js/procedural/VirtualMapValidator.js?v=7"></script>
   <script src="js/procedural/AutoSolver.js?v=7"></script>
-  <script src="js/procedural/FullCanvasLevelArchitect.js?v=14"></script>
-  <script src="js/procedural/ProceduralMapEngine.js?v=11"></script>
+  <script src="js/procedural/FullCanvasLevelArchitect.js?v=15"></script>
+  <script src="js/procedural/ProceduralMapEngine.js?v=12"></script>
   <script src="js/procedural/MovingPlatformArchitect.js?v=2"></script>
   <script src="js/procedural/AdvancedFeatureArchitect.js?v=3"></script>
   <script src="js/editor/LevelLint.js?v=1"></script>
   <script src="js/procedural/LevelSolver.js?v=1"></script>
   <script src="js/editor/StageManager.js?v=10"></script>
-  <script src="js/editor/LevelEditor.js?v=12"></script>
+  <script src="js/editor/LevelEditor.js?v=13"></script>
   <script src="js/engine/GameEngine.js?v=16"></script>
   <script src="js/main.js?v=12"></script>
 </body>

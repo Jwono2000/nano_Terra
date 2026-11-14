@@ -244,7 +244,7 @@
       return bp;
     }
 
-    static sculptArchitecturalSilhouette(bp, styleIdx, R, pal) {
+    static sculptArchitecturalSilhouette(bp, styleIdx, R, pal, stageNo = 1) {
       const elements = bp.elements;
       // Remove any flat ceiling at y=0, w=800
       for (let i = elements.length - 1; i >= 0; i--) {
@@ -264,9 +264,36 @@
         '크리스탈 지오드 돔',
         '화산 현무암 성채',
         '쌍둥이 아치 기암협곡',
-        '사이버네틱 크롬 아치'
+        '사이버네틱 크롬 아치',
+        '부유 거석 산맥',
+        '심연 칼데라 요새'
       ];
-      const safeIdx = ((styleIdx % 6) + 6) % 6;
+      const safeIdx = ((styleIdx % 8) + 8) % 8;
+
+      // 0) Stage 23 스타일 반강철 복합벽(Half-Steel Composite Wall [M2]) 자동 변환:
+      // CLIMB 대상이 아닌 내부 rockWall(h >= 55, w <= 35)의 상단 16px을 강철 캡(steelBarrier)으로 변환하여
+      // 단순 등반(CLIMB) 날먹을 물리적으로 차단하고 복합 장애물 비주얼을 강화함
+      const climbTargets = (bp.actionPlan || [])
+        .filter(s => s.act === 'CLIMB')
+        .map(s => s.atWallX || s.atX || 0);
+      const baseWalls = elements.filter(
+        e => e.type === 'rockWall' && e.w <= 35 && e.h >= 55 && e.x >= 80 && e.x <= 700
+      );
+      baseWalls.forEach((rw, wIdx) => {
+        const isClimbTarget = climbTargets.some(cx => Math.abs(cx - rw.x) <= 32 || Math.abs(cx - (rw.x + rw.w)) <= 32);
+        if (!isClimbTarget && ((wIdx + safeIdx) % 2 === 0)) {
+          const capH = 16;
+          elements.push({
+            type: 'steelBarrier',
+            x: rw.x,
+            y: rw.y,
+            w: rw.w,
+            h: capH
+          });
+          rw.y += capH;
+          rw.h -= capH;
+        }
+      });
 
       // 1) Multi-Material Strata Diversification across floor slabs (y >= 90, h <= 25)
       const slabMaterials = ['craggyRock', 'volcanicBasalt', 'quantumCrystal', 'platform'];
@@ -275,14 +302,14 @@
       );
       slabs.forEach((s, idx) => {
         if (s.h <= 25) {
-          s.type = slabMaterials[(safeIdx + idx) % slabMaterials.length];
+          s.type = slabMaterials[(safeIdx + idx + (stageNo % 4)) % slabMaterials.length];
           if (s.type !== 'platform' && !s.profile) {
             s.profile = R.profile(Math.max(4, Math.min(10, Math.round(s.w / 35))), 12, 24);
           }
         }
       });
 
-      // 2) Under-Slab Floating Island Crags (polygonRock) & Chrome Truss Struts (diagonalBeam)
+      // 2) Stage 18/19/22 스타일 거대 폴리곤 암산 뿌리(polygonRock [M4]) & 크롬 트러스(diagonalBeam [M7])
       const protectedX = (bp.actionPlan || [])
         .map(s => s.atX || s.atWallX || s.atEdgeX || 0)
         .filter(Boolean);
@@ -291,11 +318,11 @@
       slabs.forEach((s, idx) => {
         if (s.w < 110) return;
         const subY0 = s.y + s.h;
-        const subY1 = subY0 + R.irange(24, 38);
+        const subY1 = subY0 + R.irange(26, 44);
         if (subY1 >= 415) return;
 
         const centerX = s.x + s.w * 0.5;
-        const spanW = Math.min(86, Math.round(s.w * 0.42));
+        const spanW = Math.min(96, Math.round(s.w * 0.46));
         const rx0 = Math.round(centerX - spanW / 2);
         const rx1 = Math.round(centerX + spanW / 2);
 
@@ -324,6 +351,7 @@
         if (hitsOther) return;
 
         if ((safeIdx + idx) % 2 === 0) {
+          const midX = Math.round((rx0 + rx1) / 2) + R.irange(-8, 8);
           elements.push({
             type: 'polygonRock',
             palette: pal,
@@ -332,9 +360,9 @@
             points: [
               { x: rx0, y: subY0 },
               { x: rx1, y: subY0 },
-              { x: rx1 - 12, y: Math.round((subY0 + subY1) / 2) },
-              { x: Math.round((rx0 + rx1) / 2), y: subY1 },
-              { x: rx0 + 12, y: Math.round((subY0 + subY1) / 2) }
+              { x: rx1 - 10, y: Math.round((subY0 + subY1) / 2) },
+              { x: midX, y: subY1 },
+              { x: rx0 + 10, y: Math.round((subY0 + subY1) / 2) }
             ]
           });
         } else {
@@ -350,7 +378,30 @@
         }
       });
 
-      // 3) 6 Distinct Ceiling / Sky Silhouettes (appended last so elements[0], [1] remain rect obstacles)
+      // 3) 심연 바닥(y=426..450) 다각형 암산 첨탑(Subterranean PolygonRock Spires [M4]) — 물리 간섭 0%
+      const spireCount = 3 + (stageNo % 3);
+      for (let sIdx = 0; sIdx < spireCount; sIdx++) {
+        const sx0 = 40 + sIdx * Math.floor(700 / spireCount) + R.irange(-15, 15);
+        const sw = R.irange(70, 130);
+        const sx1 = Math.min(780, sx0 + sw);
+        const peakY = R.irange(426, 434);
+        const mat = slabMaterials[(safeIdx + sIdx) % 3];
+        elements.push({
+          type: 'polygonRock',
+          palette: pal,
+          material: mat === 'platform' ? 'craggyRock' : mat,
+          isSteel: false,
+          points: [
+            { x: sx0, y: 450 },
+            { x: Math.round(sx0 + sw * 0.28), y: peakY + 5 },
+            { x: Math.round((sx0 + sx1) / 2), y: peakY },
+            { x: Math.round(sx0 + sw * 0.75), y: peakY + 6 },
+            { x: sx1, y: 450 }
+          ]
+        });
+      }
+
+      // 4) 8 Distinct Ceiling / Sky Silhouettes (appended last so elements[0], [1] remain rect obstacles)
       if (safeIdx === 0) {
         const segs = [[0, 140], [175, 310], [345, 465], [500, 635], [670, 800]];
         for (const [x0, x1] of segs) {
@@ -421,10 +472,37 @@
           isSteel: false,
           points: [{ x: 470, y: 0 }, { x: 800, y: 0 }, { x: 800, y: hA }, { x: 660, y: hA + 4 }, { x: 510, y: hA }]
         });
-      } else {
+      } else if (safeIdx === 5) {
         elements.push({ type: 'steelPlatform', x: 0, y: 0, w: 240, h: 14, palette: pal, isSteel: true });
         elements.push({ type: 'steelPlatform', x: 290, y: 0, w: 220, h: 14, palette: pal, isSteel: true });
         elements.push({ type: 'steelPlatform', x: 560, y: 0, w: 240, h: 14, palette: pal, isSteel: true });
+      } else if (safeIdx === 6) {
+        const hM = Math.min(maxCeilH, 24);
+        elements.push({
+          type: 'polygonRock',
+          palette: pal,
+          material: 'quantumCrystal',
+          isSteel: false,
+          points: [{ x: 60, y: 0 }, { x: 260, y: 0 }, { x: 220, y: hM }, { x: 160, y: hM + 4 }, { x: 95, y: hM }]
+        });
+        elements.push({
+          type: 'polygonRock',
+          palette: pal,
+          material: 'quantumCrystal',
+          isSteel: false,
+          points: [{ x: 540, y: 0 }, { x: 740, y: 0 }, { x: 705, y: hM }, { x: 640, y: hM + 4 }, { x: 580, y: hM }]
+        });
+      } else {
+        const hK = Math.min(maxCeilH, 22);
+        elements.push({ type: 'steelPlatform', x: 0, y: 0, w: 150, h: 14, palette: pal, isSteel: true });
+        elements.push({
+          type: 'polygonRock',
+          palette: pal,
+          material: 'volcanicBasalt',
+          isSteel: false,
+          points: [{ x: 240, y: 0 }, { x: 560, y: 0 }, { x: 510, y: hK }, { x: 400, y: hK + 5 }, { x: 290, y: hK }]
+        });
+        elements.push({ type: 'steelPlatform', x: 650, y: 0, w: 150, h: 14, palette: pal, isSteel: true });
       }
 
       return styleNames[safeIdx];
@@ -445,11 +523,11 @@
 
       let variant = 0;
       if (opts.variant != null) {
-        variant = ((opts.variant % 5) + 5) % 5;
+        variant = ((opts.variant % 6) + 6) % 6;
       } else {
         this._variantByArch = this._variantByArch || {};
         const prev = this._variantByArch[archetype];
-        variant = prev == null ? 0 : (prev + 1) % 5;
+        variant = prev == null ? 0 : (prev + 1) % 6;
         this._variantByArch[archetype] = variant;
       }
 
@@ -564,7 +642,7 @@
               { act: 'MINE', count: 1, role: 'pioneer', atX: 530, dir: 1 },
               { act: 'BUILD', count: 1, role: 'pioneer', atEdgeX: 644, dir: 1 }
             ];
-          } else {
+          } else if (variant === 4) {
             variantName = 'V5: 코어 오버로드 공명실(BOMB) & 반강철 미끼 단층';
             shortcutHint = 'BASH가 부족한 스킬 기아! 상부 150px 공명실에서 우측 벽 반전 직후 BOMB(5초 카운트다운)으로 반강철 복합벽을 폭파 돌파';
             elements.push({ type: 'steelBarrier', x: 70, y: 40, w: 20, h: 60 });
@@ -590,6 +668,38 @@
               { act: 'BASH', role: 'pioneer', atWallX: 390, count: 1 },
               { act: 'BASH', role: 'pioneer', atWallX: 560, count: 1 },
               { act: 'BUILD', role: 'pioneer', atEdgeX: 624, dir: 1, count: 1 }
+            ];
+          } else {
+            variantName = 'V6: 스폰 백도어 반전[M1] & 1타 2피 강철턱[M5] & 수직 엘리베이터[M3]';
+            shortcutHint = '정면(우측)은 강철 미끼 함정! 반전 후 스폰 뒤쪽(좌측) 반강철 백도어를 뚫고 하부 언더패스 → 1타 2피 계단(낭떠러지+12px 강철턱 동시 돌파) → 수직 엘리베이터 통과';
+            elements.push(this.makeSlab(180, 100, 190, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'steelPlatform', x: 230, y: 120, w: 140, h: 16, palette: pal, isSteel: true });
+            elements.push({ type: 'steelBarrier', x: 325, y: 30, w: 20, h: 70 });
+            elements.push({ type: 'rockWall', x: 345, y: 30, w: 25, h: 70, palette: pal });
+            elements.push({ type: 'steelBarrier', x: 200, y: 15, w: 25, h: 25 });
+            elements.push({ type: 'rockWall', x: 200, y: 40, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(90, 160, 120, 20, R, pal, 'volcanicBasalt'));
+            elements.push({ type: 'steelBarrier', x: 90, y: 100, w: 20, h: 60 });
+            elements.push(this.makeSlab(170, 220, 230, 20, R, pal, 'platform'));
+            elements.push({ type: 'steelBarrier', x: 170, y: 180, w: 20, h: 40 });
+            elements.push({ type: 'rockWall', x: 310, y: 160, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(420, 220, 170, 20, R, pal, 'quantumCrystal'));
+            // [M5] 1타 2피: 20px 낭떠러지 너머 착지점에 12px 강철 턱 배치 (계단 1개로 낭떠러지+강철턱 동시 돌파!)
+            elements.push({ type: 'steelBarrier', x: 420, y: 208, w: 10, h: 12 });
+            if (useMoving) {
+              elements.push({ type: 'movingPlatform', x: 580, y: 225, w: 50, h: 12, axis: 'vertical', range: 35, speed: 0.8, pauseTicks: 12, palette: pal });
+            }
+            elements.push(this.makeSlab(600, 270, 160, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'rockWall', x: 650, y: 210, w: 25, h: 60, palette: pal });
+            elements.push({ type: 'steelBarrier', x: 740, y: 190, w: 20, h: 80 });
+            spawn = { x: 265, y: 65 };
+            gate = { x: 715, y: 244 };
+            actionPlan = [
+              { act: 'BASH', role: 'pioneer', atWallX: 225, dir: -1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 310, dir: 1, count: 1 },
+              { act: 'BUILD', role: 'pioneer', atEdgeX: 394, dir: 1, count: 1 },
+              ...(useMoving ? [] : [{ act: 'BUILD', role: 'pioneer', atEdgeX: 584, dir: 1, count: 1 }]),
+              { act: 'BASH', role: 'pioneer', atWallX: 650, dir: 1, count: 1 }
             ];
           }
           break;
@@ -693,7 +803,7 @@
               { act: 'BUILD', count: 1, role: 'pioneer', atEdgeX: 624, dir: 1 },
               { act: 'BASH', count: 1, role: 'crowd', atWallX: 185 }
             ];
-          } else {
+          } else if (variant === 4) {
             variantName = 'V5: 강철 밀폐 독방 바닥 폭파(BOMB) & 반강철 미끼 요새';
             shortcutHint = 'DRILL 0개 지급! 좌측 바닥은 강철 미끼이므로 우측 강철벽 반전 타이밍에 BOMB을 발동해 우측 바닥을 폭파 탈출';
             elements.push({ type: 'steelBarrier', x: 60, y: 40, w: 20, h: 60 });
@@ -716,6 +826,37 @@
               { act: 'BASH', role: 'pioneer', atWallX: 340, count: 1 },
               { act: 'BUILD', role: 'pioneer', atEdgeX: 414, dir: 1, count: 1 },
               { act: 'BASH', role: 'pioneer', atWallX: 580, count: 1 }
+            ];
+          } else {
+            variantName = 'V6: 백도어 150px 공명 폭탄[M1+M9] & 1타 2피 강철턱[M5] & 수직 엘리베이터[M3]';
+            shortcutHint = '우측은 강철 봉쇄! 150px 공명실에서 좌측 백도어 반전 타이밍 BOMB으로 뒤쪽 벽을 폭파한 뒤 언더패스 1타 2피 계단 돌파';
+            elements.push(this.makeSlab(180, 100, 200, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'steelPlatform', x: 180, y: 100, w: 70, h: 20, palette: pal, isSteel: true });
+            elements.push({ type: 'steelPlatform', x: 230, y: 120, w: 150, h: 16, palette: pal, isSteel: true });
+            elements.push({ type: 'steelBarrier', x: 360, y: 30, w: 20, h: 70 });
+            elements.push({ type: 'steelBarrier', x: 190, y: 15, w: 20, h: 25 });
+            elements.push({ type: 'rockWall', x: 190, y: 40, w: 20, h: 60, palette: pal });
+            elements.push(this.makeSlab(90, 160, 120, 20, R, pal, 'volcanicBasalt'));
+            elements.push({ type: 'steelBarrier', x: 90, y: 100, w: 20, h: 60 });
+            elements.push(this.makeSlab(170, 220, 230, 20, R, pal, 'platform'));
+            elements.push({ type: 'steelBarrier', x: 170, y: 180, w: 20, h: 40 });
+            elements.push({ type: 'rockWall', x: 310, y: 160, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(420, 220, 170, 20, R, pal, 'quantumCrystal'));
+            elements.push({ type: 'steelBarrier', x: 420, y: 208, w: 10, h: 12 });
+            if (useMoving) {
+              elements.push({ type: 'movingPlatform', x: 580, y: 225, w: 50, h: 12, axis: 'vertical', range: 35, speed: 0.8, pauseTicks: 12, palette: pal });
+            }
+            elements.push(this.makeSlab(600, 270, 160, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'rockWall', x: 650, y: 210, w: 25, h: 60, palette: pal });
+            elements.push({ type: 'steelBarrier', x: 740, y: 190, w: 20, h: 80 });
+            spawn = { x: 280, y: 65 };
+            gate = { x: 715, y: 244 };
+            actionPlan = [
+              { act: 'BOMB', role: 'pioneer', atX: 216, dir: 1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 310, dir: 1, count: 1 },
+              { act: 'BUILD', role: 'pioneer', atEdgeX: 394, dir: 1, count: 1 },
+              ...(useMoving ? [] : [{ act: 'BUILD', role: 'pioneer', atEdgeX: 584, dir: 1, count: 1 }]),
+              { act: 'BASH', role: 'pioneer', atWallX: 650, dir: 1, count: 1 }
             ];
           }
           break;
@@ -819,7 +960,7 @@
               { act: 'MINE', count: 1, role: 'pioneer', atX: 350, dir: 1 },
               { act: 'BUILD', count: 1, role: 'pioneer', atEdgeX: 604, dir: 1 }
             ];
-          } else {
+          } else if (variant === 4) {
             variantName = 'V5: 스위치백 코너 폭탄(BOMB) & 미끼 암벽 회랑';
             shortcutHint = '상단 우측 암벽 뒤엔 강철 코어가 숨겨진 미끼! 150px 공명실 코너에서 BOMB으로 바닥을 폭파해 2층 스위치백으로 진입';
             elements.push({ type: 'steelBarrier', x: 380, y: 30, w: 20, h: 60 });
@@ -844,6 +985,31 @@
               { act: 'BOMB', role: 'pioneer', atX: 544, dir: -1, count: 1 },
               { act: 'BASH', role: 'pioneer', atWallX: 375, dir: -1, count: 1 },
               { act: 'MINE', role: 'pioneer', atX: 230, dir: -1, count: 1 },
+              { act: 'BUILD', role: 'pioneer', atEdgeX: 374, dir: 1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 560, dir: 1, count: 1 }
+            ];
+          } else {
+            variantName = 'V6: 백도어 스위치백[M1] & 크롬 트러스 사선채굴[M7] & 1타 2피 강철턱[M5]';
+            shortcutHint = '우측 미끼벽 반전 후 좌측 백도어 격파 → 크롬 트러스(diagonalBeam) 가이드 사선 채굴(MINE) → 1타 2피 계단으로 강철턱 돌파';
+            elements.push(this.makeSlab(380, 90, 260, 20, R, pal, 'platform'));
+            elements.push({ type: 'steelBarrier', x: 600, y: 30, w: 20, h: 60 });
+            elements.push({ type: 'rockWall', x: 620, y: 30, w: 25, h: 60, palette: pal });
+            elements.push({ type: 'rockWall', x: 440, y: 30, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(110, 140, 480, 40, R, pal, 'craggyRock'));
+            elements.push({ type: 'steelPlatform', x: 440, y: 180, w: 150, h: 14, palette: pal, isSteel: true });
+            elements.push({ type: 'diagonalBeam', x: 350, y: 180, w: 60, h: 24, dir: 'downLeft', thickness: 12 });
+            elements.push({ type: 'steelBarrier', x: 110, y: 80, w: 20, h: 60 });
+            elements.push(this.makeSlab(80, 240, 300, 20, R, pal, 'volcanicBasalt'));
+            elements.push({ type: 'steelBarrier', x: 80, y: 180, w: 20, h: 60 });
+            elements.push(this.makeSlab(400, 240, 360, 20, R, pal, 'quantumCrystal'));
+            elements.push({ type: 'steelBarrier', x: 400, y: 228, w: 10, h: 12 });
+            elements.push({ type: 'rockWall', x: 560, y: 180, w: 25, h: 60, palette: pal });
+            elements.push({ type: 'steelBarrier', x: 740, y: 160, w: 20, h: 80 });
+            spawn = { x: 540, y: 50 };
+            gate = { x: 680, y: 214 };
+            actionPlan = [
+              { act: 'BASH', role: 'pioneer', atWallX: 465, dir: -1, count: 1 },
+              { act: 'MINE', role: 'pioneer', atX: 220, dir: -1, count: 1 },
               { act: 'BUILD', role: 'pioneer', atEdgeX: 374, dir: 1, count: 1 },
               { act: 'BASH', role: 'pioneer', atWallX: 560, dir: 1, count: 1 }
             ];
@@ -945,7 +1111,7 @@
               { act: 'BUILD', count: 1, role: 'pioneer', atEdgeX: 614, dir: 1 },
               { act: 'BASH', count: 1, role: 'crowd', atWallX: 185 }
             ];
-          } else {
+          } else if (variant === 4) {
             variantName = 'V5: 본대 150px 공명실 폭탄 해방(BOMB) & 선발대 선제 개척';
             shortcutHint = 'BASH는 상단 성벽 2개뿐! 선발대가 CLIMB로 상단 루트를 개척한 뒤, 본대는 150px 감금실 반전 타이밍 BOMB으로 감금벽을 폭파 탈출';
             elements.push({ type: 'steelBarrier', x: 60, y: 140, w: 20, h: 80 });
@@ -967,12 +1133,42 @@
               { act: 'BASH', role: 'pioneer', atWallX: 580, count: 1 },
               { act: 'BOMB', role: 'crowd', atX: 224, dir: -1, count: 1 }
             ];
+          } else {
+            variantName = 'V6: 백도어 선발대 월담[M1+M6] & 1타 2피 강철턱[M5] & 후방 본대 해방';
+            shortcutHint = '우측은 강철 봉쇄! 선발대가 좌측 백도어를 CLIMB로 넘어 하부 언더패스와 1타 2피 강철턱 다리를 완성한 뒤 좌측 감금벽을 열어 본대 해방';
+            elements.push(this.makeSlab(180, 100, 190, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'steelPlatform', x: 200, y: 120, w: 170, h: 16, palette: pal, isSteel: true });
+            elements.push({ type: 'steelBarrier', x: 330, y: 30, w: 20, h: 70 });
+            elements.push({ type: 'rockWall', x: 200, y: 40, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(90, 160, 120, 20, R, pal, 'volcanicBasalt'));
+            elements.push({ type: 'steelBarrier', x: 90, y: 100, w: 20, h: 60 });
+            elements.push(this.makeSlab(170, 220, 230, 20, R, pal, 'platform'));
+            elements.push({ type: 'steelBarrier', x: 170, y: 180, w: 20, h: 40 });
+            elements.push({ type: 'rockWall', x: 310, y: 160, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(420, 220, 170, 20, R, pal, 'quantumCrystal'));
+            elements.push({ type: 'steelBarrier', x: 420, y: 208, w: 10, h: 12 });
+            if (useMoving) {
+              elements.push({ type: 'movingPlatform', x: 580, y: 225, w: 50, h: 12, axis: 'vertical', range: 35, speed: 0.8, pauseTicks: 12, palette: pal });
+            }
+            elements.push(this.makeSlab(600, 270, 160, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'rockWall', x: 650, y: 210, w: 25, h: 60, palette: pal });
+            elements.push({ type: 'steelBarrier', x: 740, y: 190, w: 20, h: 80 });
+            spawn = { x: 265, y: 65 };
+            gate = { x: 715, y: 244 };
+            actionPlan = [
+              { act: 'CLIMB', role: 'pioneer', atWallX: 225, dir: -1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 310, dir: 1, count: 1 },
+              { act: 'BUILD', role: 'pioneer', atEdgeX: 394, dir: 1, count: 1 },
+              ...(useMoving ? [] : [{ act: 'BUILD', role: 'pioneer', atEdgeX: 584, dir: 1, count: 1 }]),
+              { act: 'BASH', role: 'pioneer', atWallX: 650, dir: 1, count: 1 },
+              { act: 'BASH', role: 'crowd', atWallX: 225, dir: -1, count: 1 }
+            ];
           }
           break;
         }
 
         /* --------------------------------------------------------------
-         * 5. TRAVERSE -> CORE_MOUNTAIN (강철 코어 산악 우회 & 5종 변형)
+         * 5. TRAVERSE -> CORE_MOUNTAIN (강철 코어 산악 우회 & 6종 변형)
          * ------------------------------------------------------------*/
         case 'traverse': {
           gimmickLabel = 'CORE_MOUNTAIN';
@@ -1061,7 +1257,7 @@
               { act: 'BASH', count: 1, role: 'pioneer', atWallX: 525 },
               { act: 'BUILD', count: 1, role: 'pioneer', atEdgeX: 659, dir: 1 }
             ];
-          } else {
+          } else if (variant === 4) {
             variantName = 'V5: 반강철 복합 성벽 폭탄 돌파(BOMB) & 중앙 암산 우회';
             shortcutHint = 'BASH 1개 부족! 150px 초소 반강철 복합벽을 BOMB 타이밍으로 폭파한 뒤 중앙 암산을 MINE으로 사선 관통';
             elements.push({ type: 'steelBarrier', x: 50, y: 150, w: 20, h: 70 });
@@ -1086,12 +1282,38 @@
               { act: 'BASH', role: 'pioneer', atWallX: 520, count: 1 },
               { act: 'BUILD', role: 'pioneer', atEdgeX: 594, dir: 1, count: 1 }
             ];
+          } else {
+            variantName = 'V6: 거대 암산[M4] & 1타 2피 강철턱[M5] & 수직 엘리베이터[M3] & 크롬 트러스[M7]';
+            shortcutHint = '서측 반강철벽 돌파 → 1타 2피 계단으로 중앙 암산의 12px 강철턱 점프 → 크롬 트러스 가이드 사선 채굴(MINE) → 수직 엘리베이터 통과';
+            elements.push({ type: 'steelBarrier', x: 40, y: 80, w: 20, h: 80 });
+            elements.push(this.makeSlab(40, 160, 190, 20, R, pal, 'platform'));
+            elements.push({ type: 'rockWall', x: 150, y: 100, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(250, 160, 230, 40, R, pal, 'craggyRock'));
+            elements.push({ type: 'steelBarrier', x: 250, y: 148, w: 10, h: 12 });
+            elements.push({ type: 'diagonalBeam', x: 290, y: 200, w: 60, h: 24, dir: 'downRight', thickness: 12 });
+            elements.push({ type: 'steelBarrier', x: 460, y: 100, w: 20, h: 60 });
+            elements.push(this.makeSlab(400, 240, 190, 20, R, pal, 'volcanicBasalt'));
+            elements.push({ type: 'rockWall', x: 500, y: 180, w: 25, h: 60, palette: pal });
+            if (useMoving) {
+              elements.push({ type: 'movingPlatform', x: 580, y: 245, w: 50, h: 12, axis: 'vertical', range: 30, speed: 0.8, pauseTicks: 12, palette: pal });
+            }
+            elements.push(this.makeSlab(600, 280, 160, 20, R, pal, 'quantumCrystal'));
+            elements.push({ type: 'steelBarrier', x: 740, y: 200, w: 20, h: 80 });
+            spawn = { x: 95, y: 120 };
+            gate = { x: 700, y: 254 };
+            actionPlan = [
+              { act: 'BASH', role: 'pioneer', atWallX: 150, count: 1 },
+              { act: 'BUILD', role: 'pioneer', atEdgeX: 224, dir: 1, count: 1 },
+              { act: 'MINE', role: 'pioneer', atX: 380, dir: 1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 500, count: 1 },
+              ...(useMoving ? [] : [{ act: 'BUILD', role: 'pioneer', atEdgeX: 584, dir: 1, count: 1 }])
+            ];
           }
           break;
         }
 
         /* --------------------------------------------------------------
-         * 6. ASCENT -> CITADEL_ASCENT (시타델 다단 등반 & 5종 변형)
+         * 6. ASCENT -> CITADEL_ASCENT (시타델 다단 등반 & 6종 변형)
          * ------------------------------------------------------------*/
         case 'ascent':
         default: {
@@ -1185,7 +1407,7 @@
               { act: 'BUILD', count: 1, role: 'pioneer', atEdgeX: 484, dir: 1 },
               { act: 'BASH', count: 1, role: 'pioneer', atWallX: 560 }
             ];
-          } else {
+          } else if (variant === 4) {
             variantName = 'V5: 심연 공명 벙커 폭탄 개문(BOMB) & 시타델 등반';
             shortcutHint = '성벽은 3개인데 BASH는 2개뿐! 하단 150px 공명 벙커에서 BOMB 카운트다운으로 반강철 성문을 폭파하고 점프패드로 시타델 등반';
             elements.push({ type: 'steelBarrier', x: 50, y: 260, w: 20, h: 70 });
@@ -1210,6 +1432,35 @@
               { act: 'BASH', role: 'pioneer', atWallX: 440, count: 1 },
               { act: 'BUILD', role: 'pioneer', atEdgeX: 514, dir: 1, count: 1 },
               { act: 'BASH', role: 'pioneer', atWallX: 630, count: 1 }
+            ];
+          } else {
+            variantName = 'V6: 백도어 점프패드 반전[M1] & 1타 2피 강철턱 시타델 등반[M5]';
+            shortcutHint = '우측 강철벽 반전 후 좌측 백도어를 격파해 하부 점프패드 런처로 진입 → 1타 2피 계단으로 시타델 강철턱 돌파';
+            elements.push(this.makeSlab(180, 260, 180, 20, R, pal, 'craggyRock'));
+            elements.push({ type: 'steelPlatform', x: 220, y: 280, w: 140, h: 16, palette: pal, isSteel: true });
+            elements.push({ type: 'steelBarrier', x: 340, y: 190, w: 20, h: 70 });
+            elements.push({ type: 'rockWall', x: 200, y: 200, w: 25, h: 60, palette: pal });
+            elements.push(this.makeSlab(90, 320, 120, 20, R, pal, 'volcanicBasalt'));
+            elements.push({ type: 'steelBarrier', x: 90, y: 260, w: 20, h: 60 });
+            elements.push(this.makeSlab(170, 370, 220, 20, R, pal, 'platform'));
+            elements.push({ type: 'steelBarrier', x: 170, y: 330, w: 20, h: 40 });
+            elements.push({ type: 'rockWall', x: 300, y: 310, w: 25, h: 60, palette: pal });
+            if (useJumpPad) {
+              elements.push({ type: 'jumpPad', x: 340, y: 360, w: 40, h: 10, dir: 'up-right', direction: 'up-right', power: 5.8, palette: pal });
+            }
+            elements.push(this.makeSlab(465, 330, 135, 20, R, pal, 'craggyRock'));
+            elements.push(this.makeSlab(620, 330, 140, 20, R, pal, 'quantumCrystal'));
+            elements.push({ type: 'steelBarrier', x: 620, y: 318, w: 10, h: 12 });
+            elements.push({ type: 'rockWall', x: 655, y: 270, w: 25, h: 60, palette: pal });
+            elements.push({ type: 'steelBarrier', x: 740, y: 250, w: 20, h: 80 });
+            spawn = { x: 265, y: 225 };
+            gate = { x: 715, y: 304 };
+            actionPlan = [
+              { act: 'BASH', role: 'pioneer', atWallX: 225, dir: -1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 300, dir: 1, count: 1 },
+              ...(useJumpPad ? [] : [{ act: 'BUILD', role: 'pioneer', atEdgeX: 384, dir: 1, count: 2 }]),
+              { act: 'BUILD', role: 'pioneer', atEdgeX: 594, dir: 1, count: 1 },
+              { act: 'BASH', role: 'pioneer', atWallX: 655, dir: 1, count: 1 }
             ];
           }
           break;
@@ -1250,10 +1501,10 @@
 
       let styleIdx;
       if (opts.styleIdx != null) {
-        styleIdx = ((opts.styleIdx % 6) + 6) % 6;
+        styleIdx = ((opts.styleIdx % 8) + 8) % 8;
       } else {
         if (!this._styleDeck || this._styleDeck.length === 0) {
-          this._styleDeck = R.shuffle([0, 1, 2, 3, 4, 5]);
+          this._styleDeck = R.shuffle([0, 1, 2, 3, 4, 5, 6, 7]);
           if (this._lastStyleIdx != null && this._styleDeck[0] === this._lastStyleIdx && this._styleDeck.length > 1) {
             const swapIdx = 1 + (Math.abs(R.irange(0, this._styleDeck.length - 2)));
             const tmp = this._styleDeck[0];
@@ -1265,8 +1516,38 @@
         this._lastStyleIdx = styleIdx;
       }
 
-      const styleName = this.sculptArchitecturalSilhouette(bpObj, styleIdx, R, pal);
+      const stageNoNum = Number(opts.stageNo) || 1;
+      const styleName = this.sculptArchitecturalSilhouette(bpObj, styleIdx, R, pal, stageNoNum);
       variantName = `${variantName} · ${mirrorX ? '역방향(←)' : '정방향(→)'} · ${styleName}`;
+
+      // Compute 4x3 12-Sector Spatial Graph Path & Active Puzzle Micro-Modules ([M1]..[M9])
+      const toSector = (px, py) => `S(${clamp(Math.floor(px / 200), 0, 3)},${clamp(Math.floor(py / 150), 0, 2)})`;
+      const sectorNodes = [toSector(spawn.x, spawn.y)];
+      for (const s of actionPlan) {
+        const ax = s.atX || s.atWallX || s.atEdgeX;
+        if (ax) {
+          const sec = toSector(ax, Math.round((spawn.y + gate.y) / 2));
+          if (sectorNodes[sectorNodes.length - 1] !== sec) sectorNodes.push(sec);
+        }
+      }
+      const gateSec = toSector(gate.x, gate.y);
+      if (sectorNodes[sectorNodes.length - 1] !== gateSec) sectorNodes.push(gateSec);
+      const sectorGraphPath = sectorNodes.join(' → ');
+
+      const modules = [];
+      if (variant === 5 || actionPlan.some((s, idx) => idx === 0 && s.dir === (mirrorX ? 1 : -1))) {
+        modules.push('M1:스폰백도어반전');
+      } else {
+        modules.push('M1:직관적미끼함정');
+      }
+      if (elements.some(e => e.type === 'steelBarrier' && e.h <= 40)) modules.push('M2:반강철복합벽');
+      if (elements.some(e => e.type === 'movingPlatform')) modules.push('M3:엘리베이터동기화');
+      if (elements.some(e => e.type === 'polygonRock')) modules.push('M4:폴리곤암산');
+      if (elements.some(e => e.type === 'steelBarrier' && e.h <= 14)) modules.push('M5:1타2피강철턱');
+      if (actionPlan.some(s => s.role === 'crowd') || actionPlan.some(s => s.act === 'CLIMB')) modules.push('M6:선발대본대협동');
+      if (elements.some(e => e.type === 'diagonalBeam')) modules.push('M7:크롬트러스반사');
+      if (elements.some(e => e.type === 'jumpPad') || elements.some(e => e.type === 'rockWall' && e.h >= 110)) modules.push('M8:시크릿지름길');
+      if (actionPlan.some(s => s.act === 'BOMB')) modules.push('M9:폭탄240틱공명');
 
       const solution = [];
       for (const step of actionPlan) {
@@ -1282,7 +1563,9 @@
         gimmickLabel,
         shortcutHint,
         variant,
-        variantName
+        variantName,
+        sectorGraphPath,
+        modules
       };
     }
 
@@ -1696,10 +1979,17 @@
                 const nearEdgeOk = !curr.atEdgeX || Math.abs(candidate.x - curr.atEdgeX) <= 6;
                 const dirOk = !curr.dir || candidate.dir === curr.dir;
 
-                if (curr.act === 'CLIMB' && isSolidAhead && !isSteelAhead && nearWallOk) {
+                if (curr.act === 'CLIMB' && isSolidAhead && !isSteelAhead && nearWallOk && dirOk) {
                   let topY = candidate.y;
-                  while (isSolid(aheadX, topY - 1) && topY > 14) topY--;
-                  if (!isSolid(aheadX, topY - 12)) {
+                  let hitUpperSteel = false;
+                  while (isSolid(aheadX, topY - 1) && topY > 14) {
+                    if (isSteel(aheadX, topY - 1)) {
+                      hitUpperSteel = true;
+                      break;
+                    }
+                    topY--;
+                  }
+                  if (!hitUpperSteel && !isSolid(aheadX, topY - 12)) {
                     let overX = aheadX;
                     while (isSolid(overX, topY + 2) && Math.abs(overX - candidate.x) < 42) overX += candidate.dir;
                     candidate.x = overX + candidate.dir * 2;
@@ -1979,18 +2269,23 @@
         };
       }
 
-      // 2) 단일/2단 수직·사선 날먹 방지 검증
+      // 2) 직관적 오답(Naive First-Impression Bot) 14종 시뮬레이션:
+      // 시작 직후 눈에 보이는 첫 벽/바닥/낭떠러지에 단순 직진 조작만 했을 때 클리어되면 폐기!
       const cheeseTrials = [
         [{ act: 'BASH', count: 1 }],
         [{ act: 'DRILL', count: 1 }],
         [{ act: 'MINE', count: 1 }],
         [{ act: 'BUILD', count: 1 }],
         [{ act: 'BOMB', count: 1 }],
+        [{ act: 'CLIMB', count: 1 }],
         [{ act: 'DRILL', count: 1 }, { act: 'DRILL', count: 1 }],
         [{ act: 'MINE', count: 1 }, { act: 'MINE', count: 1 }],
         [{ act: 'BASH', count: 1 }, { act: 'DRILL', count: 1 }],
         [{ act: 'BASH', count: 1 }, { act: 'BASH', count: 1 }],
-        [{ act: 'DRILL', count: 1 }, { act: 'BUILD', count: 1 }]
+        [{ act: 'DRILL', count: 1 }, { act: 'BUILD', count: 1 }],
+        [{ act: 'BASH', count: 1 }, { act: 'BUILD', count: 1 }],
+        [{ act: 'CLIMB', count: 1 }, { act: 'BASH', count: 1 }],
+        [{ act: 'MINE', count: 1 }, { act: 'BASH', count: 1 }]
       ];
       for (const cheeseAct of cheeseTrials) {
         const cr = runPhysicsTrial(cheeseAct, false);
@@ -2090,8 +2385,8 @@
 
       this._variantByArch = this._variantByArch || {};
       const baseVariant = options.variant != null
-        ? (((options.variant % 5) + 5) % 5)
-        : (this._variantByArch[primaryArchetype] == null ? (initSeed % 5) : ((this._variantByArch[primaryArchetype] + 1) % 5));
+        ? (((options.variant % 6) + 6) % 6)
+        : (this._variantByArch[primaryArchetype] == null ? (initSeed % 6) : ((this._variantByArch[primaryArchetype] + 1) % 6));
       this._variantByArch[primaryArchetype] = baseVariant;
 
       const chosenMirrorX = options.mirrorX != null
@@ -2109,7 +2404,7 @@
         const diff = this.resolveDifficulty(options.difficulty);
         const { palette, theme } = this.resolvePaletteAndTheme(options, R);
         const archetype = primaryArchetype;
-        const variant = (baseVariant + attempt) % 5;
+        const variant = (baseVariant + attempt) % 6;
         const mirrorX = options.mirrorX != null ? !!options.mirrorX : (attempt === 0 ? chosenMirrorX : !chosenMirrorX);
 
         const bp = this.buildMacroPuzzleBlueprint(archetype, diff, R, palette, { ...options, variant, mirrorX });
@@ -2153,6 +2448,8 @@
             variantName: bp.variantName,
             gimmickLabel: bp.gimmickLabel,
             shortcutHint: bp.shortcutHint,
+            sectorGraphPath: bp.sectorGraphPath,
+            modules: bp.modules,
             difficulty: diff.name,
             architecturalFeaturesIntegrated: true,
             attempt: attempt + 1
@@ -2162,7 +2459,7 @@
         const scoreObj = this.calculateDifficultyScore(candidate);
         candidate.difficultyScore = scoreObj.score;
         candidate.difficultyFactors = scoreObj.factors;
-        candidate.desc = `[${archetype.toUpperCase()}] ${bp.gimmickLabel} (${bp.variantName}) — ${bp.shortcutHint}. (점수: ${candidate.difficultyScore}pt, 정석: ${bp.solution.join(' → ')})`;
+        candidate.desc = `[${archetype.toUpperCase()}] ${bp.gimmickLabel} (${bp.variantName}) — ${bp.shortcutHint}. [동선그래프: ${bp.sectorGraphPath} | 기믹모듈: ${(bp.modules || []).join(', ')}] (점수: ${candidate.difficultyScore}pt, 정석: ${bp.solution.join(' → ')})`;
 
         const simResult = this.simulateHordeClearance(candidate);
         delete candidate._layoutData;

@@ -1,0 +1,174 @@
+﻿{
+  "id": "NEW_MAP",
+  "title": "miro",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "cyan",
+  "desc": "크리에이터 모드로 처음부터 제작한 전술 구역입니다.",
+  "totalUnits": 15,
+  "needPercent": 70,
+  "spawnRate": 20,
+  "timeLimit": 240,
+  "skills": {
+    "climb": 4,
+    "float": 4,
+    "bash": 4,
+    "mine": 4,
+    "drill": 4,
+    "bomb": 2,
+    "build": 6,
+    "block": 3,
+    "portal": 1
+  },
+  "spawnX": 90,
+  "spawnY": 60,
+  "gateX": 710,
+  "gateY": 320,
+  "elements": [
+    {
+      "type": "platform",
+      "x": 40,
+      "y": 120,
+      "w": 750,
+      "h": 160,
+      "palette": "cyan"
+    },
+    {
+      "type": "platform",
+      "x": 520,
+      "y": 360,
+      "w": 240,
+      "h": 20,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 220,
+      "y": 120,
+      "w": 180,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 480,
+      "y": 120,
+      "w": 140,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 690,
+      "y": 120,
+      "w": 100,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 40,
+      "y": 120,
+      "w": 90,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelBarrier",
+      "x": 180,
+      "y": 160,
+      "w": 30,
+      "h": 120,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 500,
+      "y": 260,
+      "w": 20,
+      "h": 120,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 280,
+      "y": 180,
+      "w": 210,
+      "h": 20,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 590,
+      "y": 180,
+      "w": 200,
+      "h": 20,
+      "palette": "cyan"
+    },
+    {
+      "type": "craggyRock",
+      "x": 40,
+      "y": 280,
+      "w": 460,
+      "h": 30,
+      "palette": "cyan",
+      "profile": [
+        36,
+        25,
+        32,
+        29,
+        38,
+        24,
+        26,
+        26,
+        26,
+        24,
+        35,
+        41,
+        30
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 40,
+      "y": 360,
+      "w": 460,
+      "h": 20,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 520,
+      "y": 360,
+      "w": 240,
+      "h": 20,
+      "palette": "cyan",
+      "isSteel": true
+    },
+    {
+      "type": "steelBarrier",
+      "x": 40,
+      "y": 130,
+      "w": 20,
+      "h": 150,
+      "palette": "cyan"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 500,
+      "y": 250,
+      "w": 100,
+      "h": 10,
+      "palette": "cyan",
+      "isSteel": true
+    }
+  ],
+  "solutionDna": [
+    "CUSTOM"
+  ],
+  "difficultyScore": 50
+}

@@ -632,6 +632,16 @@
     }
 
     static generate(options = {}) {
+      // StageForge v3: Whole-Canvas Macro-Blueprint + 실물리(ForgeSim) 검증 생성기
+      const SF = (typeof StageForge !== 'undefined') ? StageForge : (root && root.StageForge);
+      if (SF && options.engine !== 'legacy') {
+        try {
+          return SF.generate(options);
+        } catch (e) {
+          console.warn('[ProceduralMapEngine] StageForge fallback to Architect:', e.message);
+        }
+      }
+
       const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
         ? FullCanvasLevelArchitect
         : (FA && FA.FullCanvasLevelArchitect)
@@ -666,6 +676,35 @@
     }
 
     static generateCampaignBatch(arc = {}) {
+      const SF = (typeof StageForge !== 'undefined') ? StageForge : (root && root.StageForge);
+      const archs = ['cascade', 'chamber', 'zigzag', 'split', 'traverse', 'ascent', 'elevator', 'terraces'];
+      if (SF && arc.engine !== 'legacy' && arc.stages) {
+        const stages = [];
+        for (let i = 0; i < arc.stages; i++) {
+          const t = arc.stages === 1 ? 1 : i / (arc.stages - 1);
+          let diff = 'easy';
+          if (t > 0.85) diff = 'master';
+          else if (t > 0.65) diff = 'nightmare';
+          else if (t > 0.4) diff = 'hard';
+          else if (t > 0.15) diff = 'normal';
+
+          try {
+            const map = SF.generate({
+              difficulty: diff,
+              layout: archs[i % archs.length],
+              id: (arc.startStage || 11) + i,
+              seed: ((arc.seed || Date.now()) + i * 7919) >>> 0
+            });
+            stages.push(map);
+          } catch (e) {
+            console.warn('[ProceduralMapEngine] batch StageForge fallback:', e.message);
+          }
+        }
+        if (stages.length > 0) {
+          return { stages, metrics: this.metaGenerator.audit(stages, arc) };
+        }
+      }
+
       const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
         ? FullCanvasLevelArchitect
         : (FA && FA.FullCanvasLevelArchitect)
@@ -674,7 +713,6 @@
 
       if (Architect && arc.stages) {
         const stages = [];
-        const archs = ['cascade', 'zigzag', 'traverse', 'split', 'chamber', 'ascent'];
         for (let i = 0; i < arc.stages; i++) {
           const t = arc.stages === 1 ? 1 : i / (arc.stages - 1);
           let diff = 'easy';
@@ -696,6 +734,21 @@
     }
 
     static generateNextStage(currentStageNo = 11, prevMap = null, difficulty = 'normal') {
+      const SF = (typeof StageForge !== 'undefined') ? StageForge : (root && root.StageForge);
+      const archs = ['cascade', 'chamber', 'zigzag', 'split', 'traverse', 'ascent', 'elevator', 'terraces'];
+      const prevArch = prevMap ? (prevMap.layoutType || (prevMap._meta && prevMap._meta.layoutType)) : null;
+      const choices = archs.filter(a => a !== prevArch);
+      const layout = choices.length ? choices[Math.floor(Math.random() * choices.length)] : 'cascade';
+      const seed = (Date.now() ^ (currentStageNo * 7919)) >>> 0;
+
+      if (SF) {
+        try {
+          return SF.generate({ difficulty, layout, id: currentStageNo, seed });
+        } catch (e) {
+          console.warn('[ProceduralMapEngine] nextStage StageForge fallback:', e.message);
+        }
+      }
+
       const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
         ? FullCanvasLevelArchitect
         : (FA && FA.FullCanvasLevelArchitect)
@@ -703,15 +756,11 @@
           : null;
 
       if (Architect) {
-        const archs = ['cascade', 'zigzag', 'traverse', 'split', 'chamber', 'ascent'];
-        const prevArch = prevMap ? prevMap.layoutType : null;
-        const choices = archs.filter(a => a !== prevArch);
-        const layout = choices.length ? choices[Math.floor(Math.random() * choices.length)] : 'cascade';
         return Architect.generate({
           difficulty,
           layout,
           stageNo: currentStageNo,
-          seed: (Date.now() ^ (currentStageNo * 7919)) >>> 0
+          seed
         });
       }
 
@@ -720,8 +769,8 @@
         score: targetScore,
         difficulty,
         stageNo: currentStageNo,
-        avoidArch: prevMap ? prevMap.layoutType : null,
-        seed: (Date.now() ^ (currentStageNo * 7919)) >>> 0
+        avoidArch: prevArch,
+        seed
       });
     }
   }

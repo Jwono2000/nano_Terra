@@ -1156,6 +1156,24 @@ class GameEngine {
   }
 
   applySkillToUnit(unit, skillKey) {
+    // 스킬 판정은 SkillRules(단일 소스)에 위임 → ForgeSim(맵 생성기 검증)과 100% 동일 규칙
+    if (typeof SkillRules === 'undefined') return this._legacyApplySkillToUnit(unit, skillKey);
+    const res = SkillRules.apply(this.terrain, unit, skillKey, this.particles);
+    if (!res.applied) {
+      if (res.steelHit && typeof SFX !== 'undefined' && SFX.playHit) SFX.playHit();
+      return;
+    }
+    if (this.skillCounts[skillKey] > 0) {
+      this.skillCounts[skillKey]--;
+    }
+    this.updateSkillUI();
+    SFX.playClick();
+    if (navigator.vibrate) navigator.vibrate(20);
+    this.particles.spawnBurst(unit.x, unit.y - 10, res.color, 16, 2.5);
+  }
+
+  // (구버전 판정 — SkillRules.js 미로드 시 폴백)
+  _legacyApplySkillToUnit(unit, skillKey) {
     if (unit.state === STATE.DEAD || unit.state === STATE.EXITING) return;
 
     const isFalling = (unit.state === STATE.FALLING || unit.state === STATE.FLOATING);
@@ -1282,6 +1300,9 @@ class GameEngine {
         unit.stopSounds();
         unit.state = STATE.THERMAL_DRILLING;
         unit.cutSteps = 0;
+        unit.exitSteps = 0;
+        unit.vx = 0;
+        unit.drillDir = unit.dir;
         applied = true;
         skillColor = "#ff6600";
         break;

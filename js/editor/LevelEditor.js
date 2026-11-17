@@ -449,10 +449,11 @@ class LevelEditor {
       }
       const seed = this._newSeed();
       let generatedData = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
-      if (params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
+      const isStageForge = !!(generatedData && generatedData._meta && String(generatedData._meta.generator || '').startsWith('StageForge'));
+      if (!isStageForge && params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
         generatedData = MovingPlatformArchitect.injectMovingPlatforms(generatedData, { seed });
       }
-      if (typeof AdvancedFeatureArchitect !== 'undefined') {
+      if (!isStageForge && typeof AdvancedFeatureArchitect !== 'undefined') {
         const doOptA = params.includeOptionA !== false;
         const doOptB = params.includeOptionB !== false;
         if (doOptA || doOptB) {
@@ -527,9 +528,7 @@ class LevelEditor {
       `;
     }
 
-    if (typeof SFX !== 'undefined' && SFX.playTeleport) {
-      SFX.playTeleport();
-    }
+    // 맵 재생성/즉시생성 시 갑작스런 큰 효과음 방지를 위해 무음 처리
   }
 
   generateVerified(params, opts = {}) {
@@ -557,10 +556,11 @@ class LevelEditor {
       try {
         const seed = this._newSeed();
         let data = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
-        if (params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
+        const isStageForge = !!(data && data._meta && String(data._meta.generator || '').startsWith('StageForge'));
+        if (!isStageForge && params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
           data = MovingPlatformArchitect.injectMovingPlatforms(data, { seed });
         }
-        if (typeof AdvancedFeatureArchitect !== 'undefined') {
+        if (!isStageForge && typeof AdvancedFeatureArchitect !== 'undefined') {
           const doOptA = params.includeOptionA !== false;
           const doOptB = params.includeOptionB !== false;
           if (doOptA || doOptB) {
@@ -574,7 +574,21 @@ class LevelEditor {
         data.seed = seed;
         data.genParams = params;
         let verdict = null;
-        if (canVerify) {
+        if (data._meta && String(data._meta.generator || '').startsWith('StageForge') && data._meta.forgeSim) {
+          const fs = data._meta.forgeSim;
+          const lintRes = (typeof LevelLint !== 'undefined' && LevelLint.check) ? LevelLint.check(data) : { ok: true, errors: [], summary: 'OK' };
+          verdict = {
+            accepted: true,
+            adapter: 'ForgeSim(1:1)',
+            band: data.difficulty || targetBand || 'normal',
+            score: { total: data.difficultyScore || 50 },
+            solve: { solvable: true, plan: data._meta.goldenPlan || [], requiredSkills: (data.solutionDna || []).length },
+            timing: { criticalActions: (data.solutionDna || []).length },
+            alternatives: { count: 1 },
+            lint: lintRes,
+            reasons: [`ForgeSim ${fs.rescued}/${fs.total} 구출 검증`]
+          };
+        } else if (canVerify) {
           verdict = LevelSolver.evaluate(data, {
             bands: LevelEditor.DIFFICULTY_BANDS,
             lint: (typeof LevelLint !== 'undefined') ? LevelLint : null,

@@ -1,0 +1,218 @@
+﻿{
+  "id": 801,
+  "title": "[HARD] WORMHOLE TRIAD #801",
+  "desc": "[CASCADE] WORMHOLE_TRIAD — 세 갈래 중 오른쪽이 정답. 강철벽 아래를 뚫고 내려가 적당한 높이(280)에서 레이저로 옆을 뚫으면 90px 안전 낙하. 위는 역추진이 모자라고 왼쪽은 강철벽에 갇힌다. (점수: 150pt, 솔루션: DRILL → BASH)",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "layoutType": "cascade",
+  "isOverridden": true,
+  "totalUnits": 10,
+  "needPercent": 80,
+  "spawnRate": 25,
+  "timeLimit": 200,
+  "spawnX": 75,
+  "spawnY": 55,
+  "gateX": 700,
+  "gateY": 358,
+  "skills": {
+    "bash": 1,
+    "block": 0,
+    "bomb": 1,
+    "build": 1,
+    "climb": 0,
+    "drill": 2,
+    "float": 3,
+    "mine": 0,
+    "portal": 0
+  },
+  "elements": [
+    {
+      "type": "steelBarrier",
+      "x": 20,
+      "y": 5,
+      "w": 15,
+      "h": 85
+    },
+    {
+      "type": "platform",
+      "x": 30,
+      "y": 90,
+      "w": 200,
+      "h": 22,
+      "palette": "purple"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 120,
+      "y": 130,
+      "w": 110,
+      "h": 16,
+      "palette": "purple",
+      "isSteel": true
+    },
+    {
+      "type": "steelBarrier",
+      "x": 195,
+      "y": 110,
+      "w": 15,
+      "h": 75
+    },
+    {
+      "type": "platform",
+      "x": 200,
+      "y": 185,
+      "w": 220,
+      "h": 22,
+      "palette": "purple"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 400,
+      "y": 110,
+      "w": 20,
+      "h": 75
+    },
+    {
+      "type": "steelBarrier",
+      "x": 315,
+      "y": 205,
+      "w": 15,
+      "h": 75
+    },
+    {
+      "type": "platform",
+      "x": 320,
+      "y": 280,
+      "w": 330,
+      "h": 22,
+      "palette": "purple"
+    },
+    {
+      "type": "rockWall",
+      "x": 650,
+      "y": 90,
+      "w": 20,
+      "h": 280,
+      "palette": "purple"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 540,
+      "y": 302,
+      "w": 20,
+      "h": 68
+    },
+    {
+      "type": "platform",
+      "x": 540,
+      "y": 220,
+      "w": 220,
+      "h": 20,
+      "palette": "purple"
+    },
+    {
+      "type": "platform",
+      "x": 30,
+      "y": 300,
+      "w": 170,
+      "h": 22,
+      "palette": "purple"
+    },
+    {
+      "type": "steelBarrier",
+      "x": 200,
+      "y": 225,
+      "w": 15,
+      "h": 75
+    },
+    {
+      "type": "steelBarrier",
+      "x": 15,
+      "y": 225,
+      "w": 15,
+      "h": 75
+    },
+    {
+      "type": "platform",
+      "x": 560,
+      "y": 370,
+      "w": 200,
+      "h": 22,
+      "palette": "purple"
+    }
+  ],
+  "solutionDna": [
+    "DRILL",
+    "BASH"
+  ],
+  "seed": 801,
+  "difficultyScore": 150,
+  "difficultyFactors": {
+    "sequenceLength": 2,
+    "uniqueSkills": 2,
+    "skillTransitions": 1,
+    "timingCount": 0,
+    "comboSynergy": 1
+  },
+  "_meta": {
+    "seed": 801,
+    "archetype": "cascade",
+    "gimmickLabel": "WORMHOLE_TRIAD",
+    "shortcutHint": "레이저를 강철벽에 날렸다면 폭탄으로 오른쪽 벽을 뚫을 수 있다 (1명 희생)",
+    "difficulty": "HARD",
+    "elementCount": 15,
+    "attempt": 1,
+    "simVerified": false
+  },
+  "genParams": {
+    "difficulty": "hard",
+    "layout": "scenario",
+    "theme": "purple",
+    "palette": "purple",
+    "includeMovingPlatform": false,
+    "includeOptionA": false,
+    "includeOptionB": false
+  },
+  "verification": {
+    "adapter": "ScenarioValidator",
+    "solvable": true,
+    "plan": [
+      {
+        "skill": "drill",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 360,
+          "y": 185,
+          "tol": 16,
+          "ytol": 16
+        },
+        "dir": 1
+      },
+      {
+        "skill": "bash",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 630,
+          "y": 280,
+          "tol": 16,
+          "ytol": 16
+        },
+        "dir": 1
+      }
+    ],
+    "score": 150,
+    "scoreParts": null,
+    "band": "hard",
+    "requiredSkills": 2,
+    "criticalActions": 2,
+    "minWindow": null,
+    "alternatives": 1,
+    "zeroSkillShortcut": false,
+    "lintOk": true,
+    "reasons": [
+      "validator 6/6 PASS (intended route DRILL->BASH, all drops safe)"
+    ],
+    "nodes": null,
+    "checkedAt": "2026-11-18T05:38:00+09:00"
+  }
+}

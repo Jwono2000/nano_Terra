@@ -946,6 +946,12 @@ class NanoUnit {
   }
 
   updateThermalDrill(terrain, particles, speedScale) {
+    // Preserve initial travel direction and eliminate horizontal inertia during vertical drill
+    if (this.drillDir === undefined || this.drillDir === null) {
+      this.drillDir = this.dir;
+    }
+    this.vx = 0;
+
     // 1. Pre-check: Check if directly standing on or approaching steel BEFORE cutting!
     const isObstacleBelow = terrain.isSteel(this.x, this.y + 1) || 
                             terrain.isSteel(this.x, this.y + 3) || 
@@ -954,6 +960,11 @@ class NanoUnit {
                             terrain.isSteel(this.x, this.y + 5);
     if (isObstacleBelow) {
       this.stopSounds();
+      if (this.drillDir !== undefined && this.drillDir !== null) {
+        this.dir = this.drillDir;
+        this.drillDir = null;
+      }
+      this.vx = 0;
       this.state = STATE.WALKING;
       this.cutSteps = 0;
       this.exitSteps = 0;
@@ -1009,6 +1020,12 @@ class NanoUnit {
         const cutX = this.x - 10;
         terrain.carveRect(cutX, this.y - 4, cutW, cutH, particles);
 
+        // Restore and maintain the initial travel direction, eliminating horizontal drift/wall rebound
+        if (this.drillDir !== undefined && this.drillDir !== null) {
+          this.dir = this.drillDir;
+          this.drillDir = null;
+        }
+        this.vx = 0;
         this.state = this.hasAntiGrav ? STATE.FLOATING : STATE.FALLING;
         this.fallDistance = 0;
         this.vy = 0;

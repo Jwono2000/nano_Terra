@@ -120,6 +120,9 @@ class VirtualMapValidator {
             if (skillCounts.drill > 0 || skillCounts.drill === undefined) {
               scout.state = STATE.THERMAL_DRILLING;
               scout.cutSteps = 0;
+              scout.exitSteps = 0;
+              scout.vx = 0;
+              scout.drillDir = scout.dir;
               if (skillCounts.drill > 0) skillCounts.drill--;
               solverCooldown = 30;
             }

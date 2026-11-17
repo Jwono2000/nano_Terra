@@ -245,8 +245,8 @@ const SFX = {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(300, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.25);
-      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.09, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.22);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start();

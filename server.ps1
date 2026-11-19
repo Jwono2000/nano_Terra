@@ -1,11 +1,45 @@
 param([int]$port = 8080)
 
+# Stop any previously running instance of this server.ps1 on the same machine to prevent port conflicts
+try {
+    $selfScript = $MyInvocation.MyCommand.Path
+    $existingServers = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+        $_.ProcessId -ne $PID -and
+        $_.Name -match '^(powershell|pwsh)(\.exe)?$' -and
+        $_.CommandLine -and
+        ($_.CommandLine -match '(?i)(?:^|\s)-f(?:ile)?\s+["'']?[^"'']*server\.ps1["'']?') -and
+        ($_.CommandLine -notmatch '(?i)(?:^|\s)-c(?:ommand)?\s+') -and
+        ($_.CommandLine -match "(?i)-port\s+$port\b" -or ($port -eq 8080 -and $_.CommandLine -notmatch '(?i)-port\s+\d+'))
+    }
+    foreach ($proc in $existingServers) {
+        Write-Host "[AUTO-RESTART] Stopping previous server.ps1 process (PID $($proc.ProcessId))..."
+        Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+    if ($existingServers) {
+        Start-Sleep -Milliseconds 350
+    }
+} catch {
+    Write-Host "[WARN] Could not inspect previous server processes: $($_.Exception.Message)"
+}
+
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$($port)/")
-try {
-    $listener.Start()
-} catch {
-    Write-Error "Failed to start listener on port $($port): $($_.Exception.Message)"
+$started = $false
+$lastErr = $null
+for ($attempt = 1; $attempt -le 6; $attempt++) {
+    try {
+        $listener.Start()
+        $started = $true
+        break
+    } catch {
+        $lastErr = $_.Exception.Message
+        if ($attempt -lt 6) {
+            Start-Sleep -Milliseconds 250
+        }
+    }
+}
+if (-not $started) {
+    Write-Error "Failed to start listener on port $($port): $lastErr"
     exit 1
 }
 
@@ -84,6 +118,7 @@ function Update-StagesManifest([string]$dir) {
 # Auto-sync manifest on server launch
 Update-StagesManifest $baseDir
 
+try {
 while ($listener.IsListening) {
     try {
         $context = $listener.GetContext()
@@ -319,4 +354,10 @@ while ($listener.IsListening) {
             }
         } catch {}
     }
+}
+} finally {
+    try {
+        if ($listener -and $listener.IsListening) { $listener.Stop() }
+        if ($listener) { $listener.Close() }
+    } catch {}
 }

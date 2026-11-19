@@ -1,0 +1,477 @@
+﻿{
+  "id": 34,
+  "title": "[S034] [HARD] ABYSSAL INTERLOCK",
+  "bgImg": "assets/bg_level_7.jpg",
+  "terrainTheme": "red",
+  "desc": "74px 광폭 심연은 계단 2개를 연속으로 이어야 건널 수 있습니다! 격리벽을 바로 뚫고 본대와 함께 가면 1차 계단 끝에서 후발대가 전원 추락합니다. 선발대 1명만 등반(CLIMB)해 2연쇄 다리를 완공한 뒤 본대를 해방하세요!",
+  "totalUnits": 15,
+  "needPercent": 100,
+  "spawnRate": 55,
+  "timeLimit": 330,
+  "skills": {
+    "climb": 1,
+    "float": 0,
+    "bash": 2,
+    "mine": 0,
+    "drill": 0,
+    "bomb": 0,
+    "build": 3,
+    "block": 0,
+    "portal": 0
+  },
+  "spawnX": 90,
+  "spawnY": 210,
+  "gateX": 700,
+  "gateY": 220,
+  "solutionDna": [
+    "CLIMB",
+    "BUILD",
+    "BASH"
+  ],
+  "difficultyScore": 76,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 2,
+      "y": 2,
+      "w": 40,
+      "h": 447,
+      "points": [
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 15,
+          "y": 3
+        },
+        {
+          "x": 29,
+          "y": 3
+        },
+        {
+          "x": 42,
+          "y": 2
+        },
+        {
+          "x": 42,
+          "y": 148
+        },
+        {
+          "x": 42,
+          "y": 301
+        },
+        {
+          "x": 42,
+          "y": 447
+        },
+        {
+          "x": 29,
+          "y": 447
+        },
+        {
+          "x": 15,
+          "y": 449
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 3,
+          "y": 301
+        },
+        {
+          "x": 3,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 758,
+      "y": 1,
+      "w": 41,
+      "h": 448,
+      "points": [
+        {
+          "x": 758,
+          "y": 2
+        },
+        {
+          "x": 771,
+          "y": 1
+        },
+        {
+          "x": 785,
+          "y": 3
+        },
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 799,
+          "y": 148
+        },
+        {
+          "x": 799,
+          "y": 301
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 785,
+          "y": 447
+        },
+        {
+          "x": 771,
+          "y": 449
+        },
+        {
+          "x": 758,
+          "y": 447
+        },
+        {
+          "x": 759,
+          "y": 301
+        },
+        {
+          "x": 758,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 2,
+      "w": 709,
+      "h": 62,
+      "points": [
+        {
+          "x": 46,
+          "y": 2
+        },
+        {
+          "x": 279,
+          "y": 5
+        },
+        {
+          "x": 521,
+          "y": 3
+        },
+        {
+          "x": 754,
+          "y": 2
+        },
+        {
+          "x": 753,
+          "y": 22
+        },
+        {
+          "x": 755,
+          "y": 44
+        },
+        {
+          "x": 754,
+          "y": 64
+        },
+        {
+          "x": 521,
+          "y": 63
+        },
+        {
+          "x": 279,
+          "y": 63
+        },
+        {
+          "x": 46,
+          "y": 64
+        },
+        {
+          "x": 50,
+          "y": 44
+        },
+        {
+          "x": 51,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 50,
+      "y": 278,
+      "w": 220,
+      "h": 160,
+      "points": [
+        {
+          "x": 46,
+          "y": 276
+        },
+        {
+          "x": 118,
+          "y": 279
+        },
+        {
+          "x": 194,
+          "y": 278
+        },
+        {
+          "x": 266,
+          "y": 276
+        },
+        {
+          "x": 262,
+          "y": 328
+        },
+        {
+          "x": 265,
+          "y": 383
+        },
+        {
+          "x": 266,
+          "y": 435
+        },
+        {
+          "x": 194,
+          "y": 435
+        },
+        {
+          "x": 118,
+          "y": 436
+        },
+        {
+          "x": 46,
+          "y": 435
+        },
+        {
+          "x": 47,
+          "y": 383
+        },
+        {
+          "x": 50,
+          "y": 328
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 350,
+      "y": 280,
+      "w": 410,
+      "h": 160,
+      "points": [
+        {
+          "x": 350,
+          "y": 278
+        },
+        {
+          "x": 483,
+          "y": 280
+        },
+        {
+          "x": 621,
+          "y": 279
+        },
+        {
+          "x": 754,
+          "y": 278
+        },
+        {
+          "x": 755,
+          "y": 330
+        },
+        {
+          "x": 749,
+          "y": 385
+        },
+        {
+          "x": 754,
+          "y": 437
+        },
+        {
+          "x": 621,
+          "y": 435
+        },
+        {
+          "x": 483,
+          "y": 439
+        },
+        {
+          "x": 350,
+          "y": 437
+        },
+        {
+          "x": 349,
+          "y": 385
+        },
+        {
+          "x": 350,
+          "y": 330
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 50,
+      "y": 260,
+      "w": 220,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 44,
+      "y": 65,
+      "w": 16,
+      "h": 212
+    },
+    {
+      "type": "rockWall",
+      "x": 176,
+      "y": 202,
+      "w": 24,
+      "h": 60
+    },
+    {
+      "type": "steelPlatform",
+      "x": 346,
+      "y": 262,
+      "w": 402,
+      "h": 20
+    },
+    {
+      "type": "rockWall",
+      "x": 600,
+      "y": 204,
+      "w": 30,
+      "h": 58
+    },
+    {
+      "type": "steelPlatform",
+      "x": 596,
+      "y": 66,
+      "w": 38,
+      "h": 138
+    },
+    {
+      "type": "steelPlatform",
+      "x": 738,
+      "y": 66,
+      "w": 16,
+      "h": 216
+    },
+    {
+      "type": "jumpPad",
+      "x": 450,
+      "y": 260,
+      "w": 40,
+      "h": 10,
+      "dir": "up-left",
+      "power": 7.5,
+      "palette": "red"
+    },
+    {
+      "type": "jumpPad",
+      "x": 268,
+      "y": 293,
+      "w": 78,
+      "h": 10,
+      "dir": "up-right",
+      "power": 5,
+      "palette": "red"
+    }
+  ],
+  "_meta": {
+    "generator": "CausalGrammarEngine-v9-Phase2",
+    "family": "double_stair_interlock",
+    "variant": "v0",
+    "mirrorX": false,
+    "decoy": null,
+    "difficulty": "hard",
+    "difficultyLabel": "HARD",
+    "difficultyScore": 76,
+    "mechanics": [
+      "Pioneer Separation CLIMB",
+      "74px Double-Stair Chasm Interlock",
+      "Delayed Horde Release"
+    ],
+    "shortcutHint": "u1 CLIMB → 74px 심연 2연쇄 BUILD → 출구 BASH → 본대 격리벽 BASH 해방",
+    "fingerprint": "double_stair_interlock|v0|N|none"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase2",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 16,
+    "goldenNeed": 16,
+    "goldenTicks": 1490,
+    "solidRatioPct": 56.5,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "climb",
+        "unit": 1,
+        "at": {
+          "x": 158,
+          "y": 262,
+          "tol": 12
+        },
+        "dir": 1,
+        "label": "선발대 u1 격리벽 CLIMB 단독 출격"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 268,
+          "y": 262,
+          "tol": 4
+        },
+        "dir": 1,
+        "label": "u1 74px 광폭 심연 1차 BUILD"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 314,
+          "y": 238,
+          "tol": 6,
+          "ytol": 12
+        },
+        "dir": 1,
+        "wait": 160,
+        "label": "u1 74px 광폭 심연 2차 연쇄 BUILD 완공"
+      },
+      {
+        "skill": "bash",
+        "unit": 1,
+        "at": {
+          "x": 594,
+          "y": 262,
+          "tol": 8
+        },
+        "dir": 1,
+        "label": "u1 최종 출구 암벽 BASH 개통"
+      },
+      {
+        "skill": "bash",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 170,
+          "y": 262,
+          "tol": 8
+        },
+        "dir": 1,
+        "wait": 140,
+        "label": "전 구간 완공 후 본대 격리벽 BASH 해방 → 100% 구출!"
+      }
+    ]
+  },
+  "isOverridden": false}

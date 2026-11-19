@@ -1,0 +1,485 @@
+﻿{
+  "id": 33,
+  "title": "[S033] [HARD] VORTEX SWITCH II",
+  "bgImg": "assets/bg_level_1.jpg",
+  "terrainTheme": "cyan",
+  "desc": "하나의 점프패드가 두 개의 목적지를 가집니다! 지금 상태로 점프하면 공중 암석 반사판에 튕겨 중단 작업대로만 갑니다. 선발대 1명이 1차 궤도로 작업대에 올라가 계단(BUILD) 비계를 깔고 시한폭탄(BOMB)으로 반사판과 비계를 동시에 폭파하면, 똑같은 점프패드가 뒤쪽 강철벽까지 날아가 본대를 상단 웜홀 성소로 쏘아 올립니다!",
+  "totalUnits": 16,
+  "needPercent": 88,
+  "spawnRate": 24,
+  "timeLimit": 330,
+  "skills": {
+    "climb": 1,
+    "float": 0,
+    "bomb": 1,
+    "block": 0,
+    "build": 1,
+    "bash": 1,
+    "mine": 0,
+    "drill": 0,
+    "portal": 0
+  },
+  "spawnX": 704,
+  "spawnY": 300,
+  "gateX": 688,
+  "gateY": 136,
+  "solutionDna": [
+    "CLIMB",
+    "BUILD",
+    "BOMB",
+    "BASH"
+  ],
+  "difficultyScore": 76,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 756,
+      "y": 2,
+      "w": 42,
+      "h": 446,
+      "points": [
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 785,
+          "y": 6
+        },
+        {
+          "x": 771,
+          "y": 4
+        },
+        {
+          "x": 758,
+          "y": 2
+        },
+        {
+          "x": 757,
+          "y": 148
+        },
+        {
+          "x": 756,
+          "y": 301
+        },
+        {
+          "x": 758,
+          "y": 447
+        },
+        {
+          "x": 771,
+          "y": 447
+        },
+        {
+          "x": 785,
+          "y": 448
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 798,
+          "y": 301
+        },
+        {
+          "x": 797,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 1,
+      "y": 2,
+      "w": 41,
+      "h": 445,
+      "points": [
+        {
+          "x": 42,
+          "y": 2
+        },
+        {
+          "x": 29,
+          "y": 6
+        },
+        {
+          "x": 15,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 148
+        },
+        {
+          "x": 1,
+          "y": 301
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 15,
+          "y": 442
+        },
+        {
+          "x": 29,
+          "y": 447
+        },
+        {
+          "x": 42,
+          "y": 447
+        },
+        {
+          "x": 41,
+          "y": 301
+        },
+        {
+          "x": 42,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 1,
+      "w": 708,
+      "h": 33,
+      "points": [
+        {
+          "x": 754,
+          "y": 2
+        },
+        {
+          "x": 521,
+          "y": 1
+        },
+        {
+          "x": 279,
+          "y": 1
+        },
+        {
+          "x": 46,
+          "y": 2
+        },
+        {
+          "x": 51,
+          "y": 12
+        },
+        {
+          "x": 51,
+          "y": 24
+        },
+        {
+          "x": 46,
+          "y": 34
+        },
+        {
+          "x": 279,
+          "y": 34
+        },
+        {
+          "x": 521,
+          "y": 34
+        },
+        {
+          "x": 754,
+          "y": 34
+        },
+        {
+          "x": 753,
+          "y": 24
+        },
+        {
+          "x": 754,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 337,
+      "w": 708,
+      "h": 110,
+      "points": [
+        {
+          "x": 754,
+          "y": 338
+        },
+        {
+          "x": 521,
+          "y": 342
+        },
+        {
+          "x": 279,
+          "y": 337
+        },
+        {
+          "x": 46,
+          "y": 338
+        },
+        {
+          "x": 48,
+          "y": 373
+        },
+        {
+          "x": 47,
+          "y": 412
+        },
+        {
+          "x": 46,
+          "y": 447
+        },
+        {
+          "x": 279,
+          "y": 443
+        },
+        {
+          "x": 521,
+          "y": 443
+        },
+        {
+          "x": 754,
+          "y": 447
+        },
+        {
+          "x": 753,
+          "y": 412
+        },
+        {
+          "x": 753,
+          "y": 373
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 50,
+      "y": 40,
+      "w": 270,
+      "h": 300,
+      "points": [
+        {
+          "x": 308,
+          "y": 38
+        },
+        {
+          "x": 222,
+          "y": 40
+        },
+        {
+          "x": 132,
+          "y": 40
+        },
+        {
+          "x": 46,
+          "y": 38
+        },
+        {
+          "x": 48,
+          "y": 134
+        },
+        {
+          "x": 45,
+          "y": 236
+        },
+        {
+          "x": 46,
+          "y": 332
+        },
+        {
+          "x": 132,
+          "y": 333
+        },
+        {
+          "x": 222,
+          "y": 327
+        },
+        {
+          "x": 308,
+          "y": 332
+        },
+        {
+          "x": 306,
+          "y": 236
+        },
+        {
+          "x": 310,
+          "y": 134
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 332,
+      "y": 318,
+      "w": 416,
+      "h": 18
+    },
+    {
+      "type": "steelPlatform",
+      "x": 740,
+      "y": 36,
+      "w": 16,
+      "h": 300
+    },
+    {
+      "type": "rockWall",
+      "x": 590,
+      "y": 262,
+      "w": 24,
+      "h": 56
+    },
+    {
+      "type": "jumpPad",
+      "x": 388,
+      "y": 308,
+      "w": 32,
+      "h": 10,
+      "dir": "up-left",
+      "power": 11.2
+    },
+    {
+      "type": "steelPlatform",
+      "x": 312,
+      "y": 36,
+      "w": 20,
+      "h": 284
+    },
+    {
+      "type": "rockWall",
+      "x": 344,
+      "y": 204,
+      "w": 24,
+      "h": 28
+    },
+    {
+      "type": "steelPlatform",
+      "x": 394,
+      "y": 252,
+      "w": 166,
+      "h": 14
+    },
+    {
+      "type": "steelPlatform",
+      "x": 554,
+      "y": 206,
+      "w": 12,
+      "h": 60
+    },
+    {
+      "type": "steelPlatform",
+      "x": 370,
+      "y": 160,
+      "w": 374,
+      "h": 16
+    },
+    {
+      "type": "polygonRock",
+      "points": [
+        {
+          "x": 420,
+          "y": 250
+        },
+        {
+          "x": 440,
+          "y": 250
+        },
+        {
+          "x": 430,
+          "y": 260
+        }
+      ],
+      "x": 420,
+      "y": 250,
+      "w": 20,
+      "h": 10,
+      "palette": "cyan"
+    }
+  ],
+  "_meta": {
+    "generator": "CausalGrammarEngine-v9-Phase2",
+    "family": "switchable_pad",
+    "variant": "v0",
+    "mirrorX": true,
+    "decoy": null,
+    "difficulty": "hard",
+    "difficultyLabel": "HARD",
+    "difficultyScore": 76,
+    "mechanics": [
+      "Switchable JumpPad (1 Pad → 2 Destinations)",
+      "BUILD Scaffolding + 240-Tick BOMB Self-Clearing",
+      "Pioneer Separation"
+    ],
+    "shortcutHint": "u1 CLIMB(격리벽) → 1차 점프(작업대 y=252) → 우측 끝 BUILD 비계 → 좌향 복귀 중(x≈362) 240틱 BOMB(반사판+비계 동시 폭파) → 본대 격리벽 BASH 해방!",
+    "fingerprint": "switchable_pad|v0|M|none"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase2",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 15,
+    "goldenNeed": 15,
+    "goldenTicks": 1675,
+    "solidRatioPct": 66.2,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "climb",
+        "unit": 1,
+        "at": {
+          "x": 634,
+          "y": 318,
+          "tol": 12
+        },
+        "dir": -1,
+        "label": "u1 격리벽 등반 → 점프패드 1차 궤도(중단 작업대) 착지"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 404,
+          "y": 252,
+          "tol": 4
+        },
+        "dir": -1,
+        "label": "작업대 우측 끝 BUILD 비계로 공중 반사판(x=432) 접속"
+      },
+      {
+        "skill": "bomb",
+        "unit": 1,
+        "at": {
+          "x": 438,
+          "y": 252,
+          "tol": 5,
+          "ytol": 16
+        },
+        "dir": 1,
+        "wait": 160,
+        "label": "좌향 이동 중 240틱(300px) 정밀 BOMB 점화 → 반사판+비계 동시 폭파 소거!"
+      },
+      {
+        "skill": "bash",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 620,
+          "y": 318,
+          "tol": 8
+        },
+        "dir": -1,
+        "wait": 260,
+        "label": "2차 궤도 개통 완료 후 본대 격리벽 BASH 해방 → 전원 상단 성소 도약!"
+      }
+    ]
+  },
+  "isOverridden": false}

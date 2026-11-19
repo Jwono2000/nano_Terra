@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "id": 1,
     "title": "[NORMAL] GENESIS DROP",
@@ -10301,10 +10301,10 @@
       },
       {
         "type": "polygonRock",
-        "x": 45,
-        "y": 38,
-        "w": 265,
-        "h": 295,
+        "x": 50,
+        "y": 40,
+        "w": 270,
+        "h": 300,
         "points": [
           {
             "x": 308,
@@ -10420,6 +10420,28 @@
         "y": 160,
         "w": 374,
         "h": 16
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 420,
+            "y": 250
+          },
+          {
+            "x": 440,
+            "y": 250
+          },
+          {
+            "x": 430,
+            "y": 260
+          }
+        ],
+        "x": 420,
+        "y": 250,
+        "w": 20,
+        "h": 10,
+        "palette": "cyan"
       }
     ],
     "_meta": {
@@ -10507,25 +10529,25 @@
     "bgImg": "assets/bg_level_7.jpg",
     "terrainTheme": "red",
     "desc": "74px 광폭 심연은 계단 2개를 연속으로 이어야 건널 수 있습니다! 격리벽을 바로 뚫고 본대와 함께 가면 1차 계단 끝에서 후발대가 전원 추락합니다. 선발대 1명만 등반(CLIMB)해 2연쇄 다리를 완공한 뒤 본대를 해방하세요!",
-    "totalUnits": 16,
+    "totalUnits": 15,
     "needPercent": 100,
-    "spawnRate": 24,
+    "spawnRate": 55,
     "timeLimit": 330,
     "skills": {
       "climb": 1,
       "float": 0,
-      "bomb": 0,
-      "block": 0,
-      "build": 2,
       "bash": 2,
       "mine": 0,
       "drill": 0,
+      "bomb": 0,
+      "build": 3,
+      "block": 0,
       "portal": 0
     },
-    "spawnX": 94,
-    "spawnY": 244,
-    "gateX": 696,
-    "gateY": 238,
+    "spawnX": 90,
+    "spawnY": 210,
+    "gateX": 700,
+    "gateY": 220,
     "solutionDna": [
       "CLIMB",
       "BUILD",
@@ -10706,131 +10728,131 @@
       },
       {
         "type": "polygonRock",
-        "x": 46,
-        "y": 288,
+        "x": 50,
+        "y": 278,
         "w": 220,
         "h": 160,
         "points": [
           {
             "x": 46,
-            "y": 288
+            "y": 276
           },
           {
             "x": 118,
-            "y": 291
+            "y": 279
           },
           {
             "x": 194,
-            "y": 290
+            "y": 278
           },
           {
             "x": 266,
-            "y": 288
+            "y": 276
           },
           {
             "x": 262,
-            "y": 340
+            "y": 328
           },
           {
             "x": 265,
-            "y": 395
+            "y": 383
           },
           {
             "x": 266,
-            "y": 447
+            "y": 435
           },
           {
             "x": 194,
-            "y": 447
+            "y": 435
           },
           {
             "x": 118,
-            "y": 448
+            "y": 436
           },
           {
             "x": 46,
-            "y": 447
+            "y": 435
           },
           {
             "x": 47,
-            "y": 395
+            "y": 383
           },
           {
             "x": 50,
-            "y": 340
+            "y": 328
           }
         ]
       },
       {
         "type": "polygonRock",
-        "x": 349,
-        "y": 288,
-        "w": 406,
-        "h": 161,
+        "x": 350,
+        "y": 280,
+        "w": 410,
+        "h": 160,
         "points": [
           {
             "x": 350,
-            "y": 288
+            "y": 278
           },
           {
             "x": 483,
-            "y": 290
+            "y": 280
           },
           {
             "x": 621,
-            "y": 289
+            "y": 279
           },
           {
             "x": 754,
-            "y": 288
+            "y": 278
           },
           {
             "x": 755,
-            "y": 340
+            "y": 330
           },
           {
             "x": 749,
-            "y": 395
+            "y": 385
           },
           {
             "x": 754,
-            "y": 447
+            "y": 437
           },
           {
             "x": 621,
-            "y": 445
+            "y": 435
           },
           {
             "x": 483,
-            "y": 449
+            "y": 439
           },
           {
             "x": 350,
-            "y": 447
+            "y": 437
           },
           {
             "x": 349,
-            "y": 395
+            "y": 385
           },
           {
             "x": 350,
-            "y": 340
+            "y": 330
           }
         ]
       },
       {
         "type": "steelPlatform",
         "x": 50,
-        "y": 262,
-        "w": 222,
+        "y": 260,
+        "w": 220,
         "h": 20
       },
       {
         "type": "steelPlatform",
         "x": 44,
-        "y": 66,
+        "y": 65,
         "w": 16,
-        "h": 216
+        "h": 212
       },
       {
         "type": "rockWall",
@@ -10866,6 +10888,26 @@
         "y": 66,
         "w": 16,
         "h": 216
+      },
+      {
+        "type": "jumpPad",
+        "x": 450,
+        "y": 260,
+        "w": 40,
+        "h": 10,
+        "dir": "up-left",
+        "power": 7.5,
+        "palette": "red"
+      },
+      {
+        "type": "jumpPad",
+        "x": 268,
+        "y": 293,
+        "w": 78,
+        "h": 10,
+        "dir": "up-right",
+        "power": 5,
+        "palette": "red"
       }
     ],
     "_meta": {
@@ -10979,8 +11021,8 @@
       "drill": 1,
       "portal": 0
     },
-    "spawnX": 96,
-    "spawnY": 130,
+    "spawnX": 100,
+    "spawnY": 100,
     "gateX": 682,
     "gateY": 216,
     "solutionDna": [
@@ -11280,24 +11322,17 @@
       },
       {
         "type": "steelPlatform",
-        "x": 52,
-        "y": 148,
-        "w": 56,
-        "h": 16
-      },
-      {
-        "type": "platform",
-        "x": 108,
-        "y": 148,
-        "w": 40,
-        "h": 16
+        "x": 50,
+        "y": 150,
+        "w": 60,
+        "h": 20
       },
       {
         "type": "steelPlatform",
-        "x": 148,
-        "y": 148,
-        "w": 54,
-        "h": 16
+        "x": 150,
+        "y": 150,
+        "w": 70,
+        "h": 20
       },
       {
         "type": "steelPlatform",
@@ -11308,9 +11343,9 @@
       },
       {
         "type": "steelPlatform",
-        "x": 196,
-        "y": 94,
-        "w": 16,
+        "x": 200,
+        "y": 90,
+        "w": 20,
         "h": 70
       },
       {
@@ -11391,6 +11426,19 @@
         "y": 80,
         "w": 16,
         "h": 200
+      },
+      {
+        "type": "craggyRock",
+        "x": 110,
+        "y": 150,
+        "w": 40,
+        "h": 20,
+        "palette": "brown",
+        "profile": [
+          18,
+          22,
+          22
+        ]
       }
     ],
     "_meta": {
@@ -54677,489 +54725,692 @@
   },
   {
     "id": 124,
-    "title": "[S124] [APEX] IRONCLAD RELAY",
-    "bgImg": "assets/bg_level_5.jpg",
-    "terrainTheme": "green",
-    "desc": "FLOAT=0, BLOCK=0 단일 선발대 8자 대장정! 선발대 1명이 벽을 넘어 점프패드로 성채에 올라간 뒤, 양방향 MINE으로 내려와 스폰 아래 역방향 BUILD 완충 발판을 깔고 본대를 역등반시켜 성채를 정복하세요.",
-    "totalUnits": 18,
-    "needPercent": 100,
-    "spawnRate": 22,
-    "timeLimit": 330,
+    "title": "[HARD] WORMHOLE TRIAD #801",
+    "desc": "[CASCADE] WORMHOLE_TRIAD — 세 갈래 중 오른쪽이 정답. 강철벽 아래를 뚫고 내려가 적당한 높이(280)에서 레이저로 옆을 뚫으면 90px 안전 낙하. 위는 역추진이 모자라고 왼쪽은 강철벽에 갇힌다. (점수: 150pt, 솔루션: DRILL → BASH)",
+    "bgImg": "assets/bg_level_3.jpg",
+    "terrainTheme": "purple",
+    "layoutType": "cascade",
+    "totalUnits": 15,
+    "needPercent": 80,
+    "spawnRate": 25,
+    "timeLimit": 200,
+    "spawnX": 75,
+    "spawnY": 55,
+    "gateX": 700,
+    "gateY": 330,
     "skills": {
-      "climb": 1,
-      "float": 0,
-      "bomb": 0,
-      "block": 0,
-      "build": 2,
+      "climb": 3,
+      "float": 3,
+      "bomb": 2,
+      "block": 2,
+      "build": 4,
       "bash": 2,
       "mine": 1,
-      "drill": 1,
+      "drill": 4,
       "portal": 0
     },
-    "spawnX": 90,
-    "spawnY": 130,
-    "gateX": 704,
-    "gateY": 128,
-    "solutionDna": [
-      "CLIMB",
-      "MINE",
-      "BUILD",
-      "DRILL",
-      "BASH"
-    ],
-    "difficultyScore": 100,
     "elements": [
       {
-        "type": "polygonRock",
-        "x": 2,
-        "y": 2,
-        "w": 43,
-        "h": 447,
-        "points": [
-          {
-            "x": 2,
-            "y": 2
-          },
-          {
-            "x": 15,
-            "y": 4
-          },
-          {
-            "x": 31,
-            "y": 2
-          },
-          {
-            "x": 44,
-            "y": 2
-          },
-          {
-            "x": 45,
-            "y": 148
-          },
-          {
-            "x": 45,
-            "y": 301
-          },
-          {
-            "x": 44,
-            "y": 447
-          },
-          {
-            "x": 31,
-            "y": 449
-          },
-          {
-            "x": 15,
-            "y": 445
-          },
-          {
-            "x": 2,
-            "y": 447
-          },
-          {
-            "x": 2,
-            "y": 301
-          },
-          {
-            "x": 2,
-            "y": 148
-          }
-        ]
-      },
-      {
-        "type": "polygonRock",
-        "x": 754,
-        "y": 2,
-        "w": 45,
-        "h": 445,
-        "points": [
-          {
-            "x": 756,
-            "y": 2
-          },
-          {
-            "x": 769,
-            "y": 2
-          },
-          {
-            "x": 785,
-            "y": 7
-          },
-          {
-            "x": 798,
-            "y": 2
-          },
-          {
-            "x": 799,
-            "y": 148
-          },
-          {
-            "x": 799,
-            "y": 301
-          },
-          {
-            "x": 798,
-            "y": 447
-          },
-          {
-            "x": 785,
-            "y": 445
-          },
-          {
-            "x": 769,
-            "y": 447
-          },
-          {
-            "x": 756,
-            "y": 447
-          },
-          {
-            "x": 756,
-            "y": 301
-          },
-          {
-            "x": 754,
-            "y": 148
-          }
-        ]
-      },
-      {
-        "type": "polygonRock",
-        "x": 47,
-        "y": 1,
-        "w": 705,
-        "h": 47,
-        "points": [
-          {
-            "x": 48,
-            "y": 2
-          },
-          {
-            "x": 280,
-            "y": 1
-          },
-          {
-            "x": 520,
-            "y": 1
-          },
-          {
-            "x": 752,
-            "y": 2
-          },
-          {
-            "x": 750,
-            "y": 16
-          },
-          {
-            "x": 752,
-            "y": 32
-          },
-          {
-            "x": 752,
-            "y": 46
-          },
-          {
-            "x": 520,
-            "y": 48
-          },
-          {
-            "x": 280,
-            "y": 48
-          },
-          {
-            "x": 48,
-            "y": 46
-          },
-          {
-            "x": 52,
-            "y": 32
-          },
-          {
-            "x": 47,
-            "y": 16
-          }
-        ]
-      },
-      {
-        "type": "polygonRock",
-        "x": 48,
-        "y": 284,
-        "w": 704,
-        "h": 163,
-        "points": [
-          {
-            "x": 48,
-            "y": 284
-          },
-          {
-            "x": 280,
-            "y": 286
-          },
-          {
-            "x": 520,
-            "y": 288
-          },
-          {
-            "x": 752,
-            "y": 284
-          },
-          {
-            "x": 752,
-            "y": 337
-          },
-          {
-            "x": 750,
-            "y": 394
-          },
-          {
-            "x": 752,
-            "y": 447
-          },
-          {
-            "x": 520,
-            "y": 446
-          },
-          {
-            "x": 280,
-            "y": 446
-          },
-          {
-            "x": 48,
-            "y": 447
-          },
-          {
-            "x": 50,
-            "y": 394
-          },
-          {
-            "x": 53,
-            "y": 337
-          }
-        ]
-      },
-      {
-        "type": "steelPlatform",
-        "x": 50,
-        "y": 148,
-        "w": 54,
-        "h": 16
+        "type": "steelBarrier",
+        "x": 20,
+        "y": 20,
+        "w": 20,
+        "h": 90
       },
       {
         "type": "platform",
-        "x": 104,
-        "y": 148,
-        "w": 40,
-        "h": 16
+        "x": 30,
+        "y": 100,
+        "w": 200,
+        "h": 20,
+        "palette": "purple"
       },
       {
         "type": "steelPlatform",
-        "x": 144,
-        "y": 148,
-        "w": 50,
-        "h": 16
+        "x": 20,
+        "y": 100,
+        "w": 110,
+        "h": 20,
+        "palette": "purple",
+        "isSteel": true
       },
       {
-        "type": "steelPlatform",
-        "x": 46,
-        "y": 48,
-        "w": 16,
-        "h": 236
-      },
-      {
-        "type": "steelPlatform",
-        "x": 194,
-        "y": 104,
-        "w": 16,
+        "type": "steelBarrier",
+        "x": 210,
+        "y": 60,
+        "w": 20,
         "h": 60
       },
       {
+        "type": "platform",
+        "x": 190,
+        "y": 210,
+        "w": 230,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 190,
+        "y": 300,
+        "w": 20,
+        "h": 90
+      },
+      {
+        "type": "steelBarrier",
+        "x": 310,
+        "y": 210,
+        "w": 20,
+        "h": 80
+      },
+      {
+        "type": "platform",
+        "x": 310,
+        "y": 280,
+        "w": 330,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "rockWall",
+        "x": 740,
+        "y": 90,
+        "w": 60,
+        "h": 280,
+        "palette": "purple"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 480,
+        "y": 190,
+        "w": 30,
+        "h": 110
+      },
+      {
+        "type": "platform",
+        "x": 520,
+        "y": 190,
+        "w": 220,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "platform",
+        "x": 20,
+        "y": 300,
+        "w": 170,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "steelBarrier",
+        "x": 190,
+        "y": 210,
+        "w": 20,
+        "h": 90
+      },
+      {
+        "type": "steelBarrier",
+        "x": 20,
+        "y": 230,
+        "w": 20,
+        "h": 90
+      },
+      {
+        "type": "steelBarrier",
+        "x": 790,
+        "y": 90,
+        "w": 10,
+        "h": 300,
+        "palette": "purple"
+      },
+      {
         "type": "steelPlatform",
-        "x": 210,
-        "y": 148,
-        "w": 110,
-        "h": 16
+        "x": 510,
+        "y": 190,
+        "w": 230,
+        "h": 20,
+        "palette": "purple",
+        "isSteel": true
       },
       {
         "type": "jumpPad",
-        "x": 280,
-        "y": 138,
-        "w": 30,
+        "x": 80,
+        "y": 290,
+        "w": 40,
         "h": 10,
         "dir": "up-right",
-        "power": 4.5
-      },
-      {
-        "type": "rockWall",
-        "x": 396,
-        "y": 172,
-        "w": 108,
-        "h": 88
+        "power": 18,
+        "palette": "purple"
       },
       {
         "type": "steelPlatform",
-        "x": 504,
-        "y": 172,
-        "w": 106,
-        "h": 16
+        "x": 420,
+        "y": 280,
+        "w": 70,
+        "h": 20,
+        "palette": "purple",
+        "isSteel": true
+      },
+      {
+        "type": "craggyRock",
+        "x": 420,
+        "y": 340,
+        "w": 70,
+        "h": 10,
+        "palette": "purple",
+        "profile": [
+          13,
+          11,
+          9
+        ]
+      },
+      {
+        "type": "diagonalBeam",
+        "x": 490,
+        "y": 350,
+        "w": 30,
+        "h": 20,
+        "palette": "purple",
+        "slope": 1,
+        "thickness": 16,
+        "isSteel": true
       },
       {
         "type": "steelPlatform",
-        "x": 610,
-        "y": 152,
-        "w": 138,
-        "h": 36
+        "x": 20,
+        "y": 120,
+        "w": 20,
+        "h": 110,
+        "palette": "purple",
+        "isSteel": true
       },
       {
-        "type": "rockWall",
-        "x": 536,
-        "y": 114,
-        "w": 24,
-        "h": 58
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 520,
+            "y": 370
+          },
+          {
+            "x": 510,
+            "y": 390
+          },
+          {
+            "x": 530,
+            "y": 410
+          },
+          {
+            "x": 560,
+            "y": 400
+          },
+          {
+            "x": 560,
+            "y": 370
+          }
+        ],
+        "x": 510,
+        "y": 370,
+        "w": 50,
+        "h": 40,
+        "palette": "purple"
       },
       {
-        "type": "steelPlatform",
-        "x": 532,
-        "y": 48,
-        "w": 32,
-        "h": 66
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 550,
+            "y": 370
+          },
+          {
+            "x": 550,
+            "y": 390
+          },
+          {
+            "x": 570,
+            "y": 400
+          },
+          {
+            "x": 600,
+            "y": 400
+          },
+          {
+            "x": 610,
+            "y": 390
+          },
+          {
+            "x": 590,
+            "y": 370
+          }
+        ],
+        "x": 550,
+        "y": 370,
+        "w": 60,
+        "h": 30,
+        "palette": "purple"
       },
       {
-        "type": "rockWall",
-        "x": 644,
-        "y": 94,
-        "w": 28,
-        "h": 58
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 640,
+            "y": 370
+          },
+          {
+            "x": 600,
+            "y": 390
+          },
+          {
+            "x": 640,
+            "y": 410
+          },
+          {
+            "x": 670,
+            "y": 390
+          }
+        ],
+        "x": 600,
+        "y": 370,
+        "w": 70,
+        "h": 40,
+        "palette": "purple"
       },
       {
-        "type": "steelPlatform",
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 660,
+            "y": 370
+          },
+          {
+            "x": 650,
+            "y": 390
+          },
+          {
+            "x": 660,
+            "y": 400
+          },
+          {
+            "x": 700,
+            "y": 410
+          },
+          {
+            "x": 710,
+            "y": 390
+          },
+          {
+            "x": 680,
+            "y": 370
+          }
+        ],
+        "x": 650,
+        "y": 370,
+        "w": 60,
+        "h": 40,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 700,
+            "y": 370
+          },
+          {
+            "x": 690,
+            "y": 390
+          },
+          {
+            "x": 720,
+            "y": 400
+          },
+          {
+            "x": 750,
+            "y": 390
+          },
+          {
+            "x": 740,
+            "y": 370
+          }
+        ],
+        "x": 690,
+        "y": 370,
+        "w": 60,
+        "h": 30,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 730,
+            "y": 370
+          },
+          {
+            "x": 730,
+            "y": 390
+          },
+          {
+            "x": 770,
+            "y": 400
+          },
+          {
+            "x": 790,
+            "y": 390
+          },
+          {
+            "x": 790,
+            "y": 370
+          }
+        ],
+        "x": 730,
+        "y": 370,
+        "w": 60,
+        "h": 30,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 210,
+            "y": 370
+          },
+          {
+            "x": 250,
+            "y": 370
+          },
+          {
+            "x": 260,
+            "y": 390
+          },
+          {
+            "x": 240,
+            "y": 400
+          },
+          {
+            "x": 210,
+            "y": 400
+          }
+        ],
+        "x": 210,
+        "y": 370,
+        "w": 50,
+        "h": 30,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 240,
+            "y": 370
+          },
+          {
+            "x": 240,
+            "y": 390
+          },
+          {
+            "x": 270,
+            "y": 410
+          },
+          {
+            "x": 290,
+            "y": 390
+          },
+          {
+            "x": 280,
+            "y": 370
+          }
+        ],
+        "x": 240,
+        "y": 370,
+        "w": 50,
+        "h": 40,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 270,
+            "y": 370
+          },
+          {
+            "x": 260,
+            "y": 390
+          },
+          {
+            "x": 310,
+            "y": 400
+          },
+          {
+            "x": 320,
+            "y": 390
+          },
+          {
+            "x": 310,
+            "y": 370
+          }
+        ],
+        "x": 260,
+        "y": 370,
+        "w": 60,
+        "h": 30,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 310,
+            "y": 370
+          },
+          {
+            "x": 310,
+            "y": 390
+          },
+          {
+            "x": 330,
+            "y": 400
+          },
+          {
+            "x": 350,
+            "y": 390
+          },
+          {
+            "x": 340,
+            "y": 370
+          }
+        ],
+        "x": 310,
+        "y": 370,
+        "w": 40,
+        "h": 30,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 340,
+            "y": 370
+          },
+          {
+            "x": 370,
+            "y": 370
+          },
+          {
+            "x": 380,
+            "y": 389.9999999999999
+          },
+          {
+            "x": 370,
+            "y": 400
+          },
+          {
+            "x": 330,
+            "y": 389.9999999999999
+          }
+        ],
+        "x": 330,
+        "y": 370,
+        "w": 50,
+        "h": 30,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 590,
+            "y": 370
+          },
+          {
+            "x": 590,
+            "y": 390
+          },
+          {
+            "x": 630,
+            "y": 390
+          },
+          {
+            "x": 640,
+            "y": 370
+          }
+        ],
+        "x": 590,
+        "y": 370,
+        "w": 50,
+        "h": 20,
+        "palette": "purple"
+      },
+      {
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 640,
+            "y": 370
+          },
+          {
+            "x": 670,
+            "y": 370
+          },
+          {
+            "x": 650,
+            "y": 380
+          }
+        ],
         "x": 640,
-        "y": 48,
-        "w": 36,
-        "h": 46
+        "y": 370,
+        "w": 30,
+        "h": 10,
+        "palette": "purple"
       },
       {
-        "type": "steelPlatform",
-        "x": 738,
-        "y": 48,
-        "w": 16,
-        "h": 236
-      },
-      {
-        "type": "steelPlatform",
-        "x": 50,
-        "y": 260,
-        "w": 698,
-        "h": 22
+        "type": "polygonRock",
+        "points": [
+          {
+            "x": 670,
+            "y": 370
+          },
+          {
+            "x": 700,
+            "y": 370
+          },
+          {
+            "x": 720,
+            "y": 380
+          },
+          {
+            "x": 690,
+            "y": 400
+          },
+          {
+            "x": 670,
+            "y": 390
+          }
+        ],
+        "x": 670,
+        "y": 370,
+        "w": 50,
+        "h": 30,
+        "palette": "purple"
       }
     ],
+    "solutionDna": [
+      "DRILL",
+      "BASH"
+    ],
+    "seed": 801,
+    "difficultyScore": 150,
+    "difficultyFactors": {
+      "sequenceLength": 2,
+      "uniqueSkills": 2,
+      "skillTransitions": 1,
+      "timingCount": 0,
+      "comboSynergy": 1
+    },
     "_meta": {
-      "generator": "CausalGrammarEngine-v9-Phase2",
-      "family": "figure8_relay_variants",
-      "variant": "v3",
-      "mirrorX": false,
-      "decoy": null,
-      "difficulty": "apex",
-      "difficultyLabel": "APEX",
-      "difficultyScore": 100,
-      "mechanics": [
-        "Single-Pioneer Figure-8 Loop",
-        "FLOAT=0 & BLOCK=0",
-        "Two-Way Diagonal MINE",
-        "Reverse BUILD Landing Cushion"
-      ],
-      "shortcutHint": "u1 CLIMB → 점프패드 → 성채 좌향 MINE 하강 → 스폰 아래 역방향 BUILD → 본대 DRILL → MINE 역등반 & BASH",
-      "fingerprint": "figure8_relay_variants|v3|N|none"
+      "seed": 801,
+      "archetype": "cascade",
+      "gimmickLabel": "WORMHOLE_TRIAD",
+      "shortcutHint": "레이저를 강철벽에 날렸다면 폭탄으로 오른쪽 벽을 뚫을 수 있다 (1명 희생)",
+      "difficulty": "HARD",
+      "elementCount": 15,
+      "attempt": 1,
+      "simVerified": false
+    },
+    "genParams": {
+      "difficulty": "hard",
+      "layout": "scenario",
+      "theme": "purple",
+      "palette": "purple",
+      "includeMovingPlatform": false,
+      "includeOptionA": false,
+      "includeOptionB": false
     },
     "verification": {
-      "engine": "ForgeSim-v9-Phase2",
-      "verifiedAt": "2026-11-19T15:37:34.459Z",
-      "lintErrors": 0,
-      "zeroRescued": 0,
-      "greedyCleared": false,
-      "goldenRescued": 18,
-      "goldenNeed": 18,
-      "goldenTicks": 2302,
-      "solidRatioPct": 64.8,
-      "trapsVerifiedBlocked": 2,
+      "adapter": "ScenarioValidator",
+      "solvable": true,
       "plan": [
-        {
-          "skill": "climb",
-          "unit": 1,
-          "at": {
-            "x": 176,
-            "y": 148,
-            "tol": 12
-          },
-          "dir": 1,
-          "label": "u1 격리벽 등반 → 점프패드 성채 도약"
-        },
-        {
-          "skill": "mine",
-          "unit": 1,
-          "at": {
-            "x": 496,
-            "y": 172,
-            "tol": 6
-          },
-          "dir": -1,
-          "label": "u1 출구벽 반사 후 성채 좌하향 MINE 경사로 굴착"
-        },
-        {
-          "skill": "build",
-          "unit": 1,
-          "at": {
-            "x": 158,
-            "y": 260,
-            "tol": 5
-          },
-          "dir": -1,
-          "label": "u1 하단 스폰 아래 역방향 BUILD 완충 발판"
-        },
         {
           "skill": "drill",
           "unit": "crowd_lead",
           "at": {
-            "x": 122,
-            "y": 148,
-            "tol": 5
+            "x": 360,
+            "y": 185,
+            "tol": 16,
+            "ytol": 16
           },
-          "wait": 190,
-          "label": "본대 스폰 바닥 DRILL 안전 하강 → MINE 역등반!"
+          "dir": 1
         },
         {
           "skill": "bash",
-          "unit": "any",
+          "unit": "crowd_lead",
           "at": {
-            "x": 530,
-            "y": 172,
-            "tol": 8
+            "x": 630,
+            "y": 280,
+            "tol": 16,
+            "ytol": 16
           },
-          "dir": 1,
-          "label": "성채 1차 수문 BASH"
-        },
-        {
-          "skill": "build",
-          "unit": "any",
-          "at": {
-            "x": 566,
-            "y": 172,
-            "tol": 5
-          },
-          "dir": 1,
-          "label": "성채 20px 강철 단차 BUILD"
-        },
-        {
-          "skill": "bash",
-          "unit": "any",
-          "at": {
-            "x": 638,
-            "y": 152,
-            "tol": 8
-          },
-          "dir": 1,
-          "label": "성채 최종 출구 BASH"
+          "dir": 1
         }
-      ]
+      ],
+      "score": 150,
+      "scoreParts": null,
+      "band": "hard",
+      "requiredSkills": 2,
+      "criticalActions": 2,
+      "minWindow": null,
+      "alternatives": 1,
+      "zeroSkillShortcut": false,
+      "lintOk": true,
+      "reasons": [
+        "validator 6/6 PASS (intended route DRILL->BASH, all drops safe)"
+      ],
+      "nodes": null,
+      "checkedAt": "2026-11-18T05:38:00+09:00"
     }
   }
 ]

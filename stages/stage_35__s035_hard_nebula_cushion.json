@@ -1,0 +1,585 @@
+﻿{
+  "id": 35,
+  "title": "[S035] [HARD] NEBULA CUSHION",
+  "bgImg": "assets/bg_level_9.jpg",
+  "terrainTheme": "brown",
+  "desc": "스폰 아래 112px 치사 낙차! 2인 선발대(CLIMB+FLOAT+BLOCK 반사 → 역방향 BUILD 완충)로 완충 발판을 만든 뒤, BLOCK 대원을 직접 BASH로 해제해 하류 함정까지 전부 정리하고 본대를 하강시키세요.",
+  "totalUnits": 16,
+  "needPercent": 100,
+  "spawnRate": 24,
+  "timeLimit": 330,
+  "skills": {
+    "climb": 2,
+    "float": 2,
+    "bomb": 0,
+    "block": 1,
+    "build": 2,
+    "bash": 2,
+    "mine": 0,
+    "drill": 1,
+    "portal": 0
+  },
+  "spawnX": 100,
+  "spawnY": 100,
+  "gateX": 682,
+  "gateY": 216,
+  "solutionDna": [
+    "CLIMB",
+    "FLOAT",
+    "BLOCK",
+    "BUILD",
+    "BASH",
+    "DRILL"
+  ],
+  "difficultyScore": 77,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 1,
+      "y": 2,
+      "w": 48,
+      "h": 445,
+      "points": [
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 17,
+          "y": 3
+        },
+        {
+          "x": 34,
+          "y": 5
+        },
+        {
+          "x": 48,
+          "y": 2
+        },
+        {
+          "x": 48,
+          "y": 148
+        },
+        {
+          "x": 49,
+          "y": 301
+        },
+        {
+          "x": 48,
+          "y": 447
+        },
+        {
+          "x": 34,
+          "y": 447
+        },
+        {
+          "x": 17,
+          "y": 444
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 1,
+          "y": 301
+        },
+        {
+          "x": 4,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 749,
+      "y": 1,
+      "w": 50,
+      "h": 446,
+      "points": [
+        {
+          "x": 750,
+          "y": 2
+        },
+        {
+          "x": 765,
+          "y": 1
+        },
+        {
+          "x": 783,
+          "y": 4
+        },
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 797,
+          "y": 148
+        },
+        {
+          "x": 799,
+          "y": 301
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 783,
+          "y": 443
+        },
+        {
+          "x": 765,
+          "y": 442
+        },
+        {
+          "x": 750,
+          "y": 447
+        },
+        {
+          "x": 751,
+          "y": 301
+        },
+        {
+          "x": 749,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 292,
+      "y": 2,
+      "w": 454,
+      "h": 77,
+      "points": [
+        {
+          "x": 294,
+          "y": 2
+        },
+        {
+          "x": 442,
+          "y": 2
+        },
+        {
+          "x": 598,
+          "y": 4
+        },
+        {
+          "x": 746,
+          "y": 2
+        },
+        {
+          "x": 744,
+          "y": 26
+        },
+        {
+          "x": 743,
+          "y": 54
+        },
+        {
+          "x": 746,
+          "y": 78
+        },
+        {
+          "x": 598,
+          "y": 75
+        },
+        {
+          "x": 442,
+          "y": 79
+        },
+        {
+          "x": 294,
+          "y": 78
+        },
+        {
+          "x": 292,
+          "y": 54
+        },
+        {
+          "x": 293,
+          "y": 26
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 51,
+      "y": 284,
+      "w": 695,
+      "h": 163,
+      "points": [
+        {
+          "x": 52,
+          "y": 284
+        },
+        {
+          "x": 280,
+          "y": 285
+        },
+        {
+          "x": 518,
+          "y": 284
+        },
+        {
+          "x": 746,
+          "y": 284
+        },
+        {
+          "x": 745,
+          "y": 337
+        },
+        {
+          "x": 744,
+          "y": 394
+        },
+        {
+          "x": 746,
+          "y": 447
+        },
+        {
+          "x": 518,
+          "y": 445
+        },
+        {
+          "x": 280,
+          "y": 446
+        },
+        {
+          "x": 52,
+          "y": 447
+        },
+        {
+          "x": 51,
+          "y": 394
+        },
+        {
+          "x": 52,
+          "y": 337
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 50,
+      "y": 1,
+      "w": 241,
+      "h": 45,
+      "points": [
+        {
+          "x": 52,
+          "y": 2
+        },
+        {
+          "x": 130,
+          "y": 2
+        },
+        {
+          "x": 212,
+          "y": 1
+        },
+        {
+          "x": 290,
+          "y": 2
+        },
+        {
+          "x": 291,
+          "y": 16
+        },
+        {
+          "x": 286,
+          "y": 32
+        },
+        {
+          "x": 290,
+          "y": 46
+        },
+        {
+          "x": 212,
+          "y": 45
+        },
+        {
+          "x": 130,
+          "y": 45
+        },
+        {
+          "x": 52,
+          "y": 46
+        },
+        {
+          "x": 54,
+          "y": 32
+        },
+        {
+          "x": 50,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 50,
+      "y": 150,
+      "w": 60,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 150,
+      "y": 150,
+      "w": 70,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 52,
+      "y": 48,
+      "w": 16,
+      "h": 104
+    },
+    {
+      "type": "steelPlatform",
+      "x": 200,
+      "y": 90,
+      "w": 20,
+      "h": 70
+    },
+    {
+      "type": "steelPlatform",
+      "x": 274,
+      "y": 80,
+      "w": 18,
+      "h": 124
+    },
+    {
+      "type": "steelPlatform",
+      "x": 52,
+      "y": 164,
+      "w": 16,
+      "h": 100
+    },
+    {
+      "type": "steelPlatform",
+      "x": 52,
+      "y": 260,
+      "w": 418,
+      "h": 22
+    },
+    {
+      "type": "rockWall",
+      "x": 376,
+      "y": 188,
+      "w": 30,
+      "h": 72
+    },
+    {
+      "type": "steelPlatform",
+      "x": 372,
+      "y": 80,
+      "w": 38,
+      "h": 108
+    },
+    {
+      "type": "steelPlatform",
+      "x": 470,
+      "y": 276,
+      "w": 46,
+      "h": 16
+    },
+    {
+      "type": "jumpPad",
+      "x": 478,
+      "y": 266,
+      "w": 28,
+      "h": 10,
+      "dir": "up-left",
+      "power": 12.2
+    },
+    {
+      "type": "steelPlatform",
+      "x": 516,
+      "y": 240,
+      "w": 232,
+      "h": 42
+    },
+    {
+      "type": "rockWall",
+      "x": 586,
+      "y": 178,
+      "w": 30,
+      "h": 62
+    },
+    {
+      "type": "steelPlatform",
+      "x": 582,
+      "y": 80,
+      "w": 38,
+      "h": 98
+    },
+    {
+      "type": "steelPlatform",
+      "x": 732,
+      "y": 80,
+      "w": 16,
+      "h": 200
+    },
+    {
+      "type": "craggyRock",
+      "x": 110,
+      "y": 150,
+      "w": 40,
+      "h": 20,
+      "palette": "brown",
+      "profile": [
+        18,
+        22,
+        22
+      ]
+    }
+  ],
+  "_meta": {
+    "generator": "CausalGrammarEngine-v9-Phase2",
+    "family": "twin_cushion_evolution",
+    "variant": "v1",
+    "mirrorX": false,
+    "decoy": null,
+    "difficulty": "hard",
+    "difficultyLabel": "HARD",
+    "difficultyScore": 77,
+    "mechanics": [
+      "Twin Pioneer Cushion",
+      "Blocker-Freeing BASH",
+      "Downstream Cursed Pad Overpass"
+    ],
+    "shortcutHint": "u1/u2 CLIMB+FLOAT → u1 BLOCK → u2 역방향 BUILD → u1 직접 BASH 해제+하류 개척 → 본대 DRILL 하강",
+    "fingerprint": "twin_cushion_evolution|v1|N|none"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase2",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 16,
+    "goldenNeed": 16,
+    "goldenTicks": 1641,
+    "solidRatioPct": 66.7,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "climb",
+        "unit": 1,
+        "at": {
+          "x": 165,
+          "y": 148,
+          "tol": 12
+        },
+        "dir": 1,
+        "label": "u1 등반"
+      },
+      {
+        "skill": "float",
+        "unit": 1,
+        "at": {
+          "x": 192,
+          "y": 116,
+          "tol": 24,
+          "ytol": 36
+        },
+        "state": "any",
+        "label": "u1 역추진"
+      },
+      {
+        "skill": "climb",
+        "unit": 2,
+        "at": {
+          "x": 165,
+          "y": 148,
+          "tol": 12
+        },
+        "dir": 1,
+        "label": "u2 등반"
+      },
+      {
+        "skill": "float",
+        "unit": 2,
+        "at": {
+          "x": 192,
+          "y": 116,
+          "tol": 24,
+          "ytol": 36
+        },
+        "state": "any",
+        "label": "u2 역추진"
+      },
+      {
+        "skill": "block",
+        "unit": 1,
+        "at": {
+          "x": 370,
+          "y": 260,
+          "tol": 5
+        },
+        "dir": 1,
+        "label": "u1 1차 암벽 앞 인간 반사판 BLOCK"
+      },
+      {
+        "skill": "build",
+        "unit": 2,
+        "at": {
+          "x": 162,
+          "y": 260,
+          "tol": 5
+        },
+        "dir": -1,
+        "label": "u2 반사 후 스폰 아래 역방향 BUILD 완충"
+      },
+      {
+        "skill": "bash",
+        "unit": "blocker",
+        "at": {
+          "x": 370,
+          "y": 260,
+          "tol": 14
+        },
+        "wait": 20,
+        "label": "u1(BLOCK) 직접 BASH 해제+1차 암벽 돌파"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 468,
+          "y": 260,
+          "tol": 4
+        },
+        "dir": 1,
+        "label": "u1 하류 함정 점프패드 BUILD 과교"
+      },
+      {
+        "skill": "bash",
+        "unit": 1,
+        "at": {
+          "x": 580,
+          "y": 240,
+          "tol": 8
+        },
+        "dir": 1,
+        "label": "u1 2차 암벽 BASH 개통"
+      },
+      {
+        "skill": "drill",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 126,
+          "y": 148,
+          "tol": 5
+        },
+        "wait": 40,
+        "label": "하류 완공 후 본대 스폰 DRILL 안전 하강 → 100% 구출!"
+      }
+    ]
+  },
+  "isOverridden": false}

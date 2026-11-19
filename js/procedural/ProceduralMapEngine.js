@@ -1,12 +1,13 @@
 /* ============================================================================
- * ProceduralMapEngine.js — 다중 경로 & 날먹 차단 퍼즐 생성 엔진 (v5)
+ * ProceduralMapEngine.js — v8 "Mystery Triad & Emergent Maze" 연동 오케스트레이터
  *
  * [핵심 개편 사항]
- * 1. 난이도 설정 후 맵 생성 시 FullCanvasLevelArchitect(v5)의 다중 경로 토폴로지 생성기 구동
- * 2. 정석 정답(Golden Solution) 1개는 정밀 물리 엔진으로 100% 클리어 보장
- * 3. 유혹의 함정 분기(Decoy Branches) + 고수용 센스 루트(Alt Routes) + 전술 유틸리티 스킬 지급으로
- *    "딱 보고 길을 치열하게 고민하며 개인 센스에 따라 다른 해법도 가능한" 맵 생성
- * 4. 0-Skill(무조작) 및 1-Skill(단일 스킬 날먹) 자동 퍼징 검증으로 허무하게 깨지는 맵 원천 차단
+ * 1. 기본 맵 생성 파이프라인을 FullCanvasLevelArchitect(v8 TriadMazeBuilder)로 전환
+ *    (4×3 12섹터 DAG · 웜홀 3중 진입로 · 30~50% 거대 굴착 암반 · 역발상 기믹 시너지)
+ * 2. 난이도 점수(DifficultyScorer)를 오브젝트 개수가 아닌
+ *    [선택지/분기 수 + 함정 배제 수 + 자원 결핍 압박 + 스킬 전환/타이밍 정밀도]로 개편
+ * 3. Zero-Skill(0명) · Greedy/Naive-Bot 차단 · Golden Plan · Alternative Trade-off
+ *    4단계 실물리 검증 및 desc/shortcutHint/verification.plan 자동 연동
  * ==========================================================================*/
 (function (root, factory) {
   const C = (typeof require === 'function') ? require('./MapCore.js') : root;
@@ -48,12 +49,13 @@
   };
 
   /* =====================================================================
-   * DifficultyScorer — 타이밍 개수 & 스킬 시퀀스 길이 & 경로 분기 의사결정 스코어러
+   * DifficultyScorer (v8) — 선택지 분기 · 함정 배제 · 자원 결핍 · 스킬 전환/타이밍 스코어러
    * ===================================================================*/
   const WEIGHTS = {
-    timingCount: 40,     // 요구되는 스킬 조작 타이밍의 개수 및 간격 밀도
-    sequenceLength: 36,  // 필수 스킬 시퀀스의 길이 및 고유 스킬 다양성
-    comboSynergy: 24     // 연속 스킬 전환 연계 및 다중 경로(함정/서브루트) 판단 난이도
+    branchChoices: 22,     // 웜홀 3중 진입로 및 미로 분기 선택지 복잡도
+    decoyTraps: 22,        // 자원 제약/강철 코어로 배제해야 하는 함정 경로 수
+    scarcityPressure: 22,  // 핵심 스킬(float/bash 등) 희소성 & 구출 쿼터 압박
+    skillPrecision: 34     // 스킬 전환 · 역발상 연계 · 타이밍 정밀도
   };
 
   class DifficultyScorer {
@@ -76,20 +78,31 @@
         if (dist < 135) tightTimingPairs += 1.0;
         else if (dist < 185) tightTimingPairs += 0.5;
       }
-      f.timingCount = clamp((timingCount * 18) + (tightTimingPairs * 10), 0, 100);
 
       const seqLen = Math.max(dna.length, timingCount);
       const uniqueSkills = new Set(dna.length > 0 ? dna : triggers.map(t => t.skill)).size;
-      f.sequenceLength = clamp((seqLen * 16) + (uniqueSkills * 8), 0, 100);
-
       const activeSeq = triggers.length > 0 ? triggers.map(t => t.skill) : dna;
       let switches = 0;
       for (let i = 1; i < activeSeq.length; i++) {
         if (activeSeq[i] !== activeSeq[i - 1]) switches++;
       }
+
       const routeBranches = (meta.routeBranches != null)
         ? meta.routeBranches
-        : ((plan && plan.deco ? plan.deco.length : 2));
+        : ((meta.triadEntries && meta.triadEntries.length) || 3);
+      const decoyCount = (meta.decoyCount != null)
+        ? meta.decoyCount
+        : ((meta.redHerrings && meta.redHerrings.length) || 2);
+      const scarcityRatio = meta.scarcityRatio != null ? meta.scarcityRatio : 0.7;
+
+      f.branchChoices = clamp((routeBranches * 24) + ((meta.altCount || 1) * 14), 0, 100);
+      f.decoyTraps = clamp((decoyCount * 30), 0, 100);
+      f.scarcityPressure = clamp(Math.round(scarcityRatio * 100), 0, 100);
+      f.skillPrecision = clamp((seqLen * 14) + (uniqueSkills * 9) + (switches * 12) + (tightTimingPairs * 10), 0, 100);
+
+      // 하위 호환 키 유지
+      f.timingCount = clamp((timingCount * 18) + (tightTimingPairs * 10), 0, 100);
+      f.sequenceLength = clamp((seqLen * 16) + (uniqueSkills * 8), 0, 100);
       f.comboSynergy = clamp((switches * 22) + (tightTimingPairs * 8) + (routeBranches * 5), 0, 100);
 
       return f;
@@ -101,7 +114,7 @@
       for (const k of Object.keys(WEIGHTS)) {
         s += WEIGHTS[k] * ((f[k] || 0) / 100);
       }
-      const total = Math.round(clamp(s * 1.38, 25, 165) * 10) / 10;
+      const total = Math.round(clamp(s * 2.15, 45, 230) * 10) / 10;
       return { total, factors: f };
     }
 
@@ -582,14 +595,16 @@
     }
 
     static mapDifficultyToScore(diff) {
-      if (typeof diff === 'number') return clamp(diff, 30, 165);
+      if (typeof diff === 'number') return clamp(diff, 45, 230);
       const d = (diff || 'normal').toLowerCase();
       switch (d) {
-        case 'easy': return 48;
-        case 'normal': return 78;
-        case 'hard': return 108;
-        case 'nightmare': return 138;
-        default: return 78;
+        case 'easy': return 70;
+        case 'normal': return 98;
+        case 'hard': return 130;
+        case 'nightmare': return 160;
+        case 'master': return 188;
+        case 'apex': return 212;
+        default: return 98;
       }
     }
 
@@ -608,9 +623,11 @@
         'ascent': 'ascent',
         'traverse': 'traverse',
         'split': 'split',
-        'chamber': 'chamber'
+        'chamber': 'chamber',
+        'elevator': 'elevator',
+        'terraces': 'terraces'
       };
-      return map[l] || null;
+      return map[l] || l;
     }
 
     static mapThemeAndPaletteToBiome(theme, palette) {
@@ -632,24 +649,29 @@
     }
 
     static generate(options = {}) {
-      // StageForge v3: Whole-Canvas Macro-Blueprint + 실물리(ForgeSim) 검증 생성기
-      const SF = (typeof StageForge !== 'undefined') ? StageForge : (root && root.StageForge);
-      if (SF && options.engine !== 'legacy') {
+      // 명시적으로 stageforge 요청 시에만 StageForge 사용
+      const SF = (typeof StageForge !== 'undefined') ? StageForge : (typeof globalThis !== 'undefined' && globalThis.StageForge);
+      if (SF && options.engine === 'stageforge') {
         try {
           return SF.generate(options);
         } catch (e) {
-          console.warn('[ProceduralMapEngine] StageForge fallback to Architect:', e.message);
+          console.warn('[ProceduralMapEngine] StageForge fallback to Architect v8:', e.message);
         }
       }
 
+      // 기본 엔진: FullCanvasLevelArchitect v8 (TriadMazeBuilder: 4×3 DAG + 3중 진입로 + 거대 암반)
       const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
         ? FullCanvasLevelArchitect
         : (FA && FA.FullCanvasLevelArchitect)
           ? FA.FullCanvasLevelArchitect
           : null;
 
-      if (Architect) {
+      if (Architect && options.engine !== 'legacy') {
         return Architect.generate(options);
+      }
+
+      if (SF && options.engine !== 'legacy') {
+        return SF.generate(options);
       }
 
       const targetScore = this.mapDifficultyToScore(options.difficulty);
@@ -676,9 +698,53 @@
     }
 
     static generateCampaignBatch(arc = {}) {
-      const SF = (typeof StageForge !== 'undefined') ? StageForge : (root && root.StageForge);
+      const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
+        ? FullCanvasLevelArchitect
+        : (FA && FA.FullCanvasLevelArchitect)
+          ? FA.FullCanvasLevelArchitect
+          : null;
+      const families = (FA && FA.TRIAD_FAMILIES) || [
+        'WORMHOLE_TRIAD_PILLAR', 'LANDING_PAD_CUSHION', 'TWOWAY_MINE_RAMP',
+        'JUMPPAD_MAZE_VAULT', 'ELEVATOR_SHAFT_MAZE', 'CARVABLE_MASS_LABYRINTH',
+        'DIAGONAL_SLIDE_TRIAD', 'RESONANCE_BOMB_VAULT', 'BACKDOOR_STEEL_MIRAGE',
+        'PIONEER_FORTRESS_SYNERGY'
+      ];
+
+      if (Architect && arc.engine !== 'stageforge' && arc.stages) {
+        const stages = [];
+        const hardPlusOnly = !!arc.hardPlus;
+        for (let i = 0; i < arc.stages; i++) {
+          const t = arc.stages === 1 ? 1 : i / (arc.stages - 1);
+          let diff;
+          if (hardPlusOnly) {
+            if (t >= 0.80) diff = 'apex';
+            else if (t >= 0.55) diff = 'master';
+            else if (t >= 0.25) diff = 'nightmare';
+            else diff = 'hard';
+          } else {
+            if (t > 0.85) diff = 'apex';
+            else if (t > 0.70) diff = 'master';
+            else if (t > 0.50) diff = 'nightmare';
+            else if (t > 0.30) diff = 'hard';
+            else if (t > 0.12) diff = 'normal';
+            else diff = 'easy';
+          }
+
+          const map = Architect.generate({
+            difficulty: diff,
+            family: families[i % families.length],
+            stageNo: (arc.startStage || 24) + i,
+            id: (arc.startStage || 24) + i,
+            seed: ((arc.seed || Date.now()) + i * 7919) >>> 0
+          });
+          stages.push(map);
+        }
+        return { stages, metrics: this.metaGenerator.audit(stages, arc) };
+      }
+
+      const SF = (typeof StageForge !== 'undefined') ? StageForge : (typeof globalThis !== 'undefined' && globalThis.StageForge);
       const archs = ['cascade', 'chamber', 'zigzag', 'split', 'traverse', 'ascent', 'elevator', 'terraces'];
-      if (SF && arc.engine !== 'legacy' && arc.stages) {
+      if (SF && arc.stages) {
         const stages = [];
         for (let i = 0; i < arc.stages; i++) {
           const t = arc.stages === 1 ? 1 : i / (arc.stages - 1);
@@ -705,63 +771,39 @@
         }
       }
 
-      const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
-        ? FullCanvasLevelArchitect
-        : (FA && FA.FullCanvasLevelArchitect)
-          ? FA.FullCanvasLevelArchitect
-          : null;
-
-      if (Architect && arc.stages) {
-        const stages = [];
-        for (let i = 0; i < arc.stages; i++) {
-          const t = arc.stages === 1 ? 1 : i / (arc.stages - 1);
-          let diff = 'easy';
-          if (t > 0.75) diff = 'nightmare';
-          else if (t > 0.45) diff = 'hard';
-          else if (t > 0.2) diff = 'normal';
-
-          const map = Architect.generate({
-            difficulty: diff,
-            layout: archs[i % archs.length],
-            stageNo: (arc.startStage || 11) + i,
-            seed: (arc.seed || Date.now()) + i * 7919
-          });
-          stages.push(map);
-        }
-        return { stages, metrics: this.metaGenerator.audit(stages, arc) };
-      }
       return this.metaGenerator.batch(arc);
     }
 
-    static generateNextStage(currentStageNo = 11, prevMap = null, difficulty = 'normal') {
-      const SF = (typeof StageForge !== 'undefined') ? StageForge : (root && root.StageForge);
-      const archs = ['cascade', 'chamber', 'zigzag', 'split', 'traverse', 'ascent', 'elevator', 'terraces'];
-      const prevArch = prevMap ? (prevMap.layoutType || (prevMap._meta && prevMap._meta.layoutType)) : null;
-      const choices = archs.filter(a => a !== prevArch);
-      const layout = choices.length ? choices[Math.floor(Math.random() * choices.length)] : 'cascade';
-      const seed = (Date.now() ^ (currentStageNo * 7919)) >>> 0;
-
-      if (SF) {
-        try {
-          return SF.generate({ difficulty, layout, id: currentStageNo, seed });
-        } catch (e) {
-          console.warn('[ProceduralMapEngine] nextStage StageForge fallback:', e.message);
-        }
-      }
-
+    static generateNextStage(currentStageNo = 11, prevMap = null, difficulty = 'hard') {
       const Architect = (typeof FullCanvasLevelArchitect !== 'undefined')
         ? FullCanvasLevelArchitect
         : (FA && FA.FullCanvasLevelArchitect)
           ? FA.FullCanvasLevelArchitect
           : null;
+      const families = (FA && FA.TRIAD_FAMILIES) || [
+        'WORMHOLE_TRIAD_PILLAR', 'LANDING_PAD_CUSHION', 'TWOWAY_MINE_RAMP',
+        'JUMPPAD_MAZE_VAULT', 'ELEVATOR_SHAFT_MAZE', 'CARVABLE_MASS_LABYRINTH',
+        'DIAGONAL_SLIDE_TRIAD', 'RESONANCE_BOMB_VAULT', 'BACKDOOR_STEEL_MIRAGE',
+        'PIONEER_FORTRESS_SYNERGY'
+      ];
+      const prevFamily = prevMap && prevMap._meta ? prevMap._meta.family : null;
+      const famChoices = families.filter(f => f !== prevFamily);
+      const chosenFamily = famChoices.length ? famChoices[Math.floor(Math.random() * famChoices.length)] : families[0];
+      const seed = (Date.now() ^ (currentStageNo * 7919)) >>> 0;
 
       if (Architect) {
         return Architect.generate({
           difficulty,
-          layout,
+          family: chosenFamily,
           stageNo: currentStageNo,
+          id: currentStageNo,
           seed
         });
+      }
+
+      const SF = (typeof StageForge !== 'undefined') ? StageForge : (typeof globalThis !== 'undefined' && globalThis.StageForge);
+      if (SF) {
+        return SF.generate({ difficulty, layout: 'random', id: currentStageNo, seed });
       }
 
       const targetScore = this.mapDifficultyToScore(difficulty);
@@ -769,7 +811,6 @@
         score: targetScore,
         difficulty,
         stageNo: currentStageNo,
-        avoidArch: prevArch,
         seed
       });
     }

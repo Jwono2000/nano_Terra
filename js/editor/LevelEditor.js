@@ -449,11 +449,15 @@ class LevelEditor {
       }
       const seed = this._newSeed();
       let generatedData = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
-      const isStageForge = !!(generatedData && generatedData._meta && String(generatedData._meta.generator || '').startsWith('StageForge'));
-      if (!isStageForge && params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
+      const isIntegratedGen = !!(generatedData && generatedData._meta && (
+        String(generatedData._meta.generator || '').startsWith('StageForge') ||
+        String(generatedData._meta.generator || '').startsWith('TriadMazeBuilder') ||
+        generatedData._meta.architecturalFeaturesIntegrated
+      ));
+      if (!isIntegratedGen && params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
         generatedData = MovingPlatformArchitect.injectMovingPlatforms(generatedData, { seed });
       }
-      if (!isStageForge && typeof AdvancedFeatureArchitect !== 'undefined') {
+      if (!isIntegratedGen && typeof AdvancedFeatureArchitect !== 'undefined') {
         const doOptA = params.includeOptionA !== false;
         const doOptB = params.includeOptionB !== false;
         if (doOptA || doOptB) {
@@ -556,11 +560,15 @@ class LevelEditor {
       try {
         const seed = this._newSeed();
         let data = ProceduralMapEngine.generate(Object.assign({}, params, { seed }));
-        const isStageForge = !!(data && data._meta && String(data._meta.generator || '').startsWith('StageForge'));
-        if (!isStageForge && params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
+        const isIntegratedGen = !!(data && data._meta && (
+          String(data._meta.generator || '').startsWith('StageForge') ||
+          String(data._meta.generator || '').startsWith('TriadMazeBuilder') ||
+          data._meta.architecturalFeaturesIntegrated
+        ));
+        if (!isIntegratedGen && params.includeMovingPlatform && typeof MovingPlatformArchitect !== 'undefined') {
           data = MovingPlatformArchitect.injectMovingPlatforms(data, { seed });
         }
-        if (!isStageForge && typeof AdvancedFeatureArchitect !== 'undefined') {
+        if (!isIntegratedGen && typeof AdvancedFeatureArchitect !== 'undefined') {
           const doOptA = params.includeOptionA !== false;
           const doOptB = params.includeOptionB !== false;
           if (doOptA || doOptB) {
@@ -574,7 +582,22 @@ class LevelEditor {
         data.seed = seed;
         data.genParams = params;
         let verdict = null;
-        if (data._meta && String(data._meta.generator || '').startsWith('StageForge') && data._meta.forgeSim) {
+        if (data._meta && String(data._meta.generator || '').startsWith('TriadMazeBuilder') && data.verification && data.verification.solvable) {
+          const v = data.verification;
+          const lintRes = (typeof LevelLint !== 'undefined' && LevelLint.run) ? LevelLint.run(data) : { ok: v.lintOk !== false, errors: [], summary: 'OK' };
+          verdict = {
+            accepted: true,
+            adapter: v.adapter || 'TriadMazeValidator+ForgeSim',
+            band: v.band || data.difficulty || targetBand || 'hard',
+            score: { total: v.score || data.difficultyScore || 120, parts: v.scoreParts || null },
+            solve: { solvable: true, plan: v.plan || [], requiredSkills: v.requiredSkills || (data.solutionDna || []).length },
+            timing: { criticalActions: v.criticalActions || (v.plan || []).length, minWindow: v.minWindow || 10 },
+            alternatives: { count: v.alternativeCount != null ? v.alternativeCount : (Array.isArray(v.alternatives) ? v.alternatives.length : 1), list: Array.isArray(v.alternatives) ? v.alternatives : [] },
+            zeroSkill: { shortcut: !!v.zeroSkillShortcut },
+            lint: lintRes,
+            reasons: v.reasons || ['TriadMaze v8 verified']
+          };
+        } else if (data._meta && String(data._meta.generator || '').startsWith('StageForge') && data._meta.forgeSim) {
           const fs = data._meta.forgeSim;
           const lintRes = (typeof LevelLint !== 'undefined' && LevelLint.check) ? LevelLint.check(data) : { ok: true, errors: [], summary: 'OK' };
           verdict = {
@@ -1700,6 +1723,9 @@ class LevelEditor {
 
   _storeVerification(verdict) {
     if (!verdict) return;
+    if (this.levelData && this.levelData.verification && String(this.levelData.verification.adapter || '').startsWith('TriadMazeValidator') && this.levelData.verification.solvable) {
+      return;
+    }
     const s = verdict.solve || {};
     this.levelData.verification = {
       adapter: verdict.adapter,

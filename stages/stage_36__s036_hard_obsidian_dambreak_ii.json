@@ -1,0 +1,479 @@
+﻿{
+  "id": 36,
+  "title": "[S036] [HARD] OBSIDIAN DAMBREAK II",
+  "bgImg": "assets/bg_level_5.jpg",
+  "terrainTheme": "green",
+  "desc": "방어막(BLOCK)도 폭탄(BOMB)도 0개인데 100% 전원 구출! u1이 혼자 심연을 건너는 동안 후발대가 따라오면 전원 추락합니다. u2가 암석 천장(24px 높이) 아래에 계단(BUILD)으로 자가 댐을 세워 본대를 가둔 뒤, u1이 길을 다 열면 그 댐을 BASH로 부숴 전원을 해방하세요!",
+  "totalUnits": 16,
+  "needPercent": 100,
+  "spawnRate": 24,
+  "timeLimit": 330,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 2,
+    "mine": 0,
+    "drill": 0,
+    "bomb": 0,
+    "build": 3,
+    "block": 0,
+    "portal": 0
+  },
+  "spawnX": 703,
+  "spawnY": 214,
+  "gateX": 104,
+  "gateY": 212,
+  "solutionDna": [
+    "BUILD",
+    "BASH"
+  ],
+  "difficultyScore": 77,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 757,
+      "y": 2,
+      "w": 42,
+      "h": 447,
+      "points": [
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 785,
+          "y": 6
+        },
+        {
+          "x": 771,
+          "y": 6
+        },
+        {
+          "x": 758,
+          "y": 2
+        },
+        {
+          "x": 758,
+          "y": 148
+        },
+        {
+          "x": 757,
+          "y": 301
+        },
+        {
+          "x": 758,
+          "y": 447
+        },
+        {
+          "x": 771,
+          "y": 445
+        },
+        {
+          "x": 785,
+          "y": 449
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 798,
+          "y": 301
+        },
+        {
+          "x": 799,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 1,
+      "y": 1,
+      "w": 43,
+      "h": 446,
+      "points": [
+        {
+          "x": 42,
+          "y": 2
+        },
+        {
+          "x": 29,
+          "y": 5
+        },
+        {
+          "x": 15,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 148
+        },
+        {
+          "x": 1,
+          "y": 301
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 15,
+          "y": 446
+        },
+        {
+          "x": 29,
+          "y": 447
+        },
+        {
+          "x": 42,
+          "y": 447
+        },
+        {
+          "x": 44,
+          "y": 301
+        },
+        {
+          "x": 44,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 1,
+      "w": 708,
+      "h": 66,
+      "points": [
+        {
+          "x": 754,
+          "y": 2
+        },
+        {
+          "x": 521,
+          "y": 1
+        },
+        {
+          "x": 279,
+          "y": 3
+        },
+        {
+          "x": 46,
+          "y": 2
+        },
+        {
+          "x": 49,
+          "y": 22
+        },
+        {
+          "x": 46,
+          "y": 46
+        },
+        {
+          "x": 46,
+          "y": 66
+        },
+        {
+          "x": 279,
+          "y": 67
+        },
+        {
+          "x": 521,
+          "y": 64
+        },
+        {
+          "x": 754,
+          "y": 66
+        },
+        {
+          "x": 752,
+          "y": 46
+        },
+        {
+          "x": 753,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 480,
+      "y": 291,
+      "w": 274,
+      "h": 157,
+      "points": [
+        {
+          "x": 754,
+          "y": 292
+        },
+        {
+          "x": 665,
+          "y": 291
+        },
+        {
+          "x": 571,
+          "y": 296
+        },
+        {
+          "x": 482,
+          "y": 292
+        },
+        {
+          "x": 484,
+          "y": 342
+        },
+        {
+          "x": 480,
+          "y": 397
+        },
+        {
+          "x": 482,
+          "y": 447
+        },
+        {
+          "x": 571,
+          "y": 443
+        },
+        {
+          "x": 665,
+          "y": 448
+        },
+        {
+          "x": 754,
+          "y": 447
+        },
+        {
+          "x": 751,
+          "y": 397
+        },
+        {
+          "x": 752,
+          "y": 342
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 74,
+      "y": 292,
+      "w": 358,
+      "h": 155,
+      "points": [
+        {
+          "x": 431.9999999999999,
+          "y": 292
+        },
+        {
+          "x": 315.491124260355,
+          "y": 296
+        },
+        {
+          "x": 192.6272189349113,
+          "y": 296
+        },
+        {
+          "x": 76.11834319526628,
+          "y": 292
+        },
+        {
+          "x": 74,
+          "y": 342
+        },
+        {
+          "x": 76.11834319526628,
+          "y": 397
+        },
+        {
+          "x": 76.11834319526628,
+          "y": 447
+        },
+        {
+          "x": 192.6272189349113,
+          "y": 444
+        },
+        {
+          "x": 315.491124260355,
+          "y": 447
+        },
+        {
+          "x": 431.9999999999999,
+          "y": 447
+        },
+        {
+          "x": 429.88165680473384,
+          "y": 397
+        },
+        {
+          "x": 429.88165680473384,
+          "y": 342
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 474,
+      "y": 256,
+      "w": 274,
+      "h": 18
+    },
+    {
+      "type": "steelPlatform",
+      "x": 740,
+      "y": 40,
+      "w": 20,
+      "h": 250
+    },
+    {
+      "type": "rockWall",
+      "x": 550,
+      "y": 170,
+      "w": 30,
+      "h": 86
+    },
+    {
+      "type": "steelPlatform",
+      "x": 286,
+      "y": 270,
+      "w": 46,
+      "h": 16
+    },
+    {
+      "type": "jumpPad",
+      "x": 296,
+      "y": 260,
+      "w": 28,
+      "h": 10,
+      "dir": "up-right",
+      "power": 12.2
+    },
+    {
+      "type": "steelPlatform",
+      "x": 46,
+      "y": 68,
+      "w": 16,
+      "h": 206
+    },
+    {
+      "type": "steelPlatform",
+      "x": 332,
+      "y": 256,
+      "w": 100,
+      "h": 18
+    },
+    {
+      "type": "steelPlatform",
+      "x": 46,
+      "y": 240,
+      "w": 239,
+      "h": 40
+    },
+    {
+      "type": "rockWall",
+      "x": 158,
+      "y": 178,
+      "w": 30,
+      "h": 58
+    },
+    {
+      "type": "steelPlatform",
+      "x": 154,
+      "y": 68,
+      "w": 38,
+      "h": 110
+    }
+  ],
+  "_meta": {
+    "generator": "CausalGrammarEngine-v9-Phase2",
+    "family": "self_breaking_dam",
+    "variant": "v1",
+    "mirrorX": true,
+    "decoy": null,
+    "difficulty": "hard",
+    "difficultyLabel": "HARD",
+    "difficultyScore": 77,
+    "mechanics": [
+      "Zero-BLOCK Self-Breaking BUILD Dam",
+      "Pioneer Ahead Prep",
+      "Chasm BUILD",
+      "Cursed JumpPad Overpass"
+    ],
+    "shortcutHint": "u1 선행 통과 → u2 암석 천장 아래(x≈206) BUILD 댐 봉인 → u1 심연 가교(+함정패드 과교) & 출구 BASH → 본대가 BUILD 댐을 직접 BASH로 철거해 100% 구출!",
+    "fingerprint": "self_breaking_dam|v1|M|none"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase2",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 16,
+    "goldenNeed": 16,
+    "goldenTicks": 1477,
+    "solidRatioPct": 56.4,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "build",
+        "unit": 2,
+        "at": {
+          "x": 594,
+          "y": 256,
+          "tol": 4
+        },
+        "dir": -1,
+        "label": "u2 암석 천장 아래 BUILD 자가 댐 건설 (BLOCK=0 본대 홀드!)"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 478,
+          "y": 256,
+          "tol": 5
+        },
+        "dir": -1,
+        "label": "선발대 u1 중앙 심연 1차 BUILD 가교"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 334,
+          "y": 256,
+          "tol": 4
+        },
+        "dir": -1,
+        "label": "선발대 u1 하류 함정 점프패드 BUILD 과교 봉인"
+      },
+      {
+        "skill": "bash",
+        "unit": 1,
+        "at": {
+          "x": 194,
+          "y": 236,
+          "tol": 8
+        },
+        "dir": -1,
+        "label": "선발대 u1 최종 출구 암벽 BASH 돌파"
+      },
+      {
+        "skill": "bash",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 592,
+          "y": 248,
+          "tol": 16,
+          "ytol": 16
+        },
+        "dir": -1,
+        "wait": 140,
+        "label": "완공 후 본대가 자신이 세운 BUILD 댐을 BASH로 철거 → 100% 무희생 구출!"
+      }
+    ]
+  },
+  "isOverridden": false}

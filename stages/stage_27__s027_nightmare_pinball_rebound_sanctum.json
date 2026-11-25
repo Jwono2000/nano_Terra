@@ -1,0 +1,579 @@
+﻿{
+  "id": 27,
+  "title": "[S027] [NIGHTMARE] PINBALL REBOUND SANCTUM",
+  "bgImg": "assets/bg_level_3.jpg",
+  "terrainTheme": "purple",
+  "desc": "상단 좌측의 성소는 계단으로 오를 수 없는 고지대입니다. 하단 점프패드로 강철 타워 벽면에 공중 핀볼 리바운드 도약을 해야 하지만, 타워 좌측면에 매달린 공중 암석 스포일러가 도약 궤도를 가로막고 있습니다! 선발대 1명이 위에서 스포일러를 수직 굴착(DRILL)해 치우고 하단·상단 다리와 출구를 모두 완성한 뒤 본대를 핀볼 도약시키세요.",
+  "totalUnits": 16,
+  "needPercent": 100,
+  "spawnRate": 24,
+  "timeLimit": 330,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bomb": 0,
+    "block": 0,
+    "build": 2,
+    "bash": 1,
+    "mine": 0,
+    "drill": 2,
+    "portal": 0
+  },
+  "spawnX": 580,
+  "spawnY": 80,
+  "gateX": 114,
+  "gateY": 136,
+  "solutionDna": [
+    "CLIMB",
+    "DRILL",
+    "FLOAT",
+    "BUILD",
+    "BASH"
+  ],
+  "difficultyScore": 86,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 1,
+      "y": 1,
+      "w": 42,
+      "h": 446,
+      "points": [
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 15,
+          "y": 1
+        },
+        {
+          "x": 29,
+          "y": 1
+        },
+        {
+          "x": 42,
+          "y": 2
+        },
+        {
+          "x": 43,
+          "y": 148
+        },
+        {
+          "x": 42,
+          "y": 301
+        },
+        {
+          "x": 42,
+          "y": 447
+        },
+        {
+          "x": 29,
+          "y": 446
+        },
+        {
+          "x": 15,
+          "y": 442
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 2,
+          "y": 301
+        },
+        {
+          "x": 1,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 755,
+      "y": 2,
+      "w": 44,
+      "h": 445,
+      "points": [
+        {
+          "x": 756,
+          "y": 2
+        },
+        {
+          "x": 769,
+          "y": 2
+        },
+        {
+          "x": 785,
+          "y": 7
+        },
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 799,
+          "y": 148
+        },
+        {
+          "x": 799,
+          "y": 301
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 785,
+          "y": 443
+        },
+        {
+          "x": 769,
+          "y": 442
+        },
+        {
+          "x": 756,
+          "y": 447
+        },
+        {
+          "x": 755,
+          "y": 301
+        },
+        {
+          "x": 755,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 1,
+      "w": 706,
+      "h": 35,
+      "points": [
+        {
+          "x": 46,
+          "y": 2
+        },
+        {
+          "x": 278,
+          "y": 1
+        },
+        {
+          "x": 520,
+          "y": 1
+        },
+        {
+          "x": 752,
+          "y": 2
+        },
+        {
+          "x": 749,
+          "y": 12
+        },
+        {
+          "x": 751,
+          "y": 24
+        },
+        {
+          "x": 752,
+          "y": 34
+        },
+        {
+          "x": 520,
+          "y": 36
+        },
+        {
+          "x": 278,
+          "y": 34
+        },
+        {
+          "x": 46,
+          "y": 34
+        },
+        {
+          "x": 49,
+          "y": 24
+        },
+        {
+          "x": 50,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 45,
+      "y": 340,
+      "w": 359,
+      "h": 108,
+      "points": [
+        {
+          "x": 46,
+          "y": 340
+        },
+        {
+          "x": 163,
+          "y": 342
+        },
+        {
+          "x": 285,
+          "y": 340
+        },
+        {
+          "x": 402,
+          "y": 340
+        },
+        {
+          "x": 403,
+          "y": 375
+        },
+        {
+          "x": 404,
+          "y": 412
+        },
+        {
+          "x": 402,
+          "y": 447
+        },
+        {
+          "x": 285,
+          "y": 448
+        },
+        {
+          "x": 163,
+          "y": 448
+        },
+        {
+          "x": 46,
+          "y": 447
+        },
+        {
+          "x": 50,
+          "y": 412
+        },
+        {
+          "x": 45,
+          "y": 375
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 450,
+      "y": 340,
+      "w": 320,
+      "h": 110,
+      "points": [
+        {
+          "x": 454.26666666666665,
+          "y": 340
+        },
+        {
+          "x": 558.8,
+          "y": 343
+        },
+        {
+          "x": 667.6,
+          "y": 343
+        },
+        {
+          "x": 772.1333333333333,
+          "y": 340
+        },
+        {
+          "x": 773.2,
+          "y": 375
+        },
+        {
+          "x": 773.2,
+          "y": 412
+        },
+        {
+          "x": 772.1333333333333,
+          "y": 447
+        },
+        {
+          "x": 667.6,
+          "y": 447
+        },
+        {
+          "x": 558.8,
+          "y": 445
+        },
+        {
+          "x": 454.26666666666665,
+          "y": 447
+        },
+        {
+          "x": 454.26666666666665,
+          "y": 412
+        },
+        {
+          "x": 455.3333333333333,
+          "y": 375
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 490,
+      "y": 110,
+      "w": 200,
+      "h": 20
+    },
+    {
+      "type": "platform",
+      "x": 690,
+      "y": 110,
+      "w": 40,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 730,
+      "y": 110,
+      "w": 20,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 750,
+      "y": 40,
+      "w": 20,
+      "h": 300
+    },
+    {
+      "type": "steelPlatform",
+      "x": 488,
+      "y": 60,
+      "w": 16,
+      "h": 44
+    },
+    {
+      "type": "steelPlatform",
+      "x": 470,
+      "y": 100,
+      "w": 20,
+      "h": 170
+    },
+    {
+      "type": "rockWall",
+      "x": 450,
+      "y": 100,
+      "w": 20,
+      "h": 100
+    },
+    {
+      "type": "steelPlatform",
+      "x": 560,
+      "y": 180,
+      "w": 130,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 490,
+      "y": 250,
+      "w": 150,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 450,
+      "y": 320,
+      "w": 300,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 256,
+      "y": 318,
+      "w": 154,
+      "h": 18
+    },
+    {
+      "type": "steelPlatform",
+      "x": 256,
+      "y": 224,
+      "w": 16,
+      "h": 112
+    },
+    {
+      "type": "jumpPad",
+      "x": 374,
+      "y": 308,
+      "w": 32,
+      "h": 10,
+      "dir": "up-right",
+      "power": 11.2
+    },
+    {
+      "type": "steelPlatform",
+      "x": 318,
+      "y": 160,
+      "w": 112,
+      "h": 16
+    },
+    {
+      "type": "steelPlatform",
+      "x": 56,
+      "y": 160,
+      "w": 226,
+      "h": 16
+    },
+    {
+      "type": "steelPlatform",
+      "x": 44,
+      "y": 36,
+      "w": 16,
+      "h": 140
+    },
+    {
+      "type": "rockWall",
+      "x": 186,
+      "y": 104,
+      "w": 26,
+      "h": 56
+    },
+    {
+      "type": "steelPlatform",
+      "x": 182,
+      "y": 36,
+      "w": 34,
+      "h": 68
+    },
+    {
+      "type": "platform",
+      "x": 690,
+      "y": 180,
+      "w": 40,
+      "h": 20,
+      "palette": "purple"
+    },
+    {
+      "type": "steelPlatform",
+      "x": 730,
+      "y": 180,
+      "w": 20,
+      "h": 50,
+      "palette": "purple",
+      "isSteel": true
+    }
+  ],
+  "_meta": {
+    "generator": "CausalPuzzlePrototypes-v9-Phase1",
+    "family": "pinball_rebound_sanctum",
+    "difficulty": "nightmare",
+    "difficultyLabel": "NIGHTMARE",
+    "difficultyScore": 86,
+    "mechanics": [
+      "Aerial Spoiler DRILL Clearing",
+      "Pinball Mid-Air Steel Wall Rebound",
+      "Solo Pioneer Full-Course Prep",
+      "Sky-Gap BUILD"
+    ],
+    "shortcutHint": "u1 좌측 분리벽(x=504) CLIMB → 스포일러(x=456) DRILL+FLOAT 제거 후 하단 착지 → u1 하단 틈새(x=452) 좌향 BUILD → 점프패드 핀볼 리바운드 → 상단 틈새(x=320) 좌향 BUILD → 출구 BASH → 본대 우측 포켓(x=706) DRILL 하강해 전원(16/16) 핀볼 구출!",
+    "deductionSummary": "눈앞의 점프패드를 그대로 쓰면 공중 스포일러에 맞아 추락하는 물리 함정. 위층에서 공중 반사 궤도를 먼저 청소하고 선발대가 2개의 틈새를 완공해야 100% 구출되는 공간 추리 퍼즐.",
+    "trapDescriptions": [
+      "함정 1: 상단 공중 스포일러(x=444..468)를 치우지 않고 본대가 점프패드를 밟으면 공중 충돌 후 전원 추락",
+      "함정 2: 역추진(FLOAT)은 1개뿐이므로 스포일러 구멍으로 본대가 따라 내려오면 214px 낙사"
+    ],
+    "fingerprint": "p1|pinball_rebound_sanctum|27"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase1",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 16,
+    "goldenNeed": 16,
+    "goldenTicks": 2673,
+    "solidRatioPct": 47.5,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "climb",
+        "unit": 1,
+        "at": {
+          "x": 520,
+          "y": 104,
+          "tol": 14
+        },
+        "dir": -1,
+        "label": "선발대1 좌측 분리벽 등반"
+      },
+      {
+        "skill": "drill",
+        "unit": 1,
+        "at": {
+          "x": 458,
+          "y": 104,
+          "tol": 5
+        },
+        "dir": -1,
+        "label": "공중 핀볼 스포일러 상단 DRILL 제거"
+      },
+      {
+        "skill": "float",
+        "unit": 1,
+        "at": {
+          "x": 458,
+          "y": 210,
+          "tol": 16,
+          "ytol": 40
+        },
+        "state": "FALLING",
+        "label": "스포일러 돌파 직후 하강 중 역추진(FLOAT) 전개 → 하단 강철대 안전 착지"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 454,
+          "y": 318,
+          "tol": 5
+        },
+        "dir": -1,
+        "label": "선발대1 하단 발사대 진입 틈새 좌향 BUILD"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 320,
+          "y": 160,
+          "tol": 5
+        },
+        "dir": -1,
+        "label": "선발대1 핀볼 착지 후 상단 하늘 틈새 좌향 BUILD"
+      },
+      {
+        "skill": "bash",
+        "unit": 1,
+        "at": {
+          "x": 216,
+          "y": 160,
+          "tol": 8
+        },
+        "dir": -1,
+        "label": "선발대1 상단 성소 출구 암벽 BASH"
+      },
+      {
+        "skill": "drill",
+        "unit": "crowd_lead",
+        "at": {
+          "x": 706,
+          "y": 104,
+          "tol": 6
+        },
+        "dir": 1,
+        "wait": 60,
+        "label": "전 구간 완공 후 본대 우측 암석 포켓 DRILL 하강 → 전원 핀볼 구출!"
+      }
+    ]
+  },
+  "isOverridden": false}

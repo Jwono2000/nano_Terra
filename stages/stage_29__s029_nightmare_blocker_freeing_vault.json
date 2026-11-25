@@ -1,0 +1,482 @@
+﻿{
+  "id": 29,
+  "title": "[S029] [NIGHTMARE] BLOCKER-FREEING VAULT",
+  "bgImg": "assets/bg_level_5.jpg",
+  "terrainTheme": "green",
+  "desc": "목표 구출률 100%(16/16), 폭탄 0개, 방어막 1개! 단 한 명도 버릴 수 없습니다. u1을 선발대로 먼저 보내고 u2가 암석 바닥 위에서 방어막(BLOCK)으로 본대를 묶어두세요. 선발대가 아래쪽 다리와 출구를 모두 완성한 뒤, 방어막 대원(u2)에게 직접 수직굴착(DRILL)을 걸어 스스로 방어막을 풀고 전원 함께 하강하세요!",
+  "totalUnits": 16,
+  "needPercent": 100,
+  "spawnRate": 24,
+  "timeLimit": 300,
+  "skills": {
+    "climb": 0,
+    "float": 0,
+    "bomb": 0,
+    "block": 1,
+    "build": 2,
+    "bash": 1,
+    "mine": 0,
+    "drill": 1,
+    "portal": 0
+  },
+  "spawnX": 92,
+  "spawnY": 142,
+  "gateX": 696,
+  "gateY": 224,
+  "solutionDna": [
+    "BUILD",
+    "BLOCK",
+    "BASH",
+    "DRILL"
+  ],
+  "difficultyScore": 87,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 1,
+      "y": 1,
+      "w": 47,
+      "h": 447,
+      "points": [
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 16,
+          "y": 1
+        },
+        {
+          "x": 32,
+          "y": 3
+        },
+        {
+          "x": 46,
+          "y": 2
+        },
+        {
+          "x": 48,
+          "y": 148
+        },
+        {
+          "x": 48,
+          "y": 301
+        },
+        {
+          "x": 46,
+          "y": 447
+        },
+        {
+          "x": 32,
+          "y": 448
+        },
+        {
+          "x": 16,
+          "y": 446
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 3,
+          "y": 301
+        },
+        {
+          "x": 1,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 754,
+      "y": 1,
+      "w": 45,
+      "h": 446,
+      "points": [
+        {
+          "x": 754,
+          "y": 2
+        },
+        {
+          "x": 768,
+          "y": 1
+        },
+        {
+          "x": 784,
+          "y": 4
+        },
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 799,
+          "y": 148
+        },
+        {
+          "x": 799,
+          "y": 301
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 784,
+          "y": 444
+        },
+        {
+          "x": 768,
+          "y": 446
+        },
+        {
+          "x": 754,
+          "y": 447
+        },
+        {
+          "x": 755,
+          "y": 301
+        },
+        {
+          "x": 755,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 50,
+      "y": 1,
+      "w": 700,
+      "h": 53,
+      "points": [
+        {
+          "x": 50,
+          "y": 2
+        },
+        {
+          "x": 280,
+          "y": 4
+        },
+        {
+          "x": 520,
+          "y": 1
+        },
+        {
+          "x": 750,
+          "y": 2
+        },
+        {
+          "x": 749,
+          "y": 18
+        },
+        {
+          "x": 750,
+          "y": 38
+        },
+        {
+          "x": 750,
+          "y": 54
+        },
+        {
+          "x": 520,
+          "y": 52
+        },
+        {
+          "x": 280,
+          "y": 53
+        },
+        {
+          "x": 50,
+          "y": 54
+        },
+        {
+          "x": 55,
+          "y": 38
+        },
+        {
+          "x": 53,
+          "y": 18
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 50,
+      "y": 280,
+      "w": 410,
+      "h": 170,
+      "points": [
+        {
+          "x": 50,
+          "y": 280
+        },
+        {
+          "x": 186,
+          "y": 279
+        },
+        {
+          "x": 328,
+          "y": 280
+        },
+        {
+          "x": 464,
+          "y": 280
+        },
+        {
+          "x": 463,
+          "y": 334
+        },
+        {
+          "x": 461,
+          "y": 393
+        },
+        {
+          "x": 464,
+          "y": 447
+        },
+        {
+          "x": 328,
+          "y": 446
+        },
+        {
+          "x": 186,
+          "y": 449
+        },
+        {
+          "x": 50,
+          "y": 447
+        },
+        {
+          "x": 52,
+          "y": 393
+        },
+        {
+          "x": 53,
+          "y": 334
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 516,
+      "y": 280,
+      "w": 234,
+      "h": 168,
+      "points": [
+        {
+          "x": 516,
+          "y": 280
+        },
+        {
+          "x": 593,
+          "y": 280
+        },
+        {
+          "x": 673,
+          "y": 280
+        },
+        {
+          "x": 750,
+          "y": 280
+        },
+        {
+          "x": 746,
+          "y": 334
+        },
+        {
+          "x": 748,
+          "y": 393
+        },
+        {
+          "x": 750,
+          "y": 447
+        },
+        {
+          "x": 673,
+          "y": 444
+        },
+        {
+          "x": 593,
+          "y": 448
+        },
+        {
+          "x": 516,
+          "y": 447
+        },
+        {
+          "x": 518,
+          "y": 393
+        },
+        {
+          "x": 519,
+          "y": 334
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 52,
+      "y": 160,
+      "w": 68,
+      "h": 16
+    },
+    {
+      "type": "platform",
+      "x": 120,
+      "y": 160,
+      "w": 106,
+      "h": 16
+    },
+    {
+      "type": "steelPlatform",
+      "x": 48,
+      "y": 56,
+      "w": 16,
+      "h": 224
+    },
+    {
+      "type": "steelPlatform",
+      "x": 268,
+      "y": 160,
+      "w": 88,
+      "h": 16
+    },
+    {
+      "type": "diagonalBeam",
+      "x": 356,
+      "y": 160,
+      "w": 58,
+      "h": 58,
+      "dir": "downRight",
+      "slope": 1,
+      "isSteel": true
+    },
+    {
+      "type": "steelPlatform",
+      "x": 52,
+      "y": 248,
+      "w": 416,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 512,
+      "y": 248,
+      "w": 240,
+      "h": 20
+    },
+    {
+      "type": "rockWall",
+      "x": 590,
+      "y": 190,
+      "w": 30,
+      "h": 60
+    },
+    {
+      "type": "steelPlatform",
+      "x": 590,
+      "y": 60,
+      "w": 30,
+      "h": 130
+    },
+    {
+      "type": "steelPlatform",
+      "x": 736,
+      "y": 56,
+      "w": 16,
+      "h": 206
+    }
+  ],
+  "_meta": {
+    "generator": "CausalPuzzlePrototypes-v9-Phase1",
+    "family": "blocker_freeing_vault",
+    "difficulty": "nightmare",
+    "difficultyLabel": "NIGHTMARE",
+    "difficultyScore": 87,
+    "mechanics": [
+      "100% No-Sacrifice Quota",
+      "Pioneer Ahead + Unit 2 BLOCK Hold",
+      "45° Steel Diagonal Slide",
+      "Direct Blocker-Freeing DRILL"
+    ],
+    "shortcutHint": "u1 상단 틈새(x=222) BUILD 선행 → u2 암석 바닥(x=184) BLOCK 홀드 → u1 활강 빔 하강 → 하단 틈새(x=464) BUILD → 출구 암벽(x=592) BASH → 홀드 중인 u2(BLOCK)에게 직접 DRILL 클릭해 전원(16/16) 안전 낙하 구출!",
+    "deductionSummary": "\"BLOCK은 희생 유닛\"이라는 고정관념을 깨고, 암석 바닥 위 BLOCK에게 직접 DRILL을 걸어 방어막 해제와 본대 하강을 동시에 이루는 100% 무희생 추리 퍼즐.",
+    "trapDescriptions": [
+      "함정 1: 상단에서 바로 DRILL하면 하단 틈새(x=468..512)로 본대 전원 추락 (0명 구출)",
+      "함정 2: u2 BLOCK으로 홀드 후 u1이 길을 열어도 u2를 해제하지 못하면 15/16(93.8%) < 100% 실패"
+    ],
+    "fingerprint": "p1|blocker_freeing_vault|29"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase1",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 16,
+    "goldenNeed": 16,
+    "goldenTicks": 1461,
+    "solidRatioPct": 59.4,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 222,
+          "y": 160,
+          "tol": 5
+        },
+        "dir": 1,
+        "label": "선발대 u1 상단 틈새 BUILD 선행 → 강철 활강 빔 진입"
+      },
+      {
+        "skill": "block",
+        "unit": 2,
+        "at": {
+          "x": 184,
+          "y": 160,
+          "tol": 8
+        },
+        "dir": 1,
+        "label": "u2 암석 바닥 위 BLOCK으로 본대 홀드"
+      },
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 464,
+          "y": 248,
+          "tol": 5
+        },
+        "dir": 1,
+        "label": "선발대 u1 하단 44px 틈새 BUILD 가교"
+      },
+      {
+        "skill": "bash",
+        "unit": 1,
+        "at": {
+          "x": 586,
+          "y": 248,
+          "tol": 8
+        },
+        "dir": 1,
+        "label": "선발대 u1 하단 최종 암벽 BASH 돌파"
+      },
+      {
+        "skill": "drill",
+        "unit": "blocker",
+        "at": {
+          "x": 184,
+          "y": 160,
+          "tol": 14
+        },
+        "wait": 160,
+        "label": "개척 완료 후 BLOCK 대원(u2)에게 직접 DRILL 해제 + 전원 하강!"
+      }
+    ]
+  },
+  "isOverridden": false}

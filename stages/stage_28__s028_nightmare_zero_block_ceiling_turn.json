@@ -1,0 +1,468 @@
+﻿{
+  "id": 28,
+  "title": "[S028] [NIGHTMARE] ZERO-BLOCK CEILING TURN",
+  "bgImg": "assets/bg_level_4.jpg",
+  "terrainTheme": "brown",
+  "desc": "방어막(BLOCK)이 0개인데 대원들이 우측 132px 치사 절벽으로 걸어갑니다! 우측 낮은 강철 천장(24px 높이) 입구 직전에서 계단(BUILD)을 세워 머리를 부딪히면 방향이 좌측으로 반전되며 후발대 전체를 막아주는 영구 댐이 만들어집니다. 또한 BASH는 단 1개뿐—하단의 46px 극후 암벽을 위해 아끼고, 좌측 20px 뒷문은 240틱 시한폭탄(BOMB)으로 여세요.",
+  "totalUnits": 16,
+  "needPercent": 88,
+  "spawnRate": 35,
+  "timeLimit": 300,
+  "skills": {
+    "climb": 1,
+    "float": 1,
+    "bash": 1,
+    "mine": 0,
+    "drill": 1,
+    "bomb": 1,
+    "build": 2,
+    "block": 0,
+    "portal": 0
+  },
+  "spawnX": 240,
+  "spawnY": 110,
+  "gateX": 690,
+  "gateY": 260,
+  "solutionDna": [
+    "BUILD",
+    "BOMB",
+    "BASH"
+  ],
+  "difficultyScore": 88,
+  "elements": [
+    {
+      "type": "polygonRock",
+      "x": 1,
+      "y": 2,
+      "w": 41,
+      "h": 445,
+      "points": [
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 15,
+          "y": 4
+        },
+        {
+          "x": 29,
+          "y": 3
+        },
+        {
+          "x": 42,
+          "y": 2
+        },
+        {
+          "x": 42,
+          "y": 148
+        },
+        {
+          "x": 41,
+          "y": 301
+        },
+        {
+          "x": 42,
+          "y": 447
+        },
+        {
+          "x": 29,
+          "y": 443
+        },
+        {
+          "x": 15,
+          "y": 445
+        },
+        {
+          "x": 2,
+          "y": 447
+        },
+        {
+          "x": 2,
+          "y": 301
+        },
+        {
+          "x": 1,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 756,
+      "y": 2,
+      "w": 42,
+      "h": 445,
+      "points": [
+        {
+          "x": 756,
+          "y": 2
+        },
+        {
+          "x": 769,
+          "y": 6
+        },
+        {
+          "x": 785,
+          "y": 3
+        },
+        {
+          "x": 798,
+          "y": 2
+        },
+        {
+          "x": 798,
+          "y": 148
+        },
+        {
+          "x": 797,
+          "y": 301
+        },
+        {
+          "x": 798,
+          "y": 447
+        },
+        {
+          "x": 785,
+          "y": 447
+        },
+        {
+          "x": 769,
+          "y": 442
+        },
+        {
+          "x": 756,
+          "y": 447
+        },
+        {
+          "x": 756,
+          "y": 301
+        },
+        {
+          "x": 756,
+          "y": 148
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 1,
+      "w": 707,
+      "h": 41,
+      "points": [
+        {
+          "x": 46,
+          "y": 2
+        },
+        {
+          "x": 278,
+          "y": 3
+        },
+        {
+          "x": 520,
+          "y": 1
+        },
+        {
+          "x": 752,
+          "y": 2
+        },
+        {
+          "x": 753,
+          "y": 15
+        },
+        {
+          "x": 752,
+          "y": 29
+        },
+        {
+          "x": 752,
+          "y": 42
+        },
+        {
+          "x": 520,
+          "y": 42
+        },
+        {
+          "x": 278,
+          "y": 41
+        },
+        {
+          "x": 46,
+          "y": 42
+        },
+        {
+          "x": 49,
+          "y": 29
+        },
+        {
+          "x": 47,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "type": "polygonRock",
+      "x": 46,
+      "y": 336,
+      "w": 707,
+      "h": 111,
+      "points": [
+        {
+          "x": 46,
+          "y": 338
+        },
+        {
+          "x": 278,
+          "y": 336
+        },
+        {
+          "x": 520,
+          "y": 343
+        },
+        {
+          "x": 752,
+          "y": 338
+        },
+        {
+          "x": 753,
+          "y": 373
+        },
+        {
+          "x": 748,
+          "y": 412
+        },
+        {
+          "x": 752,
+          "y": 447
+        },
+        {
+          "x": 520,
+          "y": 445
+        },
+        {
+          "x": 278,
+          "y": 443
+        },
+        {
+          "x": 46,
+          "y": 447
+        },
+        {
+          "x": 47,
+          "y": 412
+        },
+        {
+          "x": 50,
+          "y": 373
+        }
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 110,
+      "y": 160,
+      "w": 210,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 380,
+      "y": 116,
+      "w": 70,
+      "h": 20
+    },
+    {
+      "type": "rockWall",
+      "x": 110,
+      "y": 110,
+      "w": 20,
+      "h": 50
+    },
+    {
+      "type": "steelPlatform",
+      "x": 110,
+      "y": 40,
+      "w": 20,
+      "h": 70
+    },
+    {
+      "type": "steelPlatform",
+      "x": 40,
+      "y": 40,
+      "w": 20,
+      "h": 290
+    },
+    {
+      "type": "steelPlatform",
+      "x": 40,
+      "y": 240,
+      "w": 120,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 40,
+      "y": 320,
+      "w": 360,
+      "h": 20
+    },
+    {
+      "type": "steelPlatform",
+      "x": 390,
+      "y": 300,
+      "w": 360,
+      "h": 40
+    },
+    {
+      "type": "rockWall",
+      "x": 560,
+      "y": 240,
+      "w": 50,
+      "h": 60
+    },
+    {
+      "type": "steelPlatform",
+      "x": 560,
+      "y": 90,
+      "w": 50,
+      "h": 150
+    },
+    {
+      "type": "steelPlatform",
+      "x": 736,
+      "y": 44,
+      "w": 16,
+      "h": 292
+    },
+    {
+      "type": "craggyRock",
+      "x": 320,
+      "y": 160,
+      "w": 130,
+      "h": 20,
+      "palette": "brown",
+      "profile": [
+        22,
+        24,
+        22
+      ]
+    },
+    {
+      "type": "craggyRock",
+      "x": 140,
+      "y": 40,
+      "w": 600,
+      "h": 10,
+      "palette": "brown",
+      "profile": [
+        9,
+        13,
+        13,
+        8,
+        11,
+        8,
+        12,
+        7,
+        9,
+        8,
+        10,
+        7,
+        8,
+        11,
+        13,
+        9,
+        10
+      ]
+    },
+    {
+      "type": "steelPlatform",
+      "x": 380,
+      "y": 80,
+      "w": 70,
+      "h": 20,
+      "palette": "brown",
+      "isSteel": true
+    }
+  ],
+  "_meta": {
+    "generator": "CausalPuzzlePrototypes-v9-Phase1",
+    "family": "zero_block_ceiling_turn",
+    "difficulty": "nightmare",
+    "difficultyLabel": "NIGHTMARE",
+    "difficultyScore": 88,
+    "mechanics": [
+      "Zero-BLOCK Ceiling Head-Bonk BUILD Turnaround",
+      "240-Tick Timed BOMB Wall Breach",
+      "Single-BASH Resource Conservation",
+      "20px Steel Step-Up BUILD"
+    ],
+    "shortcutHint": "u1 낮은 천장 입구 직전(x≈368) BUILD → 머리 충돌로 좌측 반전+댐 봉인 → 좌측 벽 반사 후 우측 댐 직전(x≈324) 240틱 BOMB 점화 → 좌측 20px 암벽 정면 폭파 → 2단 안전 하강 후 20px 강철 단차(x=348) BUILD 등반 → 최종 46px 암벽에 아껴둔 단일 BASH",
+    "deductionSummary": "BLOCK 없이 계단 헤드봉크로 본대 전체의 방향을 전환하는 고급 물리 테크닉과, BASH 1개 vs BOMB 1개의 벽 두께(20px vs 46px) 자원 배분 추리가 결합된 고난이도 맵.",
+    "trapDescriptions": [
+      "함정 1: 낮은 천장 입구 BUILD 반전을 쓰지 않으면 전원 우측 132px 절벽에서 낙사 (0명 구출)",
+      "함정 2: 유일한 BASH를 좌측 20px 뒷문에 써버리면 하단 46px 극후 암벽을 1발의 BOMB으로 뚫지 못해 전멸"
+    ],
+    "fingerprint": "p1|zero_block_ceiling_turn|28"
+  },
+  "verification": {
+    "engine": "ForgeSim-v9-Phase1",
+    "verifiedAt": "2026-11-19T15:37:34.458Z",
+    "lintErrors": 0,
+    "zeroRescued": 0,
+    "greedyCleared": false,
+    "goldenRescued": 15,
+    "goldenNeed": 15,
+    "goldenTicks": 1876,
+    "solidRatioPct": 54,
+    "trapsVerifiedBlocked": 2,
+    "plan": [
+      {
+        "skill": "build",
+        "unit": 1,
+        "at": {
+          "x": 368,
+          "y": 164,
+          "tol": 4
+        },
+        "dir": 1,
+        "label": "낮은 천장 입구 BUILD 헤드봉크 반전+댐 봉인"
+      },
+      {
+        "skill": "bomb",
+        "unit": 1,
+        "at": {
+          "x": 324,
+          "y": 164,
+          "tol": 4
+        },
+        "dir": 1,
+        "wait": 160,
+        "label": "240틱(300px) 계산 BOMB 점화 → 좌측 20px 암벽 정면 폭파"
+      },
+      {
+        "skill": "build",
+        "unit": "any",
+        "at": {
+          "x": 348,
+          "y": 316,
+          "tol": 5
+        },
+        "dir": 1,
+        "wait": 260,
+        "label": "하단 20px 수직 강철 단차 BUILD 계단 건설"
+      },
+      {
+        "skill": "bash",
+        "unit": "any",
+        "at": {
+          "x": 558,
+          "y": 296,
+          "tol": 8
+        },
+        "dir": 1,
+        "label": "아껴둔 단일 BASH로 46px 극후 암벽 돌파"
+      }
+    ]
+  },
+  "isOverridden": false}
